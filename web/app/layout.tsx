@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari, Noto_Sans_Telugu } from "next/font/google";
 import { THEME_INIT_SCRIPT } from "@/lib/theme-config";
+import { OG_IMAGE, SITE_URL } from "@/lib/site";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import "./theme.css";
 import "./globals.css";
@@ -12,9 +13,23 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin", "latin-ext"],
 const notoTelugu = Noto_Sans_Telugu({ variable: "--font-noto-telugu", subsets: ["telugu"], display: "swap", preload: false });
 const notoDevanagari = Noto_Sans_Devanagari({ variable: "--font-noto-devanagari", subsets: ["devanagari"], display: "swap", preload: false });
 
+const DESCRIPTION = "Say what you are owed, in Telugu or Hinglish. Baaki works out the money still owed and writes to your employer.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: "Baaki · బాకీ", template: "%s · Baaki" },
-  description: "Say what you are owed, in Telugu or Hinglish. Baaki works out the money still owed and writes to your employer.",
+  description: DESCRIPTION,
+  // Site-wide link preview: generic on purpose. Pages override it (/e/{token} with its own generic card,
+  // /r with a neutral one); child openGraph/twitter objects replace these, they do not merge.
+  openGraph: {
+    type: "website",
+    siteName: "Baaki",
+    title: "Baaki · బాకీ",
+    description: DESCRIPTION,
+    locale: "en_IN",
+    images: [OG_IMAGE],
+  },
+  twitter: { card: "summary_large_image", title: "Baaki · బాకీ", description: DESCRIPTION, images: [OG_IMAGE.url] },
   applicationName: "Baaki",
   appleWebApp: { capable: true, title: "Baaki", statusBarStyle: "default" },
   formatDetection: { telephone: false },
