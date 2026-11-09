@@ -4,26 +4,35 @@
 
 import { ApiError, audioUploadName } from "@/lib/api";
 
+/** Correction kinds. A proposal's `kind` can also be "said_paid": the employer's "I've paid" claim (see `type`). */
 export type HisaabKind = "cash" | "upi" | "advance" | "other";
 export type HisaabStatus = "proposed" | "accepted" | "rejected";
 
 export type HisaabProposal = {
   id: number;
-  case_id: number;
+  /** Absent on employer-side responses (the employer never gets the worker's case id). */
+  case_id?: number;
+  /** "payment_claim" = he says he paid (she confirms the money arrived); "correction" = he remembers it differently. */
+  type: "payment_claim" | "correction";
+  method?: string;
+  /** Sandbox demo claims, confirmed automatically and labelled synthetic. */
+  demo?: boolean;
   status: HisaabStatus;
   display_state: "proposed" | "accepted" | "disputed";
-  said_by: "employer";
+  said_by: "employer" | string;
   said_by_name: string;
   said_by_label: string;
   amount: number;
   amount_display: string;
   signed_display: string;
-  amount_source: "spoken" | "typed";
+  amount_source: "spoken" | "typed" | string;
+  /** Correction kind. For a payment claim (`type === "payment_claim"`) the backend sends "said_paid": check `type`
+   *  first, and don't index the correction-kind label tables with it. */
   kind: HisaabKind;
   month: string | null;
   month_label: string | null;
   transcript: string;
-  source: "voice" | "text";
+  source: "voice" | "text" | string;
   language: string;
   chip: { text: string; main: string; said_by_label: string };
   readback: { text: string; speech: string; language: string; audio_url: string };
@@ -44,6 +53,8 @@ export type HisaabMoney = {
   balance: number;
   balance_display: string;
   case_status: string;
+  /** Paid beyond a (reduced) total; 0 normally. */
+  overpaid?: number;
 };
 
 export type HisaabSummary = HisaabMoney & {
@@ -52,6 +63,8 @@ export type HisaabSummary = HisaabMoney & {
   employer: { name: string; language: string };
   proposals: HisaabProposal[];
   pending: number;
+  /** Pending "I've paid" claims waiting for her: show "Did the money arrive?". */
+  pending_claims: number;
   disputed_total: number;
   notice: string;
 };
@@ -67,6 +80,26 @@ export type DecideResult = HisaabMoney & {
   proposal: HisaabProposal;
   decision: "accept" | "reject";
   changed: boolean;
+  /** Set when an accept recorded money (ledger Payment row). */
+  payment?: {
+    payment_id: number;
+    recorded: number;
+    requested: number;
+    /** Claimed beyond what was owed (capped, not recorded). */
+    excess: number;
+    balance_before: number;
+    balance_after: number;
+    fully_paid: boolean;
+  } | null;
+  fully_paid?: boolean;
+  /** A paid case went back to open because the total rose. */
+  reopened?: boolean;
+  badge?: import("@/lib/types").Badge | null;
+  /** "Paisa aa gaya" for her phone, only after she confirms a payment claim. */
+  alert?: import("@/lib/types").PaidAlert | null;
+  plan?: unknown;
+  /** Sandbox only: "Demo: Lakshmi confirmed (synthetic)". */
+  confirmed_label?: string | null;
 };
 
 /** 422 "no_amount": he spoke but no amount was heard. `transcript` lets the page prefill the text box. */

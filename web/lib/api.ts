@@ -435,14 +435,16 @@ export function planInstalments(
 }
 
 /** POST /api/e/{token}/reply: the employer's voice reply (STT + translation + TTS). */
+/** The employer's reply: a recording, or typed text when the mic or voice service isn't available (pass null). */
 export function employerReply(
   token: string,
-  audio: Blob,
-  opts: { lang?: string | null; useLlm?: boolean; filename?: string } = {},
+  audio: Blob | null,
+  opts: { lang?: string | null; useLlm?: boolean; filename?: string; text?: string } = {},
   signal?: AbortSignal,
 ): Promise<ReplyResponse> {
   const form = new FormData();
-  appendAudio(form, audio, opts.filename ?? "reply");
+  if (audio) appendAudio(form, audio, opts.filename ?? "reply");
+  if (opts.text?.trim()) form.append("text", opts.text.trim());
   if (opts.lang) form.append("lang", opts.lang);
   form.append("use_llm", String(opts.useLlm ?? true));
   return sendForm<ReplyResponse>(`/api/e/${encodeURIComponent(token)}/reply`, form, signal);

@@ -254,7 +254,8 @@ export type PaymentRow = {
   case_id: number;
   amount: number;
   method: string;
-  status: "paid" | "planned" | "settled" | string;
+  /** settled = instalment covered by a payment made after the plan; cancelled = not needed any more. */
+  status: "paid" | "planned" | "settled" | "cancelled" | string;
   due_date: string | null;
   instalment_no: number | null;
   instalments_total: number | null;
@@ -288,6 +289,8 @@ export type CaseDetail = {
   category: string;
   monthly_wage: number;
   hours_per_day: number;
+  /** False when she never said her hours: show "hours not said" instead of hours_per_day (a DB default). */
+  hours_known?: boolean;
   days_per_week: number;
   months_unpaid: number;
   dismissed: boolean;
@@ -301,6 +304,10 @@ export type CaseDetail = {
   shortfall_estimate: number;
   amount_paid: number;
   balance: number;
+  overpaid?: number;
+  overpaid_display?: string;
+  /** Employer "I've paid" claims waiting for her answer ("Did the money arrive?"). */
+  pending_claims?: { count: number; amount: number; proposal_ids: number[] };
   items: CaseItemRow[];
   payments: PaymentRow[];
   messages: MessageRow[];
@@ -339,18 +346,34 @@ export type DashboardCard = {
   shortfall_estimate: number;
   haq_check: HaqCheck | null;
   monthly_wage: number;
-  hours_per_day: number;
+  /** null = hours not said. */
+  hours_per_day: number | null;
   months_unpaid: number;
   last_step: string | null;
   last_sent_at: string | null;
   next_reminder: string | null;
   employer_path: string;
   earliest_overdue: string | null;
+  /** Employer "I've paid" claims waiting for her: "{employer} says he paid ₹X. Did it arrive?". */
+  pending_claims?: number;
+  pending_claims_amount?: number;
+  overpaid?: number;
+};
+
+/** A case she started but never confirmed: not counted in totals; she can continue or delete it. */
+export type DraftCard = {
+  case_id: number;
+  employer: string;
+  total_due: number;
+  created_at: string;
+  resume_path: string;
+  delete_path: string;
 };
 
 export type Dashboard = {
   worker: Worker;
   cards: DashboardCard[];
+  drafts?: DraftCard[];
   totals: { homes: number; baaki: number; recovered: number; hidden_baaki_estimate: number };
 };
 
@@ -379,6 +402,9 @@ export type MessageView = {
   created_at: string;
   sent_at: string | null;
   employer_url?: string;
+  /** Made for a different balance than today's: show "made for ₹{balance_at_make}, balance changed". */
+  stale?: boolean;
+  balance_at_make?: number | null;
 };
 
 export type GnaniErrorInfo = { source?: string; message?: string; status?: number; [k: string]: unknown };
@@ -451,8 +477,22 @@ export type PlanRow = {
   status: string;
 };
 
+/** One employer "I've paid" claim, as the employer sees it. */
+export type EmployerClaim = {
+  id: number;
+  amount: number;
+  amount_display: string;
+  method: string;
+  status: "proposed" | "accepted" | "rejected" | string;
+  display_state: "proposed" | "accepted" | "disputed" | string;
+  status_text: string;
+  status_text_en: string;
+  demo: boolean;
+  created_at: string;
+  decided_at: string | null;
+};
+
 export type EmployerPage = {
-  case_id: number;
   status: CaseStatus;
   worker: { name: string; language: LangCode };
   employer: { name: string; language: LangCode; fair_employer: boolean };
@@ -461,20 +501,51 @@ export type EmployerPage = {
   amount_paid: number;
   balance: number;
   balance_display: string;
+  overpaid?: number;
   currency: "INR";
+  /** Only a step she has sent (sent / played / replied); never a draft. */
   message: MessageView | null;
+  /** The note was made for an older balance. */
+  stale?: boolean;
+  stale_note?: string | null;
   audio_url: string | null;
   pdf_url: string | null;
   upi: { vpa: string; link: string } | null;
   plan: PlanRow[];
   replies: MessageView[];
+  /** His "I've paid" claims (newest first). */
+  claims?: EmployerClaim[];
+  /** A claim is waiting for her: show the waiting panel instead of "I've paid", and poll. */
+  pending_confirmation?: boolean;
+  pending_claim?: EmployerClaim | null;
+  pending_claim_total?: number;
   badge: Badge | null;
   ai_notice: string;
 };
 
+/** "Paisa aa gaya" for her phone. */
+export type PaidAlert = {
+  message_id: number;
+  text: string;
+  speech: string;
+  language: string;
+  audio: { url: string; duration_s: number; voice: string; voice_note_id: string; gnani_calls: number } | null;
+  audio_error: GnaniErrorInfo | null;
+};
+
 export type PayIn = { amount?: number; method?: "upi" | "cash" | "bank" | "other"; note?: string; alert_audio?: boolean };
 
+/** "I've paid" is a claim: money, badge and alert change only after she confirms (pending_confirmation). */
 export type PayResponse = {
+  pending_confirmation?: boolean;
+  /** A second tap returns the same pending claim. */
+  already_claimed?: boolean;
+  claim?: EmployerClaim | null;
+  claimed?: number;
+  claimed_display?: string;
+  /** For the employer, in his language ("Lakshmi will confirm…"), plus English. */
+  message?: string;
+  message_en?: string;
   paid: number;
   paid_display: string;
   amount_paid: number;
@@ -483,18 +554,11 @@ export type PayResponse = {
   fully_paid: boolean;
   fair_employer: boolean;
   badge: Badge | null;
-  alert: {
-    message_id: number;
-    text: string;
-    speech: string;
-    language: string;
-    audio: { url: string; duration_s: number; voice: string; voice_note_id: string; gnani_calls: number } | null;
-    audio_error: GnaniErrorInfo | null;
-  };
+  /** null while the claim waits for her. */
+  alert: PaidAlert | null;
 };
 
 export type PlanResponse = {
-  case_id: number;
   status: "plan";
   balance: number;
   instalments: {
@@ -522,6 +586,8 @@ export type ReplyResponse = {
   original_audio_url: string | null;
   message_ids: { from_employer: number; to_worker: number };
   employer_url: string;
+  /** "text" when he typed instead of recording. */
+  source?: "voice" | "text";
 };
 
 // ------------------------------------------------------------------ voice profile

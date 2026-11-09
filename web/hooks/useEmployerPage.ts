@@ -2,9 +2,11 @@
 
 // The employer's public page (/e/{token}): no login, in the employer's language.
 //   play()      plays the voice note and POSTs /played once
-//   pay()       "I've paid" → POST /pay (the worker's phone then gets "Paisa aa gaya")
+//   pay()       "I've paid" → POST /pay. This is a CLAIM: nothing changes until the worker confirms the money
+//               arrived; while `pendingConfirmation` is true the page polls every 5 s, so the badge appears by itself
+//   reload()    refetch now (call it right after pay())
 //   plan(n)     pay in 2 or 3 parts → POST /plan
-//   reply       record → POST /reply (STT + translation + TTS for the worker)
+//   reply       record → POST /reply (STT + translation + TTS for the worker); reply.sendText(t) types instead
 // `upi.qr` is a QR data URL for desktops (generated client-side); phones use `upi.link`.
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,11 +19,19 @@ import { useAudioPlayer } from "./useAudioPlayer";
 import { useHydrated } from "./useSettings";
 import { useResource } from "./useResource";
 
+const CLAIM_POLL_MS = 5000;
+
 export function useEmployerPage(token: string | null, opts: { pollMs?: number | null } = {}) {
+  // Poll while his "I've paid" claim waits for her answer (set from the last page we loaded).
+  const [awaitingHer, setAwaitingHer] = useState(false);
   const res = useResource(token === null ? null : `emp:${token}`, (signal) => getEmployerPage(token!, signal), {
-    pollMs: opts.pollMs ?? null,
+    pollMs: opts.pollMs ?? (awaitingHer ? CLAIM_POLL_MS : null),
   });
   const page = res.data;
+  const pendingConfirmation = !!page?.pending_confirmation;
+  useEffect(() => {
+    setAwaitingHer(pendingConfirmation);
+  }, [pendingConfirmation]);
   const player = useAudioPlayer();
   const playedSent = useRef(false);
   const hydrated = useHydrated();
@@ -49,6 +59,7 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
       try {
         const r = await postPay(token, { amount, method: "upi" });
         setPayResult(r);
+        if (r.pending_confirmation) setAwaitingHer(true);
         res.refresh();
         return r;
       } catch (err) {
@@ -107,6 +118,26 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
     },
   });
 
+  const sendText = useCallback(
+    async (text: string) => {
+      if (!token || !text.trim()) return null;
+      setReplying(true);
+      setReplyError(null);
+      try {
+        const out = await employerReply(token, null, { text, lang: page?.employer.language ?? null });
+        setReplyResult(out);
+        res.refresh();
+        return out;
+      } catch (err) {
+        setReplyError(errorMessage(err));
+        return null;
+      } finally {
+        setReplying(false);
+      }
+    },
+    [page?.employer.language, res, token],
+  );
+
   // ---- UPI: deep link on phones, QR on desktops
   const upiLink = page?.upi?.link ?? null;
   const [qr, setQr] = useState<{ link: string; dataUrl: string } | null>(null);
@@ -130,6 +161,7 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
     error: res.error ? errorMessage(res.error) : null,
     notFound: !!res.error && (res.error as { status?: number }).status === 404,
     refresh: res.refresh,
+    reload: res.refresh,
     lang: page?.employer.language ?? "hi-en",
     audioUrl,
     pdfUrl: mediaUrl(page?.pdf_url),
@@ -146,6 +178,13 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
         }
       : null,
     fullyPaid,
+    /** His claim waits for her: show the waiting panel instead of "I've paid". */
+    pendingConfirmation: pendingConfirmation || (!!payResult?.pending_confirmation && !page?.badge && !fullyPaid),
+    pendingClaim: page?.pending_claim ?? payResult?.claim ?? null,
+    claims: page?.claims ?? [],
+    stale: !!page?.stale,
+    staleNote: page?.stale_note ?? null,
+    overpaid: page?.overpaid ?? 0,
     badge: payResult?.badge ?? page?.badge ?? null,
     pay,
     paying,
@@ -162,6 +201,8 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
       result: replyResult,
       error: replyError ?? recorder.error,
       toggle: recorder.toggle,
+      /** Typed reply (no mic / voice service down). */
+      sendText,
     },
     replies: page?.replies ?? [],
   };
