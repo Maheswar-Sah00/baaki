@@ -13,7 +13,7 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 [![Gnani Timbre v3.0 TTS](https://img.shields.io/badge/Gnani-Timbre%20v3.0%20TTS-9F73F4)](https://docs.gnani.ai)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-0e0e0c?logo=nextdotjs)](web/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.12-0e0e0c?logo=fastapi)](backend/)
-[![Tests](https://img.shields.io/badge/tests-1%2C604-2e7a46)](backend/tests)
+[![Tests](https://img.shields.io/badge/tests-1%2C643%20passing-2e7a46)](backend/tests)
 [![Data](https://img.shields.io/badge/demo%20data-synthetic-8a5a22)](#honesty-and-limits)
 
 📄 **Solution pitch:** [PITCH.md](PITCH.md) · [PDF, 1 page](docs/Baaki_Solution_Pitch.pdf) &nbsp;·&nbsp;
@@ -22,7 +22,6 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 
 </div>
 
-<!-- TODO-F5: the test count (1,604) is the number collected on 10 Nov 03:00 IST. Replace it in the badge and in "Development and tests" with the final passing count. -->
 
 ---
 
@@ -170,7 +169,7 @@ The Polite note says a reply-by date (today + 7 days), so that one sentence is n
 ```powershell
 cd backend; .venv\Scripts\python -m uvicorn app.main:app --port 8020 --reload   # API
 cd web; $env:BACKEND_URL="http://127.0.0.1:8020"; npm run dev                  # http://localhost:3000
-cd backend; .venv\Scripts\python -m pytest -q                                    # 1,604 tests, offline (keys blanked)
+cd backend; .venv\Scripts\python -m pytest -q                                    # 1,643 tests pass, offline (keys blanked)
 backend\.venv\Scripts\python backend\scripts\retest_features.py                  # every feature through the API, zero Gnani calls
 cd web; npm run build
 ```
