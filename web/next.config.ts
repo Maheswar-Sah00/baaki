@@ -34,7 +34,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: PROJECT_ROOT,
     rules: {
-      "*.css": {
+      // Only the global stylesheet needs Tailwind; matching "*.css" broke CSS modules
+      // (x.module.css was renamed to x.module.css.css and lost its class exports).
+      "globals.css": {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },
