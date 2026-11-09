@@ -11,8 +11,20 @@ import type { ListenLang } from "@/lib/types";
 import { BottomSheet, Card, ChipView, ErrorNote, GradientButton, MeterValue, MicButton, Screen } from "@/components/ui/primitives";
 import { CheckIcon, MicIcon, WaveIcon } from "@/components/ui/icons";
 
-/** Opt-in live chunks while recording (each one is a Gnani STT call). e.g. NEXT_PUBLIC_BAAKI_INTERIM_MS=4500 */
-const INTERIM_MS = Number(process.env.NEXT_PUBLIC_BAAKI_INTERIM_MS) || null;
+/**
+ * Live chunks while recording, so the meter moves while she talks. Each chunk is one Gnani STT call.
+ * ON by default every 4500 ms. Set NEXT_PUBLIC_BAAKI_INTERIM_MS at build time to change the interval,
+ * or to 0 / off to send only the final recording (scripts/start-demo.ps1 -NoInterim).
+ */
+const INTERIM_MS = interimSetting(process.env.NEXT_PUBLIC_BAAKI_INTERIM_MS);
+
+function interimSetting(raw: string | undefined): number | null {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (!v) return 4500;
+  if (["0", "off", "false", "no"].includes(v)) return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 2500 ? n : 4500; // useListen skips snapshots under 2.5 s anyway
+}
 
 const LISTEN_LANGS: { value: ListenLang; key: "listen.auto" | "listen.te" | "listen.hinglish" }[] = [
   { value: "auto", key: "listen.auto" },
@@ -100,7 +112,13 @@ export function SpeakScreen() {
         ))}
       </div>
 
-      <section className="speak-stage" data-state={listen.status} data-typing={typing} aria-label={t("speak.meter")}>
+      <section
+        className="speak-stage"
+        data-state={listen.status}
+        data-typing={typing}
+        data-interim={listen.interimCount}
+        aria-label={t("speak.meter")}
+      >
         <span className="speak-stage-glow" aria-hidden="true" />
         <MeterValue value={live.display} tick={live.tick} animating={live.animating} label={t("speak.meter")} />
         {live.formula ? <p className="meter-formula">{live.formula}</p> : null}

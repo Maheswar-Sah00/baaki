@@ -2,9 +2,10 @@
 
 // Record → POST /api/cases/listen → transcript + meter + safety.
 // Each /listen call spends one Gnani STT call (the account allows one active request, and the backend
-// queues behind a global lock). Interim chunks are OFF by default: pass `interimMs` (e.g. 4500) to send
-// the audio-so-far while she is still talking, so the meter moves live. Each interim call re-transcribes
-// everything recorded so far, so it costs credits; the final call on stop always happens.
+// queues behind a global lock). Interim chunks are off unless `interimMs` is passed (the Speak screen
+// passes 4500 by default; see SpeakScreen): the audio-so-far is sent while she is still talking, so the
+// meter moves live. Each interim call re-transcribes everything recorded so far, so it costs credits;
+// the final call on stop always happens.
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { errorMessage, isAbort, isVoiceServiceError, listen } from "@/lib/api";
