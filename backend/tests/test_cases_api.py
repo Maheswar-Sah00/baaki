@@ -120,6 +120,16 @@ def test_readback_text_only_no_gnani(client, demo):
     assert "నెలకు నాలుగు వేల రూపాయలు" in rb["text"] and rb["audio_url"] is None
 
 
+def test_readback_names_the_chosen_home(client, demo):
+    """She says "Ammagaru" but picks Sharma ji: the read-back must name Sharma ji."""
+    body = {"worker_id": demo["workers"]["lakshmi"], "lang": "te", "use_llm": False,
+            "employer_id": demo["employers"]["sharma"],
+            "transcript": "అమ్మగారు మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు."}
+    c = client.post("/api/cases", json=body).json()
+    rb = client.post(f"/api/cases/{c['id']}/readback", json={"audio": False}).json()
+    assert "Sharma ji" in rb["text"] and "అమ్మ గారు" not in rb["text"]
+
+
 def test_create_needs_wage(client, demo):
     r = client.post("/api/cases", json={"worker_id": demo["workers"]["lakshmi"], "transcript": "hello"})
     assert r.status_code == 422

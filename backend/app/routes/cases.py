@@ -289,6 +289,9 @@ async def create_case(body: CaseIn, s: Session = Depends(db.get_session)) -> dic
                             locality=body.employer.locality if body.employer else None)
         s.add(employer)
         s.flush()
+    # The home she picked is the employer of record: the read-back must name it, not a word from the
+    # transcript ("అమ్మగారు" / "Madam" was read back as the employer even when she chose Sharma ji).
+    facts["employer_name"] = employer.name
     sf = safety.check_sync(body.transcript)
     case = Case(worker_id=worker.id, employer_id=employer.id, transcript=body.transcript,
                 transcript_lang=body.lang or worker.language, safety_json=json.dumps(sf, ensure_ascii=False),
