@@ -161,3 +161,10 @@ async def tts(body: TTSIn) -> Response:
 # --------------------------------------------------------------------------- domain routers (placeholders)
 for _r in ROUTERS:
     app.include_router(_r)
+
+# Agent B: messages and employer side (letters is already in ROUTERS)
+from .routes.employer import router as _employer_router  # noqa: E402
+from .routes.voice_profile import router as _voice_profile_router  # noqa: E402
+
+for _r in (_employer_router, _voice_profile_router):
+    app.include_router(_r)
