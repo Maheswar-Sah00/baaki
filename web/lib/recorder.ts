@@ -200,7 +200,18 @@ export function useRecorder({
     else void start();
   }, [start, stop]);
 
-  return { state, level, elapsedMs, error, start, stop, toggle };
+  /** Everything recorded so far as one playable blob (WebM/MP4 header is in the first chunk), or null. */
+  const snapshot = useCallback((): Recording | null => {
+    const rec = recorderRef.current;
+    if (!rec || rec.state === "inactive" || chunksRef.current.length === 0) return null;
+    const type = rec.mimeType || "audio/webm";
+    const blob = new Blob(chunksRef.current, { type });
+    return { blob, mimeType: type, filename: `recording.${extForMime(type)}`, durationMs: performance.now() - startRef.current };
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  return { state, level, elapsedMs, error, start, stop, toggle, snapshot, clearError };
 }
 
 export function formatTimer(ms: number): string {
