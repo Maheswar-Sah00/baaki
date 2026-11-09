@@ -28,6 +28,7 @@ from .. import audio, db, safety, storage, tts_cache, wages
 from ..extract import extract_facts
 from ..gnani import GnaniError
 from ..lang import today_ist
+from ..messages import name_in
 from ..meter import meter, summarise
 from ..models import Case, CaseItem, DiaryEntry, Employer, Message, Payment, Worker
 from ..readback import build_readback
@@ -160,6 +161,13 @@ def apply_calc(s: Session, case: Case, facts: dict[str, Any], include_shortfall:
     return calc
 
 
+def readback_facts(facts: dict[str, Any], employer: Employer | None, lang: str) -> dict[str, Any]:
+    """Facts for the read-back, naming the employer of record in the listener's script (శర్మ గారు)."""
+    if employer is None or not employer.name:
+        return facts
+    return {**facts, "employer_name": name_in(employer.name, lang)}
+
+
 def case_json(s: Session, case: Case) -> dict[str, Any]:
     worker = s.get(Worker, case.worker_id)
     employer = s.get(Employer, case.employer_id)
@@ -167,7 +175,8 @@ def case_json(s: Session, case: Case) -> dict[str, Any]:
     pays = s.exec(select(Payment).where(Payment.case_id == case.id).order_by(Payment.id)).all()
     msgs = s.exec(select(Message).where(Message.case_id == case.id).order_by(Message.id)).all()
     facts = case.facts()
-    rb = build_readback(facts, worker.language if worker else "te-IN", legal_total=case.total_due)
+    wlang = worker.language if worker else "te-IN"
+    rb = build_readback(readback_facts(facts, employer, wlang), wlang, legal_total=case.total_due)
     return {
         "id": case.id, "status": case.status, "worker": worker.model_dump() if worker else None,
         "employer": employer.model_dump() if employer else None,
@@ -325,7 +334,8 @@ async def readback(case_id: int, body: Optional[ReadbackIn] = None, format: str 
     case = _get_case(s, case_id)
     worker = s.get(Worker, case.worker_id)
     lang = body.lang or (worker.language if worker else "te-IN")
-    rb = build_readback(case.facts(), lang, legal_total=case.total_due)
+    rb = build_readback(readback_facts(case.facts(), s.get(Employer, case.employer_id), lang), lang,
+                        legal_total=case.total_due)
     out: dict[str, Any] = {**rb, "audio_url": None, "duration_s": None, "cached": None, "tts_error": None}
     if not body.audio and format == "json":
         return out

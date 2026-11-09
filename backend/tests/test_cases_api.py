@@ -127,7 +127,8 @@ def test_readback_names_the_chosen_home(client, demo):
             "transcript": "అమ్మగారు మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు."}
     c = client.post("/api/cases", json=body).json()
     rb = client.post(f"/api/cases/{c['id']}/readback", json={"audio": False}).json()
-    assert "Sharma ji" in rb["text"] and "అమ్మ గారు" not in rb["text"]
+    assert "శర్మ గారు" in rb["text"] and "అమ్మ గారు" not in rb["text"]
+    assert c["facts"]["employer_name"] == "Sharma ji"
 
 
 def test_create_needs_wage(client, demo):
