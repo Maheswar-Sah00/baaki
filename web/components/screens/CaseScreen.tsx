@@ -15,6 +15,7 @@ import { FileIcon, ShareIcon } from "@/components/ui/icons";
 import { Confetti, ErrorNote, EstimateTag, Illustration, Loading, Money, PlayButton, Screen } from "@/components/ui/primitives";
 import { ConfirmFlow } from "./ConfirmScreen";
 import { VerifyBadge } from "@/components/features/verify/VerifyBadge";
+import { ExitLink } from "@/components/features/exit/ExitLink";
 
 export function CaseScreen({ caseId }: { caseId: number }) {
   const { t, lang } = useT();
@@ -180,6 +181,8 @@ export function CaseScreen({ caseId }: { caseId: number }) {
           </span>
         </a>
       ) : null}
+
+      <ExitLink employerId={c.employer?.id} caseId={c.id} />
 
       <p className="footnote">{t("common.not_legal_advice")}</p>
 

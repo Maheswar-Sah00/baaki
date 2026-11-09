@@ -20,6 +20,7 @@ import {
   toneForState,
 } from "@/components/ui/primitives";
 import { MicIcon } from "@/components/ui/icons";
+import { ExitLink } from "@/components/features/exit/ExitLink";
 
 export function LanguagePicker({ onPick, title }: { onPick: (l: (typeof UI_LANGS)[number]["value"]) => void; title: string }) {
   return (
@@ -160,6 +161,7 @@ export function HomeScreen() {
                 ) : null}
                 {c.fair_employer ? <span className="badge badge-fair">{t("home.fair")}</span> : null}
               </Link>
+              <ExitLink employerId={c.employer?.id} caseId={c.case_id} variant="text" />
             </li>
           ))}
         </ul>

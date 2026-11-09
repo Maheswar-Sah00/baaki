@@ -1,0 +1,2404 @@
+{
+ "version": 1,
+ "calls": {
+  "tts": 12,
+  "stt": 36,
+  "runs": [
+   {
+    "at": "2026-11-09T14:32:12+00:00",
+    "conditions": [
+     "clean",
+     "combined"
+    ],
+    "tts": 12,
+    "stt": 24,
+    "stopped": null
+   },
+   {
+    "at": "2026-11-09T14:33:44+00:00",
+    "conditions": [
+     "kitchen_0db"
+    ],
+    "tts": 0,
+    "stt": 12,
+    "stopped": null
+   }
+  ]
+ },
+ "clips": [
+  {
+   "clip_id": "te01-clean",
+   "utt_id": "te01",
+   "lang": "te",
+   "voice": "Kalpana",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "అమ్మగారు, మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "gloss": "Madam, for three months you have not paid my salary of four thousand a month.",
+   "expected": [
+    4000
+   ],
+   "audio": "te01-clean.ogg",
+   "clean_audio": "te01-clean.ogg",
+   "duration_s": 4.41,
+   "sample_rate": 48000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:05+00:00",
+   "latency_s": 0.866,
+   "transcript": "అమ్మగారు మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    4000
+   ],
+   "amounts": [
+    {
+     "amount": 4000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 28,
+     "end": 39,
+     "amount": 4000,
+     "text": "నాలుగు వేలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te01-combined",
+   "utt_id": "te01",
+   "lang": "te",
+   "voice": "Kalpana",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "అమ్మగారు, మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "gloss": "Madam, for three months you have not paid my salary of four thousand a month.",
+   "expected": [
+    4000
+   ],
+   "audio": "te01-combined.ogg",
+   "clean_audio": "te01-clean.ogg",
+   "duration_s": 5.21,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:06+00:00",
+   "latency_s": 0.854,
+   "transcript": "అమ్మగారు మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    4000
+   ],
+   "amounts": [
+    {
+     "amount": 4000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 28,
+     "end": 39,
+     "amount": 4000,
+     "text": "నాలుగు వేలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te02-clean",
+   "utt_id": "te02",
+   "lang": "te",
+   "voice": "Lakshmi",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "మేడం, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "gloss": "Madam, I am owed twelve thousand rupees; you only gave two thousand.",
+   "expected": [
+    12000,
+    2000
+   ],
+   "audio": "te02-clean.ogg",
+   "clean_audio": "te02-clean.ogg",
+   "duration_s": 4.81,
+   "sample_rate": 48000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:07+00:00",
+   "latency_s": 0.828,
+   "transcript": "మేడమ్, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    12000,
+    2000
+   ],
+   "amounts": [
+    {
+     "amount": 12000,
+     "heard": true
+    },
+    {
+     "amount": 2000,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 12,
+     "end": 32,
+     "amount": 12000,
+     "text": "పన్నెండు వేల రూపాయలు",
+     "match": true
+    },
+    {
+     "start": 44,
+     "end": 54,
+     "amount": 2000,
+     "text": "రెండు వేలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "మేడం",
+     "heard": "మేడమ్"
+    }
+   ]
+  },
+  {
+   "clip_id": "te02-combined",
+   "utt_id": "te02",
+   "lang": "te",
+   "voice": "Lakshmi",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "మేడం, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "gloss": "Madam, I am owed twelve thousand rupees; you only gave two thousand.",
+   "expected": [
+    12000,
+    2000
+   ],
+   "audio": "te02-combined.ogg",
+   "clean_audio": "te02-clean.ogg",
+   "duration_s": 5.61,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:08+00:00",
+   "latency_s": 0.804,
+   "transcript": "మేడమ్, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    12000,
+    2000
+   ],
+   "amounts": [
+    {
+     "amount": 12000,
+     "heard": true
+    },
+    {
+     "amount": 2000,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 12,
+     "end": 32,
+     "amount": 12000,
+     "text": "పన్నెండు వేల రూపాయలు",
+     "match": true
+    },
+    {
+     "start": 44,
+     "end": 54,
+     "amount": 2000,
+     "text": "రెండు వేలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "మేడం",
+     "heard": "మేడమ్"
+    }
+   ]
+  },
+  {
+   "clip_id": "te03-clean",
+   "utt_id": "te03",
+   "lang": "te",
+   "voice": "Vasudha",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు కట్ చేశారు.",
+   "gloss": "This month's salary is six thousand, but they cut five hundred.",
+   "expected": [
+    6000,
+    500
+   ],
+   "audio": "te03-clean.ogg",
+   "clean_audio": "te03-clean.ogg",
+   "duration_s": 3.93,
+   "sample_rate": 48000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:08+00:00",
+   "latency_s": 0.803,
+   "transcript": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు కట్ చేశారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    6000,
+    500
+   ],
+   "amounts": [
+    {
+     "amount": 6000,
+     "heard": true
+    },
+    {
+     "amount": 500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 11,
+     "end": 19,
+     "amount": 6000,
+     "text": "ఆరు వేలు",
+     "match": true
+    },
+    {
+     "start": 26,
+     "end": 35,
+     "amount": 500,
+     "text": "ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te03-combined",
+   "utt_id": "te03",
+   "lang": "te",
+   "voice": "Vasudha",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు కట్ చేశారు.",
+   "gloss": "This month's salary is six thousand, but they cut five hundred.",
+   "expected": [
+    6000,
+    500
+   ],
+   "audio": "te03-combined.ogg",
+   "clean_audio": "te03-clean.ogg",
+   "duration_s": 4.73,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:09+00:00",
+   "latency_s": 0.895,
+   "transcript": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు cut చేశారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    6000,
+    500
+   ],
+   "amounts": [
+    {
+     "amount": 6000,
+     "heard": true
+    },
+    {
+     "amount": 500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 11,
+     "end": 19,
+     "amount": 6000,
+     "text": "ఆరు వేలు",
+     "match": true
+    },
+    {
+     "start": 26,
+     "end": 35,
+     "amount": 500,
+     "text": "ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "కట్",
+     "heard": "cut"
+    }
+   ]
+  },
+  {
+   "clip_id": "te04-clean",
+   "utt_id": "te04",
+   "lang": "te",
+   "voice": "Chetana",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత పెట్టారు.",
+   "gloss": "Because I had fever for two days, they cut a thousand rupees.",
+   "expected": [
+    1000
+   ],
+   "audio": "te04-clean.ogg",
+   "clean_audio": "te04-clean.ogg",
+   "duration_s": 2.89,
+   "sample_rate": 48000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:10+00:00",
+   "latency_s": 0.799,
+   "transcript": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత పెట్టారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    1000
+   ],
+   "amounts": [
+    {
+     "amount": 1000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 29,
+     "end": 43,
+     "amount": 1000,
+     "text": "వెయ్యి రూపాయలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te04-combined",
+   "utt_id": "te04",
+   "lang": "te",
+   "voice": "Chetana",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత పెట్టారు.",
+   "gloss": "Because I had fever for two days, they cut a thousand rupees.",
+   "expected": [
+    1000
+   ],
+   "audio": "te04-combined.ogg",
+   "clean_audio": "te04-clean.ogg",
+   "duration_s": 3.69,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:11+00:00",
+   "latency_s": 0.808,
+   "transcript": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత కట్టారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    1000
+   ],
+   "amounts": [
+    {
+     "amount": 1000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 29,
+     "end": 43,
+     "amount": 1000,
+     "text": "వెయ్యి రూపాయలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "పెట్టారు",
+     "heard": "కట్టారు"
+    }
+   ]
+  },
+  {
+   "clip_id": "te05-clean",
+   "utt_id": "te05",
+   "lang": "te",
+   "voice": "Devansh",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "పండగ అడ్వాన్స్ మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "gloss": "I took a festival advance of three thousand five hundred; the rest of the salary is due.",
+   "expected": [
+    3500
+   ],
+   "audio": "te05-clean.ogg",
+   "clean_audio": "te05-clean.ogg",
+   "duration_s": 4.41,
+   "sample_rate": 48000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:12+00:00",
+   "latency_s": 1.127,
+   "transcript": "అండగా అడ్వాన్స్ మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    3500
+   ],
+   "amounts": [
+    {
+     "amount": 3500,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 16,
+     "end": 34,
+     "amount": 3500,
+     "text": "మూడు వేల ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "పండగ",
+     "heard": "అండగా"
+    }
+   ]
+  },
+  {
+   "clip_id": "te05-combined",
+   "utt_id": "te05",
+   "lang": "te",
+   "voice": "Devansh",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "పండగ అడ్వాన్స్ మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "gloss": "I took a festival advance of three thousand five hundred; the rest of the salary is due.",
+   "expected": [
+    3500
+   ],
+   "audio": "te05-combined.ogg",
+   "clean_audio": "te05-clean.ogg",
+   "duration_s": 5.21,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:13+00:00",
+   "latency_s": 0.88,
+   "transcript": "అండగా అడ్వాన్స్ మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    3500
+   ],
+   "amounts": [
+    {
+     "amount": 3500,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 16,
+     "end": 34,
+     "amount": 3500,
+     "text": "మూడు వేల ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "పండగ",
+     "heard": "అండగా"
+    }
+   ]
+  },
+  {
+   "clip_id": "te06-clean",
+   "utt_id": "te06",
+   "lang": "te",
+   "voice": "Prakash",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "అయ్యగారు ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికి నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "gloss": "Sir promised eight thousand; so far four thousand five hundred has come.",
+   "expected": [
+    8000,
+    4500
+   ],
+   "audio": "te06-clean.ogg",
+   "clean_audio": "te06-clean.ogg",
+   "duration_s": 5.45,
+   "sample_rate": 48000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:14+00:00",
+   "latency_s": 0.967,
+   "transcript": "అయ్యగారు, ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికీ నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    8000,
+    4500
+   ],
+   "amounts": [
+    {
+     "amount": 8000,
+     "heard": true
+    },
+    {
+     "amount": 4500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 10,
+     "end": 22,
+     "amount": 8000,
+     "text": "ఎనిమిది వేలు",
+     "match": true
+    },
+    {
+     "start": 46,
+     "end": 66,
+     "amount": 4500,
+     "text": "నాలుగు వేల ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "ఇప్పటికి",
+     "heard": "ఇప్పటికీ"
+    }
+   ]
+  },
+  {
+   "clip_id": "te06-combined",
+   "utt_id": "te06",
+   "lang": "te",
+   "voice": "Prakash",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "అయ్యగారు ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికి నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "gloss": "Sir promised eight thousand; so far four thousand five hundred has come.",
+   "expected": [
+    8000,
+    4500
+   ],
+   "audio": "te06-combined.ogg",
+   "clean_audio": "te06-clean.ogg",
+   "duration_s": 6.25,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:15+00:00",
+   "latency_s": 0.847,
+   "transcript": "అయ్యగారు, ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికీ నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    8000,
+    4500
+   ],
+   "amounts": [
+    {
+     "amount": 8000,
+     "heard": true
+    },
+    {
+     "amount": 4500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 10,
+     "end": 22,
+     "amount": 8000,
+     "text": "ఎనిమిది వేలు",
+     "match": true
+    },
+    {
+     "start": 46,
+     "end": 66,
+     "amount": 4500,
+     "text": "నాలుగు వేల ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "ఇప్పటికి",
+     "heard": "ఇప్పటికీ"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi01-clean",
+   "utt_id": "hi01",
+   "lang": "hinglish",
+   "voice": "Shivani",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "मैडम, तीन महीने की salary बाकी है, हर महीने सात हज़ार।",
+   "gloss": "Madam, three months of salary are pending, seven thousand each month.",
+   "expected": [
+    7000
+   ],
+   "audio": "hi01-clean.ogg",
+   "clean_audio": "hi01-clean.ogg",
+   "duration_s": 4.25,
+   "sample_rate": 48000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:16+00:00",
+   "latency_s": 0.838,
+   "transcript": "मैडम, तीन महीने की salary बाकी है, हर महीने सात हज़ार।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    7000
+   ],
+   "amounts": [
+    {
+     "amount": 7000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 44,
+     "end": 53,
+     "amount": 7000,
+     "text": "सात हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi01-combined",
+   "utt_id": "hi01",
+   "lang": "hinglish",
+   "voice": "Shivani",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "मैडम, तीन महीने की salary बाकी है, हर महीने सात हज़ार।",
+   "gloss": "Madam, three months of salary are pending, seven thousand each month.",
+   "expected": [
+    7000
+   ],
+   "audio": "hi01-combined.ogg",
+   "clean_audio": "hi01-clean.ogg",
+   "duration_s": 5.05,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:16+00:00",
+   "latency_s": 0.944,
+   "transcript": "मैडम, तीन महीने की salary बाकी है। हर महीने सात हज़ार।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    7000
+   ],
+   "amounts": [
+    {
+     "amount": 7000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 44,
+     "end": 53,
+     "amount": 7000,
+     "text": "सात हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi02-clean",
+   "utt_id": "hi02",
+   "lang": "hinglish",
+   "voice": "Riyaa",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "दो दिन बीमार थी तो एक हज़ार काट लिया।",
+   "gloss": "I was sick for two days, so they cut one thousand.",
+   "expected": [
+    1000
+   ],
+   "audio": "hi02-clean.ogg",
+   "clean_audio": "hi02-clean.ogg",
+   "duration_s": 2.65,
+   "sample_rate": 48000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:17+00:00",
+   "latency_s": 0.782,
+   "transcript": "दो दिन बीमार थी, तो एक हज़ार काट लिया।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    1000
+   ],
+   "amounts": [
+    {
+     "amount": 1000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 20,
+     "end": 28,
+     "amount": 1000,
+     "text": "एक हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi02-combined",
+   "utt_id": "hi02",
+   "lang": "hinglish",
+   "voice": "Riyaa",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "दो दिन बीमार थी तो एक हज़ार काट लिया।",
+   "gloss": "I was sick for two days, so they cut one thousand.",
+   "expected": [
+    1000
+   ],
+   "audio": "hi02-combined.ogg",
+   "clean_audio": "hi02-clean.ogg",
+   "duration_s": 3.45,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:18+00:00",
+   "latency_s": 0.846,
+   "transcript": "दो दिन बीमार थी तो एक हज़ार काट लिया।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    1000
+   ],
+   "amounts": [
+    {
+     "amount": 1000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 19,
+     "end": 27,
+     "amount": 1000,
+     "text": "एक हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi03-clean",
+   "utt_id": "hi03",
+   "lang": "hinglish",
+   "voice": "Tarika",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "Sir ने ढाई हज़ार advance दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "gloss": "Sir gave an advance of two and a half thousand; the remaining nine thousand has not come.",
+   "expected": [
+    2500,
+    9000
+   ],
+   "audio": "hi03-clean.ogg",
+   "clean_audio": "hi03-clean.ogg",
+   "duration_s": 4.57,
+   "sample_rate": 48000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:19+00:00",
+   "latency_s": 0.831,
+   "transcript": "Sir ने ढाई हज़ार एडवांस दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    2500,
+    9000
+   ],
+   "amounts": [
+    {
+     "amount": 2500,
+     "heard": true
+    },
+    {
+     "amount": 9000,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 7,
+     "end": 16,
+     "amount": 2500,
+     "text": "ढाई हज़ार",
+     "match": true
+    },
+    {
+     "start": 38,
+     "end": 46,
+     "amount": 9000,
+     "text": "नौ हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "advance",
+     "heard": "एडवांस"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi03-combined",
+   "utt_id": "hi03",
+   "lang": "hinglish",
+   "voice": "Tarika",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "Sir ने ढाई हज़ार advance दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "gloss": "Sir gave an advance of two and a half thousand; the remaining nine thousand has not come.",
+   "expected": [
+    2500,
+    9000
+   ],
+   "audio": "hi03-combined.ogg",
+   "clean_audio": "hi03-clean.ogg",
+   "duration_s": 5.37,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:20+00:00",
+   "latency_s": 0.908,
+   "transcript": "Sir ने ढाई हज़ार advance दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    2500,
+    9000
+   ],
+   "amounts": [
+    {
+     "amount": 2500,
+     "heard": true
+    },
+    {
+     "amount": 9000,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 7,
+     "end": 16,
+     "amount": 2500,
+     "text": "ढाई हज़ार",
+     "match": true
+    },
+    {
+     "start": 39,
+     "end": 47,
+     "amount": 9000,
+     "text": "नौ हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi04-clean",
+   "utt_id": "hi04",
+   "lang": "hinglish",
+   "voice": "Kalpana",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ़ साढ़े तीन हज़ार दिए।",
+   "gloss": "My pay is five thousand, but this time they gave only three and a half thousand.",
+   "expected": [
+    5000,
+    3500
+   ],
+   "audio": "hi04-clean.ogg",
+   "clean_audio": "hi04-clean.ogg",
+   "duration_s": 4.73,
+   "sample_rate": 48000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:21+00:00",
+   "latency_s": 0.869,
+   "transcript": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ साढ़े तीन हज़ार दिए।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    5000,
+    3500
+   ],
+   "amounts": [
+    {
+     "amount": 5000,
+     "heard": true
+    },
+    {
+     "amount": 3500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 10,
+     "end": 20,
+     "amount": 5000,
+     "text": "पाँच हज़ार",
+     "match": true
+    },
+    {
+     "start": 41,
+     "end": 56,
+     "amount": 3500,
+     "text": "साढ़े तीन हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "सिर्फ़",
+     "heard": "सिर्फ"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi04-combined",
+   "utt_id": "hi04",
+   "lang": "hinglish",
+   "voice": "Kalpana",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ़ साढ़े तीन हज़ार दिए।",
+   "gloss": "My pay is five thousand, but this time they gave only three and a half thousand.",
+   "expected": [
+    5000,
+    3500
+   ],
+   "audio": "hi04-combined.ogg",
+   "clean_audio": "hi04-clean.ogg",
+   "duration_s": 5.53,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:22+00:00",
+   "latency_s": 0.867,
+   "transcript": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ़ साढ़े तीन हज़ार दिए।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    5000,
+    3500
+   ],
+   "amounts": [
+    {
+     "amount": 5000,
+     "heard": true
+    },
+    {
+     "amount": 3500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 10,
+     "end": 20,
+     "amount": 5000,
+     "text": "पाँच हज़ार",
+     "match": true
+    },
+    {
+     "start": 42,
+     "end": 57,
+     "amount": 3500,
+     "text": "साढ़े तीन हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi05-clean",
+   "utt_id": "hi05",
+   "lang": "hinglish",
+   "voice": "Shubham",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "Diwali का bonus पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "gloss": "They promised a Diwali bonus of fifteen hundred rupees; that wasn't paid either.",
+   "expected": [
+    1500
+   ],
+   "audio": "hi05-clean.ogg",
+   "clean_audio": "hi05-clean.ogg",
+   "duration_s": 3.37,
+   "sample_rate": 48000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:23+00:00",
+   "latency_s": 0.874,
+   "transcript": "दिवाली का बोनस पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    1500
+   ],
+   "amounts": [
+    {
+     "amount": 1500,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 15,
+     "end": 30,
+     "amount": 1500,
+     "text": "पंद्रह सौ रुपये",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "diwali",
+     "heard": "दिवाली"
+    },
+    {
+     "said": "bonus",
+     "heard": "बोनस"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi05-combined",
+   "utt_id": "hi05",
+   "lang": "hinglish",
+   "voice": "Shubham",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "Diwali का bonus पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "gloss": "They promised a Diwali bonus of fifteen hundred rupees; that wasn't paid either.",
+   "expected": [
+    1500
+   ],
+   "audio": "hi05-combined.ogg",
+   "clean_audio": "hi05-clean.ogg",
+   "duration_s": 4.17,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:23+00:00",
+   "latency_s": 0.908,
+   "transcript": "दिवाली का बोनस पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    1500
+   ],
+   "amounts": [
+    {
+     "amount": 1500,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 15,
+     "end": 30,
+     "amount": 1500,
+     "text": "पंद्रह सौ रुपये",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "diwali",
+     "heard": "दिवाली"
+    },
+    {
+     "said": "bonus",
+     "heard": "बोनस"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi06-clean",
+   "utt_id": "hi06",
+   "lang": "hinglish",
+   "voice": "Yashraj",
+   "condition": "clean",
+   "snr_db": null,
+   "text": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ़्ते तक दे दो।",
+   "gloss": "Eleven thousand rupees in total are owed; please pay by next week.",
+   "expected": [
+    11000
+   ],
+   "audio": "hi06-clean.ogg",
+   "clean_audio": "hi06-clean.ogg",
+   "duration_s": 3.37,
+   "sample_rate": 48000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:24+00:00",
+   "latency_s": 0.838,
+   "transcript": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ्ते तक दे दो।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    11000
+   ],
+   "amounts": [
+    {
+     "amount": 11000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 4,
+     "end": 22,
+     "amount": 11000,
+     "text": "ग्यारह हज़ार रुपये",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "हफ़्ते",
+     "heard": "हफ्ते"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi06-combined",
+   "utt_id": "hi06",
+   "lang": "hinglish",
+   "voice": "Yashraj",
+   "condition": "combined",
+   "snr_db": 5.0,
+   "text": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ़्ते तक दे दो।",
+   "gloss": "Eleven thousand rupees in total are owed; please pay by next week.",
+   "expected": [
+    11000
+   ],
+   "audio": "hi06-combined.ogg",
+   "clean_audio": "hi06-clean.ogg",
+   "duration_s": 4.17,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:25+00:00",
+   "latency_s": 0.803,
+   "transcript": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ़्ते तक दे देना।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    11000
+   ],
+   "amounts": [
+    {
+     "amount": 11000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 4,
+     "end": 22,
+     "amount": 11000,
+     "text": "ग्यारह हज़ार रुपये",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "दो",
+     "heard": "देना"
+    }
+   ]
+  },
+  {
+   "clip_id": "te01-kitchen0db",
+   "utt_id": "te01",
+   "lang": "te",
+   "voice": "Kalpana",
+   "condition": "kitchen_0db",
+   "snr_db": 0.0,
+   "text": "అమ్మగారు, మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "gloss": "Madam, for three months you have not paid my salary of four thousand a month.",
+   "expected": [
+    4000
+   ],
+   "audio": "te01-kitchen0db.wav",
+   "clean_audio": "te01-clean.ogg",
+   "duration_s": 5.2,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:44+00:00",
+   "latency_s": 0.977,
+   "transcript": "అమ్మగారు మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    4000
+   ],
+   "amounts": [
+    {
+     "amount": 4000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 28,
+     "end": 39,
+     "amount": 4000,
+     "text": "నాలుగు వేలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te02-kitchen0db",
+   "utt_id": "te02",
+   "lang": "te",
+   "voice": "Lakshmi",
+   "condition": "kitchen_0db",
+   "snr_db": 0.0,
+   "text": "మేడం, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "gloss": "Madam, I am owed twelve thousand rupees; you only gave two thousand.",
+   "expected": [
+    12000,
+    2000
+   ],
+   "audio": "te02-kitchen0db.wav",
+   "clean_audio": "te02-clean.ogg",
+   "duration_s": 5.6,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:45+00:00",
+   "latency_s": 0.819,
+   "transcript": "మేడమ్, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    12000,
+    2000
+   ],
+   "amounts": [
+    {
+     "amount": 12000,
+     "heard": true
+    },
+    {
+     "amount": 2000,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 12,
+     "end": 32,
+     "amount": 12000,
+     "text": "పన్నెండు వేల రూపాయలు",
+     "match": true
+    },
+    {
+     "start": 44,
+     "end": 54,
+     "amount": 2000,
+     "text": "రెండు వేలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "మేడం",
+     "heard": "మేడమ్"
+    }
+   ]
+  },
+  {
+   "clip_id": "te03-kitchen0db",
+   "utt_id": "te03",
+   "lang": "te",
+   "voice": "Vasudha",
+   "condition": "kitchen_0db",
+   "snr_db": -0.0,
+   "text": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు కట్ చేశారు.",
+   "gloss": "This month's salary is six thousand, but they cut five hundred.",
+   "expected": [
+    6000,
+    500
+   ],
+   "audio": "te03-kitchen0db.wav",
+   "clean_audio": "te03-clean.ogg",
+   "duration_s": 4.72,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:45+00:00",
+   "latency_s": 0.77,
+   "transcript": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు కట్ చేశారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    6000,
+    500
+   ],
+   "amounts": [
+    {
+     "amount": 6000,
+     "heard": true
+    },
+    {
+     "amount": 500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 11,
+     "end": 19,
+     "amount": 6000,
+     "text": "ఆరు వేలు",
+     "match": true
+    },
+    {
+     "start": 26,
+     "end": 35,
+     "amount": 500,
+     "text": "ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te04-kitchen0db",
+   "utt_id": "te04",
+   "lang": "te",
+   "voice": "Chetana",
+   "condition": "kitchen_0db",
+   "snr_db": 0.0,
+   "text": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత పెట్టారు.",
+   "gloss": "Because I had fever for two days, they cut a thousand rupees.",
+   "expected": [
+    1000
+   ],
+   "audio": "te04-kitchen0db.wav",
+   "clean_audio": "te04-clean.ogg",
+   "duration_s": 3.68,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:46+00:00",
+   "latency_s": 0.746,
+   "transcript": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత పెట్టారు.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    1000
+   ],
+   "amounts": [
+    {
+     "amount": 1000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 29,
+     "end": 43,
+     "amount": 1000,
+     "text": "వెయ్యి రూపాయలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "te05-kitchen0db",
+   "utt_id": "te05",
+   "lang": "te",
+   "voice": "Devansh",
+   "condition": "kitchen_0db",
+   "snr_db": 0.0,
+   "text": "పండగ అడ్వాన్స్ మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "gloss": "I took a festival advance of three thousand five hundred; the rest of the salary is due.",
+   "expected": [
+    3500
+   ],
+   "audio": "te05-kitchen0db.wav",
+   "clean_audio": "te05-clean.ogg",
+   "duration_s": 5.2,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:47+00:00",
+   "latency_s": 0.864,
+   "transcript": "అండగా advance మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    3500
+   ],
+   "amounts": [
+    {
+     "amount": 3500,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 14,
+     "end": 32,
+     "amount": 3500,
+     "text": "మూడు వేల ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "పండగ అడ్వాన్స్",
+     "heard": "అండగా advance"
+    }
+   ]
+  },
+  {
+   "clip_id": "te06-kitchen0db",
+   "utt_id": "te06",
+   "lang": "te",
+   "voice": "Prakash",
+   "condition": "kitchen_0db",
+   "snr_db": -0.0,
+   "text": "అయ్యగారు ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికి నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "gloss": "Sir promised eight thousand; so far four thousand five hundred has come.",
+   "expected": [
+    8000,
+    4500
+   ],
+   "audio": "te06-kitchen0db.wav",
+   "clean_audio": "te06-clean.ogg",
+   "duration_s": 6.24,
+   "sample_rate": 16000,
+   "stt_lang": "te",
+   "at": "2026-11-09T14:33:48+00:00",
+   "latency_s": 0.933,
+   "transcript": "అయ్యగారు ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికీ నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "stt_language_code": "te-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "te-IN",
+   "error": null,
+   "heard": [
+    8000,
+    4500
+   ],
+   "amounts": [
+    {
+     "amount": 8000,
+     "heard": true
+    },
+    {
+     "amount": 4500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 9,
+     "end": 21,
+     "amount": 8000,
+     "text": "ఎనిమిది వేలు",
+     "match": true
+    },
+    {
+     "start": 45,
+     "end": 65,
+     "amount": 4500,
+     "text": "నాలుగు వేల ఐదు వందలు",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "ఇప్పటికి",
+     "heard": "ఇప్పటికీ"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi01-kitchen0db",
+   "utt_id": "hi01",
+   "lang": "hinglish",
+   "voice": "Shivani",
+   "condition": "kitchen_0db",
+   "snr_db": -0.0,
+   "text": "मैडम, तीन महीने की salary बाकी है, हर महीने सात हज़ार।",
+   "gloss": "Madam, three months of salary are pending, seven thousand each month.",
+   "expected": [
+    7000
+   ],
+   "audio": "hi01-kitchen0db.wav",
+   "clean_audio": "hi01-clean.ogg",
+   "duration_s": 5.04,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:49+00:00",
+   "latency_s": 0.806,
+   "transcript": "मैडम, तीन महीने की salary बाकी है। हर महीने सात हज़ार।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    7000
+   ],
+   "amounts": [
+    {
+     "amount": 7000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 44,
+     "end": 53,
+     "amount": 7000,
+     "text": "सात हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi02-kitchen0db",
+   "utt_id": "hi02",
+   "lang": "hinglish",
+   "voice": "Riyaa",
+   "condition": "kitchen_0db",
+   "snr_db": -0.0,
+   "text": "दो दिन बीमार थी तो एक हज़ार काट लिया।",
+   "gloss": "I was sick for two days, so they cut one thousand.",
+   "expected": [
+    1000
+   ],
+   "audio": "hi02-kitchen0db.wav",
+   "clean_audio": "hi02-clean.ogg",
+   "duration_s": 3.44,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:50+00:00",
+   "latency_s": 0.7,
+   "transcript": "दो दिन बीमार थी तो एक हज़ार काट लिया।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    1000
+   ],
+   "amounts": [
+    {
+     "amount": 1000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 19,
+     "end": 27,
+     "amount": 1000,
+     "text": "एक हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi03-kitchen0db",
+   "utt_id": "hi03",
+   "lang": "hinglish",
+   "voice": "Tarika",
+   "condition": "kitchen_0db",
+   "snr_db": -0.0,
+   "text": "Sir ने ढाई हज़ार advance दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "gloss": "Sir gave an advance of two and a half thousand; the remaining nine thousand has not come.",
+   "expected": [
+    2500,
+    9000
+   ],
+   "audio": "hi03-kitchen0db.wav",
+   "clean_audio": "hi03-clean.ogg",
+   "duration_s": 5.36,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:50+00:00",
+   "latency_s": 0.691,
+   "transcript": "Sir ने ढाई हज़ार advance दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    2500,
+    9000
+   ],
+   "amounts": [
+    {
+     "amount": 2500,
+     "heard": true
+    },
+    {
+     "amount": 9000,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 7,
+     "end": 16,
+     "amount": 2500,
+     "text": "ढाई हज़ार",
+     "match": true
+    },
+    {
+     "start": 39,
+     "end": 47,
+     "amount": 9000,
+     "text": "नौ हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": []
+  },
+  {
+   "clip_id": "hi04-kitchen0db",
+   "utt_id": "hi04",
+   "lang": "hinglish",
+   "voice": "Kalpana",
+   "condition": "kitchen_0db",
+   "snr_db": 0.0,
+   "text": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ़ साढ़े तीन हज़ार दिए।",
+   "gloss": "My pay is five thousand, but this time they gave only three and a half thousand.",
+   "expected": [
+    5000,
+    3500
+   ],
+   "audio": "hi04-kitchen0db.wav",
+   "clean_audio": "hi04-clean.ogg",
+   "duration_s": 5.52,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:51+00:00",
+   "latency_s": 0.673,
+   "transcript": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ साढ़े तीन हज़ार दिए।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    5000,
+    3500
+   ],
+   "amounts": [
+    {
+     "amount": 5000,
+     "heard": true
+    },
+    {
+     "amount": 3500,
+     "heard": true
+    }
+   ],
+   "hits": 2,
+   "total": 2,
+   "extras": [],
+   "spans": [
+    {
+     "start": 10,
+     "end": 20,
+     "amount": 5000,
+     "text": "पाँच हज़ार",
+     "match": true
+    },
+    {
+     "start": 41,
+     "end": 56,
+     "amount": 3500,
+     "text": "साढ़े तीन हज़ार",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "सिर्फ़",
+     "heard": "सिर्फ"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi05-kitchen0db",
+   "utt_id": "hi05",
+   "lang": "hinglish",
+   "voice": "Shubham",
+   "condition": "kitchen_0db",
+   "snr_db": 0.0,
+   "text": "Diwali का bonus पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "gloss": "They promised a Diwali bonus of fifteen hundred rupees; that wasn't paid either.",
+   "expected": [
+    1500
+   ],
+   "audio": "hi05-kitchen0db.wav",
+   "clean_audio": "hi05-clean.ogg",
+   "duration_s": 4.16,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:52+00:00",
+   "latency_s": 0.602,
+   "transcript": "दिवाली का bonus पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    1500
+   ],
+   "amounts": [
+    {
+     "amount": 1500,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 16,
+     "end": 31,
+     "amount": 1500,
+     "text": "पंद्रह सौ रुपये",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "diwali",
+     "heard": "दिवाली"
+    }
+   ]
+  },
+  {
+   "clip_id": "hi06-kitchen0db",
+   "utt_id": "hi06",
+   "lang": "hinglish",
+   "voice": "Yashraj",
+   "condition": "kitchen_0db",
+   "snr_db": -0.0,
+   "text": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ़्ते तक दे दो।",
+   "gloss": "Eleven thousand rupees in total are owed; please pay by next week.",
+   "expected": [
+    11000
+   ],
+   "audio": "hi06-kitchen0db.wav",
+   "clean_audio": "hi06-clean.ogg",
+   "duration_s": 4.16,
+   "sample_rate": 16000,
+   "stt_lang": "hinglish",
+   "at": "2026-11-09T14:33:52+00:00",
+   "latency_s": 0.615,
+   "transcript": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ्ते तक दे दूँ।",
+   "stt_language_code": "hi-IN,en-IN",
+   "mode": "codemix",
+   "model": "prisma-v3.0",
+   "detected_language": "hi-IN",
+   "error": null,
+   "heard": [
+    11000
+   ],
+   "amounts": [
+    {
+     "amount": 11000,
+     "heard": true
+    }
+   ],
+   "hits": 1,
+   "total": 1,
+   "extras": [],
+   "spans": [
+    {
+     "start": 4,
+     "end": 22,
+     "amount": 11000,
+     "text": "ग्यारह हज़ार रुपये",
+     "match": true
+    }
+   ],
+   "match": true,
+   "word_slips": [
+    {
+     "said": "हफ़्ते",
+     "heard": "हफ्ते"
+    },
+    {
+     "said": "दो",
+     "heard": "दूँ"
+    }
+   ]
+  }
+ ],
+ "corpus": [
+  {
+   "id": "te01",
+   "lang": "te",
+   "tts_lang": "te-IN",
+   "voice": "Kalpana",
+   "text": "అమ్మగారు, మూడు నెలలుగా నెలకు నాలుగు వేలు జీతం ఇవ్వలేదు.",
+   "gloss": "Madam, for three months you have not paid my salary of four thousand a month.",
+   "expected": [
+    4000
+   ]
+  },
+  {
+   "id": "te02",
+   "lang": "te",
+   "tts_lang": "te-IN",
+   "voice": "Lakshmi",
+   "text": "మేడం, నాకు పన్నెండు వేల రూపాయలు బాకీ ఉంది, రెండు వేలు మాత్రమే ఇచ్చారు.",
+   "gloss": "Madam, I am owed twelve thousand rupees; you only gave two thousand.",
+   "expected": [
+    12000,
+    2000
+   ]
+  },
+  {
+   "id": "te03",
+   "lang": "te",
+   "tts_lang": "te-IN",
+   "voice": "Vasudha",
+   "text": "ఈ నెల జీతం ఆరు వేలు, కానీ ఐదు వందలు కట్ చేశారు.",
+   "gloss": "This month's salary is six thousand, but they cut five hundred.",
+   "expected": [
+    6000,
+    500
+   ]
+  },
+  {
+   "id": "te04",
+   "lang": "te",
+   "tts_lang": "te-IN",
+   "voice": "Chetana",
+   "text": "రెండు రోజులు జ్వరం వచ్చిందని వెయ్యి రూపాయలు కోత పెట్టారు.",
+   "gloss": "Because I had fever for two days, they cut a thousand rupees.",
+   "expected": [
+    1000
+   ]
+  },
+  {
+   "id": "te05",
+   "lang": "te",
+   "tts_lang": "te-IN",
+   "voice": "Devansh",
+   "text": "పండగ అడ్వాన్స్ మూడు వేల ఐదు వందలు తీసుకున్నాను, మిగతా జీతం ఇవ్వాలి.",
+   "gloss": "I took a festival advance of three thousand five hundred; the rest of the salary is due.",
+   "expected": [
+    3500
+   ]
+  },
+  {
+   "id": "te06",
+   "lang": "te",
+   "tts_lang": "te-IN",
+   "voice": "Prakash",
+   "text": "అయ్యగారు ఎనిమిది వేలు ఇస్తానన్నారు, ఇప్పటికి నాలుగు వేల ఐదు వందలు వచ్చింది.",
+   "gloss": "Sir promised eight thousand; so far four thousand five hundred has come.",
+   "expected": [
+    8000,
+    4500
+   ]
+  },
+  {
+   "id": "hi01",
+   "lang": "hinglish",
+   "tts_lang": "hi-en",
+   "voice": "Shivani",
+   "text": "मैडम, तीन महीने की salary बाकी है, हर महीने सात हज़ार।",
+   "gloss": "Madam, three months of salary are pending, seven thousand each month.",
+   "expected": [
+    7000
+   ]
+  },
+  {
+   "id": "hi02",
+   "lang": "hinglish",
+   "tts_lang": "hi-en",
+   "voice": "Riyaa",
+   "text": "दो दिन बीमार थी तो एक हज़ार काट लिया।",
+   "gloss": "I was sick for two days, so they cut one thousand.",
+   "expected": [
+    1000
+   ]
+  },
+  {
+   "id": "hi03",
+   "lang": "hinglish",
+   "tts_lang": "hi-en",
+   "voice": "Tarika",
+   "text": "Sir ने ढाई हज़ार advance दिया था, बाकी नौ हज़ार अभी तक नहीं मिला।",
+   "gloss": "Sir gave an advance of two and a half thousand; the remaining nine thousand has not come.",
+   "expected": [
+    2500,
+    9000
+   ]
+  },
+  {
+   "id": "hi04",
+   "lang": "hinglish",
+   "tts_lang": "hi-en",
+   "voice": "Kalpana",
+   "text": "मेरी पगार पाँच हज़ार है, पर इस बार सिर्फ़ साढ़े तीन हज़ार दिए।",
+   "gloss": "My pay is five thousand, but this time they gave only three and a half thousand.",
+   "expected": [
+    5000,
+    3500
+   ]
+  },
+  {
+   "id": "hi05",
+   "lang": "hinglish",
+   "tts_lang": "hi-en",
+   "voice": "Shubham",
+   "text": "Diwali का bonus पंद्रह सौ रुपये बोला था, वो भी नहीं दिया।",
+   "gloss": "They promised a Diwali bonus of fifteen hundred rupees; that wasn't paid either.",
+   "expected": [
+    1500
+   ]
+  },
+  {
+   "id": "hi06",
+   "lang": "hinglish",
+   "tts_lang": "hi-en",
+   "voice": "Yashraj",
+   "text": "कुल ग्यारह हज़ार रुपये बाकी हैं, अगले हफ़्ते तक दे दो।",
+   "gloss": "Eleven thousand rupees in total are owed; please pay by next week.",
+   "expected": [
+    11000
+   ]
+  }
+ ],
+ "conditions": {
+  "clean": {
+   "label": "Quiet room",
+   "short": "Clean",
+   "snr_db": null,
+   "ext": "ogg",
+   "desc": "The stock-voice clip as made, no added noise."
+  },
+  "kitchen_5db": {
+   "label": "Kitchen, 5 dB",
+   "short": "Kitchen 5 dB",
+   "snr_db": 5.0,
+   "ext": "wav",
+   "desc": "Running tap, pressure-cooker whistle and clattering steel at 5 dB SNR."
+  },
+  "kitchen_0db": {
+   "label": "Loud kitchen, 0 dB",
+   "short": "Kitchen 0 dB",
+   "snr_db": 0.0,
+   "ext": "wav",
+   "desc": "The same kitchen, as loud as the voice (0 dB SNR)."
+  },
+  "phone": {
+   "label": "Phone line",
+   "short": "Phone line",
+   "snr_db": null,
+   "ext": "wav",
+   "desc": "8 kHz call audio: 300-3400 Hz band, slight clipping, mu-law."
+  },
+  "whatsapp": {
+   "label": "WhatsApp voice note",
+   "short": "WhatsApp",
+   "snr_db": null,
+   "ext": "ogg",
+   "desc": "Opus at 12 kbps, mono: a heavily compressed voice note."
+  },
+  "combined": {
+   "label": "Kitchen + phone + WhatsApp",
+   "short": "All at once",
+   "snr_db": 5.0,
+   "ext": "ogg",
+   "desc": "Kitchen at 5 dB, then the phone line, then 12 kbps Opus."
+  }
+ },
+ "settings": {
+  "model": "prisma-v3.0",
+  "stt_lang": {
+   "te": "te-IN,en-IN",
+   "hinglish": "hi-IN,en-IN"
+  },
+  "mode": "codemix (transcribe is switched to codemix for multi-language presets)",
+  "context": "domain topic + keyterms (STT_CONTEXT default on)",
+  "tts": "timbre-v3.0 stock voices via tts_cache",
+  "parser": "app.lang.amounts.extract_amounts"
+ },
+ "summary": {
+  "headline": {
+   "exact": 34,
+   "amounts": 34,
+   "clips": 24,
+   "rate": 100.0,
+   "conditions": [
+    "kitchen_0db",
+    "combined"
+   ],
+   "text": "Baaki heard 34 of 34 rupee amounts exactly in 24 noisy clips (a kitchen as loud as the voice; kitchen + phone line + WhatsApp at once).",
+   "hardest": {
+    "condition": "combined",
+    "exact": 17,
+    "amounts": 17,
+    "text": "17 of 17 with kitchen noise, a phone line and WhatsApp compression all at once."
+   }
+  },
+  "per_condition": [
+   {
+    "condition": "clean",
+    "label": "Quiet room",
+    "short": "Clean",
+    "desc": "The stock-voice clip as made, no added noise.",
+    "snr_db": null,
+    "clips": 12,
+    "clips_exact": 12,
+    "amounts": 17,
+    "exact": 17,
+    "rate": 100.0,
+    "extras": 0,
+    "by_lang": {
+     "te": {
+      "exact": 9,
+      "amounts": 9
+     },
+     "hinglish": {
+      "exact": 8,
+      "amounts": 8
+     }
+    },
+    "median_latency_s": 0.84
+   },
+   {
+    "condition": "kitchen_0db",
+    "label": "Loud kitchen, 0 dB",
+    "short": "Kitchen 0 dB",
+    "desc": "The same kitchen, as loud as the voice (0 dB SNR).",
+    "snr_db": 0.0,
+    "clips": 12,
+    "clips_exact": 12,
+    "amounts": 17,
+    "exact": 17,
+    "rate": 100.0,
+    "extras": 0,
+    "by_lang": {
+     "te": {
+      "exact": 9,
+      "amounts": 9
+     },
+     "hinglish": {
+      "exact": 8,
+      "amounts": 8
+     }
+    },
+    "median_latency_s": 0.77
+   },
+   {
+    "condition": "combined",
+    "label": "Kitchen + phone + WhatsApp",
+    "short": "All at once",
+    "desc": "Kitchen at 5 dB, then the phone line, then 12 kbps Opus.",
+    "snr_db": 5.0,
+    "clips": 12,
+    "clips_exact": 12,
+    "amounts": 17,
+    "exact": 17,
+    "rate": 100.0,
+    "extras": 0,
+    "by_lang": {
+     "te": {
+      "exact": 9,
+      "amounts": 9
+     },
+     "hinglish": {
+      "exact": 8,
+      "amounts": 8
+     }
+    },
+    "median_latency_s": 0.87
+   }
+  ],
+  "overall": {
+   "clips": 36,
+   "amounts": 51,
+   "exact": 51,
+   "rate": 100.0
+  },
+  "noisy": {
+   "clips": 24,
+   "amounts": 34,
+   "exact": 34,
+   "rate": 100.0
+  },
+  "misses": [],
+  "word_slips": 23,
+  "clips_with_word_slips": 20
+ },
+ "updated_at": "2026-11-09T14:34:40+00:00"
+}
