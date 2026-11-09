@@ -5,6 +5,7 @@ Run (from the project root):
 """
 from __future__ import annotations
 
+import dataclasses
 import logging
 from contextlib import asynccontextmanager
 from typing import Literal, Optional
@@ -15,7 +16,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
-from . import audio, config, db, llm, tts_cache
+from . import audio, config, db, gnani, llm, tts_cache
 from .gnani import DEFAULT_VOICE, DEFAULT_VOICE_V25, TIMBRE_V3_VOICES, TTS_MODEL_V25, TTS_MODEL_V3, GnaniError
 from .routes import ROUTERS
 from .stt_service import DEFAULT_LANGS, LANG_PRESETS, MODES, transcribe_upload
@@ -53,7 +54,9 @@ def _gnani_http(e: GnaniError) -> HTTPException:
 # --------------------------------------------------------------------------- health / voices
 def _health() -> dict:
     return {"ok": True, "gnani": bool(config.gnani_key()), "llm": llm.configured(),
-            "llm_provider": config.llm_provider()}
+            "llm_provider": config.llm_provider(),
+            # successful Gnani calls since this process started (credit tracking for demo runs)
+            "gnani_calls": dataclasses.asdict(gnani.STATS)}
 
 
 @app.get("/health")
