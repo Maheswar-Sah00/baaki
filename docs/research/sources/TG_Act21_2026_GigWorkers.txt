@@ -1,0 +1,1400 @@
+
+---PAGE 1---
+ 
+ 
+ 
+ 
+ 
+ 
+The Telangana Platform Based Gig Workers  
+(Registration, Social Security and Welfare) Act, 2026 
+ 
+Act No. 21 of 2026 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+DISCLAIMER: This document is being furnished to you for your information by PRS Legislative Research 
+(PRS). The contents of this document have been obtained from sources PRS believes to be reliable. These 
+contents have not been independently verified, and PRS makes no representation or warranty as to the accuracy, 
+completeness or correctness. In some cases the Principal Act and/or Amendment Act may not be available.  
+Principal Acts may or may not include subsequent amendments. For authoritative text, please contact the relevant 
+state department concerned or refer to the latest government publication or the gazette notification. Any person 
+using this material should take their own professional and legal advice before acting on any information contained 
+in this document. PRS or any persons connected with it do not accept any liability arising from the use of this 
+document. PRS or any persons connected with it shall not be in any way responsible for any loss, damage, or 
+distress to any person on account of any action taken or not taken on the basis of this document. 
+
+---PAGE 2---
+R.N.I. No. TELMUL/2016/73158
+HSE No. 1051/2026.2028
+[PrIce : Rs. 24-00 Palse.
+8©onn @a3L63=
+THE TELANGANA GAZETTE
+!
++
+PART IV-B EXTRAORDINARY
+PUBLISHED BY AUTHORITY
+No. 211 
+HYDERABAD, TUESDAY, APRIL 28, 2026.
+TELANG ANA ACTS, ORDINANCES AND
+REGULATIONS ETC.
+The following Act of the Telangana Legislature
+received the assent of the Governor on the 25th April, 2026
+and the said assent is hereby first published on
+the 28th April, 2026 in the Telangana Gazette for general
+information:-
+ACT No. 21 OF 2026.
+AN ACT TO PROVIDE 
+SOCIAL 
+SECURITY,
+EMPLOYMENT AND SERVICE CONDITIONS, SAFETY,
+HEALTH AND WELFARE MEASURES FOR PLATFORM
+BASED GIG WORKERS AND FOR OTHER MATrERS
+CONNECTED THEREWITH OR INCIDENTAL THERETO.
+]
+•
+Be it enacted by the Legislature of the State of
+Telangana in the Seventy-Seventh Year of the Republic of
+India, as follows:-
+[1]
+A. 210-1
+
+---PAGE 3---
+2 
+TELANGANA GAZETTE EXTRAORDINARY 
+IPan IV-B
+CHAPTER I
+PRELIMINARY
+Short
+tItle,
+extent,
+oommerb
+cement
+and
+appllca-
+tIon.
+1 . (1 ) This Act may be called theTelangana Platform Based
+Gig Workers (Registration, Social Security and Welfare)
+Act, 2026.
+(2) it extends to the whole of the State of Telangana.
+(3) it shall come into force on such date as the State
+Government may, by notification in the Telangana Gazette,
+appoint; and different dates may be appointed for different
+provisions of this Act and any reference in any such
+provision to the commencement of this Act shall be
+construed as a reference to the coming into force of that
+provISIon ;
+I
+•
+(4) it applies to:-
+a) Aggregators, platforms operating in the State of
+Telangana or those operating in any other States across
+India or overseas rendering one or more services in
+Telangana State as specified in Schedule-1;
+b) Every Platform Based Gig Worker registered 
+with
+the Board under section 10.
+Deflnl-
+tlons.
+2. In this Act, unless the context otherwise requires,-
+(a) “aggregator" means a digital intermediary or a
+market place for a buyer or user of a service to connect
+with the seller or the service provider, and includes any
+entity that coo'rdinates with one or more aggregators for
+providing the services;
+t
+q
+(b) “Appellate Authority” means the authority as
+may be notified by the Government under section 23;
+(c) “Automated monitoring and decIsion-makIng
+systems” means systems which make decisions by
+
+---PAGE 4---
+April 28, 20261
+TELANGANA GAZETTE EXTRAORDINARY
+3
+automated means, either wholly or partially with or without
+human intervention maintained by the aggregator;
+(d) “Board” means the Telangana Platform Based
+Gig Workers Social Security and Welfare Board constituted
+under section 3;
+(e) “Company” means a company as defined in
+clause (20) of section 2 of the Companies Act, 2013;
+Central
+Act
+No.18 of
+2013.
+t
+!
+(f) “Fund” means the Telangana Platform Based
+Gig Workers Social Security 
+and Welfare Fund established
+under sub-section (1 ) of section 19;
+(g) “Gig worker" means a person who performs
+work or participates in a work arrangement that results in
+a given rate of payment, based on terms and conditions
+laid down in such contract and includes all piece-rate work,
+and whose work is sourced through a platform, in the
+services specified in the Schedule;
+(h) “Government” means the Government of
+Telangana;
+(i) “GrIevance Redressal Officer” means the
+authority notified by the Government under sub-section (1 )
+of section 22;
+8
+( j ) “Notification” means a notification published
+in the Telangana Gazette and the word “notified” shall be
+construed accordingly;
+(k) “Payout” means any net payments made by the
+aggregator/platform to the gig worker for any work
+performed or service rendered through a platform;
+(1) “Platform” means any arrangement providing a
+service through electronic means, at the request of a
+recipient of the service, involving the organization of work
+
+---PAGE 5---
+4 
+TELANGANA GAZETTE EXTRAORDINARY
+[Part IV-B
+performed by individuals at a certain location in return for
+payment, and involving the use of automated monitoring
+and decision-making systems or human decision making
+that relies on data;
+(m) “Platform Work” means a work arrangement
+made outside traditional employer and employee
+relationship in which organisations or individuals use an
+online platform to access other organisations or individuals
+to solve specific problems or to provide specific services
+or any such other activities which may be notified by the
+State Government, in exchange for payment;
+(n) “Prescribed” means prescribed by rules made
+under this Act;
+(o) “regulations” means the regulations made by
+the Board under this Act;
+(p) “rules” means the rules made under this Act;
+(q) “Schedule” means Schedules appended to the
+(r) “Termination” means materially restricting the
+Act
+Platform Based Gig Worker to have access to the platform,
+including blocking, deactivating or suspending access to
+his account or making him ineligible to provide services on
+or through the platform irrespective of the period of such
+restriction ;
+(s) “Unique ID” means the Unique Identification
+Number assigned to the platform-based Gig worker
+registered by the Board under sub-section (4) of section
+(t) “Welfare Fund Fee” means the fee levied under
+10
+sub-section (1) of section 20;
+(u) All other words and expressions used herein but
+not defined, shall have the same meanings as assigned to
+them in the Telangana General Clauses Act, 1891 or other
+relevant Acts.
+I
+e
+B
+Act No.1 of
+1©1.
+
+---PAGE 6---
+April 28, 2026]
+TELANGANA GAZETTE EXTRAORDINARY
+.$
+CHAPTER II
+CONSTITUTION OF THE BOARD
+3. (1 ) The Government shall, by notification, with effect from
+such date, as may be specified therein, constitute a Board
+called the “Telangana Platform Based Gig Workers Social
+Security and Welfare Board” to exercise the powers
+conferred on, and to perform the duties and functions
+assigned to it, under this Act in such manner as may be
+prescribed ;
+Establish-
+ment of
+Platform
+BBed
+Gig
+Workers
+SocIal
+Security
+and Welfare
+Board.
+(2) The Board shall, as and when necessary, implement
+the general or sector specific social security and welfare
+schemes which shall be implemented by the Board, as
+may be notified by the Government from time to time;
+B
+(3) The headquarters of the Board shall be at Hyderabad;
+(4) The Board shall be a body corporate having perpetual
+succession and common seal, with power to acquire, hold
+and dispose of property, both movable and immovable,
+tangible and intangible to contract and to sue and be sued,
+by the said name.
+4. (1 ) The Board shall consist of the following members, qampp?I-
+namely:- 
+!::£f the
+a
+(i)
+(ii)
+The Minister in-charge of the
+Department of Labour,
+Government of Telangana.
+Chairperson
+ex-officio
+The Special Chief Secretary
+or Principal Secretary or
+Secretary to Government,
+Department of Labour,
+Government of Telangana.
+Ex-officio
+Member
+(iii)
+Representative from the Ministry
+of Labour and Employment,
+Government of India.
+Ex-officio
+Member
+
+---PAGE 7---
+6
+TELANGANA GAZETTE EXTRAORDINARY
+IPan IV-B
+(iV)
+The Special Chief Secretary or
+Principal Secretary or Secretary
+to Government, Department of
+Information and Technology,
+Government 
+of Telangana.
+Ex-officio
+Member
+(v) The Special Chief Secretary
+or Principal Secretary or
+Secretary to Government,
+Finance Department.
+Ex-officio
+Member
+(Vi)
+The Special Chief Secretary
+or Principal Secretary or
+Secretary to Government,
+Department of Commercial
+Taxes, Government of
+Telangana.
+Ex-officio
+Member
+4
+(vii) The Special Chief Secretary
+or Principal Secretary or
+Secretary to Government,
+Department of Transport,
+Government ofTelangana.
+Ex-officio
+Member
+(viii) The Commissioner of Labour,
+Government ofTelangana.
+Ex-officio
+Member
+(ix)
+The Chief Executive Officer
+appointed by the Government
+shall be Executive in-charge of
+day-to-day functioning of the
+Board and carry out duties on
+behalf of the Board.
+Ex-officio
+Member
+Secretary
+(x) Four (4) reprdsentatives of 
+Member
+Platform Based Gig workers to
+be nominated by the Government.
+
+---PAGE 8---
+April 28, 20261 TELANGANA GAZETTE EXTRAORDINARY 
+7
+(xi) Four (4) representatives of
+the aggregators / platforms to be
+nominated by the Government.
+Member
+(xii) Two (2) representatives from the
+Civil Societies who have working
+experience or who is an expert in
+the field of gig and platform
+economy to be nominated
+by the Government.
+Member
+I
+(xiii) a technical expert in the field
+of data collection, IT systems
+or any other relevant field to
+provide inputs as and when
+necessary.
+Special
+Invitee
+(2) At least one woman representative shall be nominated
+in each category under clauses (x), (xi) and (xii) of sub-
+section (1);
+(3) The term of the Board shall be three years.
+(4) The term of the nominated members of the Board shall
+be for a period of three years from the date of appointment;
+(5) The Government may extend the tenure of nominated
+members for another one year, if it deems fit and
+appropriate in public interest.
+e
+B
+5. (1) No person shall be appointed as a member of the
+Board, or be continued as such, who, –
+Di$qualtfic&
+tIon.
+removal
+and
+resIgnatIon
+ofa
+member of
+the Board.
+(a) is or at any time has been adjudged an insolvent
+by a competent court of law; or
+
+---PAGE 9---
+8 
+TELANGANA GAZETTE EXTRAORDINARY 
+IPart IV-B
+(b) is or has been declared to be of unsound mind by
+a competent authority; or
+(c) is or has been convicted of any offence involving
+moral turpitude.
+(2) The Government, may by notification remove any
+member of the Board, who,–
+(a) is or has become subject to any of the
+disqualifications mentioned in sub-section (1); or
+(b) is absent without leave of the Board for more
+than three consecutive meetings of the Board;
+q
+(c) in the opinion of the Government, has so abused
+the position of his office as to render that such member’s
+continuation in the office is detrimental to the public interest
+or is otherwise unfit or unsuitable to continue as such
+member:
+Provided that, no such person shall be removed under
+clauses (b) and (c), unless that person has been given an
+opportunity to show cause as to why he should not be
+removed from his office.
+(3) Any nominated member of the Board may at any
+time, resign from his office in writing addressed to the
+Government, and on acceptance of such resignation, his
+office shall become vacant.
+e
+(4) in the event of any vacancy occurring on account of
+death, removal, disqualification or resignation under sub-
+sections (1), (2) and (3), such vacancy shall be filled by
+the Government by fresh nomination for the remaining term.
+MeetIngs 6. (1 ) The Board shall meet at such intervals and observe
+!t_tIE 
+such procedure in regard to the transaction of business at
+BOmrIe .. 
+' ., 
+-, 
+,, 
+,
+its meetings, as may be prescribed:
+
+---PAGE 10---
+April 28. 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+9
+Provided that, the Chairperson may convene a special
+meeting at any time to address any specific issue upon a
+written request from at least 1/4th members of the Board,
+apart from the regular meetings.
+Provided further that, the Board shall meet at least once
+in every quarter.
+(2) The Chairperson shall preside over the meetings of the
+Board. In the absence 
+of the Chairperson; the Special Chief
+Secretary / Principal Secretary, Department of Labour,
+Employment, Training and Factories, shall preside over the
+meeting. If for any reason whatsoever both are unable to
+attend a meeting of the Board, the senior most ex-officio
+member in the Board, shall preside over the meeting.
+I
+b
+(3) All questions which come up before any meeting of the
+Board shall be decided by a majority of votes of the
+members present, and in the event of equality of votes, the
+Chairperson, or in his absence, the person presiding, shall
+have a second or a casting vote.
+(4) The quorum for the meeting of the Board shall be 1/3“’
+of the total members.
+(5) The nominated members of the Board shall be entitled
+for such allowances, at such rates as may be prescribed,
+for attending the meetings of the Board.
+7. The powers and functions of the Board shall be as Powers
+follows, namely:- 
+?nd
+functIons
+(a) Ensure registration of Platform Based Gig workers ot the
+in accordance with the provisions of this Act; 
+Bond.
+(b) Ensure registration of aggregators or platforms
+in accordance with the provisions of this Act;
+(c) Set up a monitoring mechanism to certify that
+welfare fund fee is being duly collected;
++
+A 210-a
+
+---PAGE 11---
+10
+TELANGANA GAZETTE EXTRAORDINARY 
+IPart IV-B
+(d) Ensure implementation of general and specific
+social security schemes based on contributions made, as
+may be notified by the Government and disburse the social
+security benefits to the Platform Based Gig workers;
+(e) Monitor the schemes for social security of
+registered Platform Based Gig workers and provide
+recommendations to the Government for administering
+such schemes;
+(f) Ensure that Platform Based Gig workers have
+access to the benefits as per the schemes formulated by
+the Government and to provide proactive facilitation to them
+in their engagement with concerned aggregator/platform;
+e
+(g) Constitute a committee for providing the
+recommendation to the Government for formulation, review
+and implementation of the schemes;
+(h) Formulate social security schemes for specific
+groups of Platform Based Gig workers such as women,
+persons with disabilities etc. and recommend to the
+Government;
+(i) Seek data of the Platform Based Gig workers
+who work with respective aggregators and platforms;
+a) Any other powers or functions as may be conferred
+or assigned by the Government, as may be notified from
+time to time.
+i
+RIghts ot 8. Platform Based Gig workers shall have the right to,-
+::::do;i; 
+(a) be registered with the Government on being on
+worker. boarded on any platform, irrespective of the duration of the
+work, and be provided a Unique ID applicable across all
+platforms and as may be prescribed;
+(b) have access to general and specific social security
+schemes based on contributions made by them subject to
+minimum number of transactions/gig work undertaken by
+
+---PAGE 12---
+April 28, 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+11
+the Platform Based Gig workers with any aggregator or
+platforms in a quarter as may be notified by the Board;
+Provided that, in case of death of a platform-based gig
+worker during the course of work, the requirement relating
+to minimum number of transactions or gig work shall not
+apply.
+(c) access a grievance redressal mechanism 
+as
+specified in section 22:
+Provided that, nothing in this Act shall affect any right,
+benefit or protection conferred to Platform Based Gig
+workers under any other law for the time being in force.
+b
+9. (1) An officer of the Labour Department, not below the OffIcers
+rank of Deputy Secretary to Government / Joint and
+Commissioner of Labour, shall be appointed as the Chief emplcIY-
+--:-'--:: -- " '- -'::-' ees of
+Executive Officer to perform executive functions as per the iT: "'
+provisions of this Act and the rules made thereunder. 
+i bard.
+2) The Government shall provide the Board with such
+officers and other employees, as may be required to assist
+the Board in the discharge of its functions.
+3) The officers and other employees of the Board shall
+discharge their functTons under the general superintendence
+of the Chief Executive Officer.
+4) The salaries and allowances payable to and other
+terms and conditions of service of the officers and other
+employees of the Board shall be, as may be prescribed.
++
+10. (1 ) The Government shall prescribe the procedure and
+manner for self-registration of Platform Based Gig worker.
+(2) The aggregators/platforms shall provide to the Board
+its database of all platform-based gig workers on boarded
+or registered with them within Forty-five (45) days from the
+date of commencement of this Act, irrespective of the
+duration of their engagement with the aggregator, who shall
+be aptomatically electronically registered in such manner,
+as may be prescribed.
+RegIstra-
+tIon of
+platform-
+based gIg
+worker.
+
+---PAGE 13---
+12 
+TELANGANA GAZETTE EXTRAORDINARY
+IPart IV-B
+(3) The data pertaining to aN Platform Based Gig Workers
+on boarded or registered with any platform after the
+commencement of this Act shall be automatically
+electronically shared with the Board for their registration,
+and within thirty (30) days of being on boarded with the
+aggregator or platform. The aggregators/platforms 
+shall
+update and share with the Board about any changes in
+numbers of Platform Based Gig Workers every quarter.
+(4) The Board shall maintain a database of Platform
+Based Gig Workers in the State along with the details of
+their contractual engagement with one or more aggregators
+/ platforms, and notwithstanding the duration or time of
+engagement with any platform and every Platform based
+gig worker shall be given a Unique Identification Number
+(UID)
++
+Provided that, the data so collected by the Board either
+from the aggregators / platforms or platform-based gig
+workers shall be used to achieve the aims and objectives
+of this Act.
+ReglstH- 11. (1) Every aggregator / platform shall register with the
+tIonof Board within forty-five (45) days from the date of
+?_Vega- commencement of this Act in such'manner as may be
+prescribed;
+(2) The Board shall maintain a register of aggregators/
+platforms operating in the State along with the name and
+designation of an officer notified by the State Government
+responsible for carry out obligations under this Act;
+(3) The Board shall publish the register of aggregators/
+platforms on its web portal.
+q
+CHAPTER III
+GOVERNANCE AND FAIR PRACTICES
+ency in
+respect
+of
+ItwWe-
+12. (1 ) The aggregator / platform must inform the Platform
+Based Gig Workers, in simple language and in Telugu,
+Hindi or any other language listed in the Eighth Schedule
+
+---PAGE 14---
+April 28, 20261
+TELANGANA GAZETTE EXTRAORDINARY
+13
+to the Constitution of India known to the Platform Based
+Gig Worker, regarding the procedure to seek information
+in respect of the automated monitoring and decision-
+making systems employed by the aggregator / platform,
+which have an impact on their working conditions,
+including but not limited to fares, earnings, customer
+feedback and allied information, as may be prescribed.
+Automa.
+ted
+monItor-
+Ing and
+decIsIon-
+makIng
+systems.
+2) The aggregator / platform shall take measures to
+prevent discrimination on the basis of religion, race, caste,
+gender or place of birth or on the grounds of disability by
+the automated monitoring and decision-making systems
+deployed by the aggregator.
+b
+13. (1) All contracts entered into between aggregators,
+Platforms and platform-based Gig workers shall comply
+with the provisions of this Act.
+Obllga-
+tlons to
+enter
+Into faIr
+contr-
+acts
+and
+standard
+rates of
+remune'
+ratIon.
+(2) Once the contract has been entered into, the
+aggregator shall notify the platform-based gig worker of
+any change in the terms of the contract or any material
+change in the automated monitoring and decision-making
+system, not less than fourteen (14) days before the
+proposed change, and the platform-based gig worker shall
+have the option to terminate the contract accordingly,
+without any adverse consequences for their existing
+entitlements under the previous contract.
+e
+(3) All terms and conditions of engagement between
+the platform aggregator and a platform-based gig worker
+shall be transparent, comprehensive, and made
+accessible to the concerned worker in a form and
+language that is easily understood.
+Such terms shaIF–
+
+---PAGE 15---
+14 
+TELANGANA GAZETTE EXTRAORDINARY [Part IV-B
+(a) clearly specify the applicable piece-rate or time-
+rate norms, including details of payments, deductions,
+incentives, and the method of calculation of remuneration;
+and
+(b) explicitly provide for the right of the worker to
+decline or refuse any task or assignment offered, without
+adverse consequences, unless otherwise provided under
+this Act or the rules made thereunder.
+(4) The Government may, by notification, prescribe
+standard rates of remuneration for platform-based gig
+workers, either generally or for specific categories of
+services, work types, or platforms.
+4
+(5) For the purposes of this section, the applicable
+wage period, the method and norms of computation 
+of
+the standard rates of remuneration, and classification by
+skill level, geographical area, or nature of work shall be
+as such as may be prescribed by the Government.
+14. An aggregator or platform may terminate a Platform
+Based Gig Workers by following the principles of natural
+justice after due enquiry only by giving valid reason/s in
+writing and with prior notice of seven days. However, in
+case a threat (physical or mental) is foreseen to the end
+consumer, the Platform Based Gig Workers may be
+terminated immediately.
+Termln&
+IIon of
+work.
+Income
+SecurIty.
+15. (1) in the cases of deductions from payments, the
+aggregator / platform must inform the Platform Based Gig
+Workers about the reasons for such deductions from the
+transaction statement for the work performed by the
+Platform Based Gig Workers. Every aggregator / platform
+shall mandatorily make pay-out as per the contract with
+no delay in disbursal of pay;
+(2) The welfare fee payable by the aggregator /
+platform 
+under this Act shall not be deducted from any
+amount payable to the platform-based gig worker on the
+•
+
+---PAGE 16---
+Apri128, 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+15
+basis of the contracts or terms and conditions of service
+prior to the commencement of this Act.
+16. (1) The aggregator must provide and maintain, as
+far as is reasonably practicable, a working environment
+that is safe and without risk to the health of the platform-
+based Gig worker.
+(2) The aggregator shall comply with the applicable,
+sector-specific, occupational safety and health standards
+as may be prescribed.
+17. (1) Each aggregator shall designate a person as a
+point of contact with a dedicated facilitation centre within
+their platform, who shall address the queries and
+clarifications for their platform-based gig workers.
+Masan
+ble
+workIng
+condE
+Hons.
+P
+&
+Nomlna-
+tIon of
+PoInt of
+Contact
+for
+enquIrIes.
+(2) The worker shall have the option of
+communicating with the point of contact in Telugu, English
+or any other language listed in the Eighth Schedule to the
+Constitution of India known to the Gig and platform worker;
+(3) The contact information of the point of contact
+shall be provided on the respective Platform Based Gig
+Workers accounts on the platform application.
+CHAPTER IV
+FINANCIAL PROVISIONS
+18. (1 ) The Board shall maintain proper accounts and other Accounts
+relevant 
+records 
+and prepare 
+an annual 
+statement 
+of and audIt.
+accounts in such form as may be prescribed.
+e
+(2) The accounts of the Fund shall be audited annually
+by the Office of the Accountant General of the State.
+(3) The accounts of the Fund certified by the auditor,
+together with the audited report thereon shall be submitted
+annually by the Board to the Government before such date
+as may be prescribed.
+
+---PAGE 17---
+16
+TELANGANA GAZETTE EXTRAORDINARY
+FPan IV-B
+(4) The Board shall comply with such directions as the
+Government may, after perusal of the report of the Auditor,
+think fit to issue.
+(5) The cost of the audit, as determined by the
+Government, shall be paid out of the administrative costs
+of the Fund.
+(6) All monies forming part of the Fund shall be kept in
+current or deposit account with any Nationalized Bank or
+as prescribed by the Government.
+SocIal
+SecurIty
+and
+Welfare
+Fund for
+Platform
+Based
+GIg
+Workers.
+19. (1 ) The Government shall establish a Fund to be called
+the Telangana Platform Based Gig Workers Social Security
+and Welfare Fund for social security and welfare of the
+registered Platform Based Gig Workers and the following
+money shall form part of , and be paid into, namely,-
+I
++
+(a) all sums received from welfare fund fee levied under
+this Act;
+(b) all contributions made by individual platform and
+Platform Based Gig Workers towards any specific social
+security scheme prescribed;
+(c) all sums received as grant-in-aid from the State
+Government and Central Government;
+(d) Funds received from the Corporate Social
+Responsibility Fund within meaning of the Companies Act,
+201 3;
+(e) all sums received by way of grants, gifts, donations,
+benefactions, bequests or transfers; and
+(f) all sums received from any other sources as may
+be prescribed.
+(2) The Board may spend an amount not exceeding
+5% of the annual receipts for the purpose of the Social
+Security and Welfare Fund under sub-section (1 ) with the
+prior approval of the Board, as may be specified by the
+Government from time to time, to meet the administrative
+expenses of the Board.
+4
+
+---PAGE 18---
+Apri128, 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+17
+20. (1 ) The Government shall charge a fee, tO be known as Platform
+the Telangana Platform-Based Gig Workers Welfare Fund ba SPd GIg
+=: 
+i 
+J: 
+: 
+::n1: :: 
+fogu?r 
+:ntaJ: 
+: 
+00 ; 
+PJ 
+iH£rrTn 
+SaE:hI(IF:1 :: 
+$= 
+: 
+: 
+: 
+:31;je: 
+e
+at such rate and in such manner as may be notified by the
+Government from time to time.
+(2) The Government may, by notification, specify different
+rates of the Welfare Fund Fee for different categories of
+Aggregators 
+or Platforms, having regard to the nature of
+services provided, as classified in Schedule I.
+B
+(3) The Welfare Fund Fee shall be collected by such
+authority, in such manner, and within such time as may be
+prescribed.
+(4) The aggregator/platform shall deposit the Welfare
+Fund Fee levied under this Act, at the end of the month in
+such manner, as may be prescribed.
+(5) if any aggregator / platform fails to pay any amount
+as specified under sub-section (1), shall be liable to pay
+simple interest on the fee due from the date on which such
+payment is due till such actual payment at such a rate, as
+may be notified by the State Government, 
+from time to time.
+(6) The Welfare Fee so collected will count as the total
+contribution payable under sub-section (4) of section 114
+of the Code on Social Security, 2020:
+1
+Provided that, if there is any difference between the Central
+E£T£tr§ 
+=F:o::IIFEtiP;tde?:::rjbcYIETorJ?:l£r:;Farjssao! 
+oF1:2oi'36
+may be prescribed.
+21. (1 ) All payments made to Platform Based Gig Workers
+generated on platforms shall be mapped on to a Welfare
+Fund Fee Verification System (WFFVS) on a real-time basis
+administered by the Government and monitored by the
+Board.
+Welfare
+Fund Fee
+VerIfIcatIon
+System
+(WFFVS).
+A 21G3
+
+---PAGE 19---
+18
+TELANGANA GAZETTE EXTRAORDINARY 
+FPart IV-B
+(2) Every payment made to Platform Based Gig Workers
+and the Welfare Fund Fee deducted by the platforms shall
+be sent to Welfare Fund Fee Verification System (WFFVS)
+on a real-time basis for each transaction related to platform-
+based Gig worker in such manner as may be prescribed;
+' 
+(3) All the details of Welfare Fund Fee collected and
+spent at the Platform Based Gig Workers level shall be
+disclosed and made available on the Welfare Fund Fee
+Verification System (WFFVS) on a real-time basis;
+4
+(4) Welfare Fund Fee Verification System (WFFVS) shall
+be in compliance with the applicable Central and State
+legislations on data protection for the time being in force.
+CHAPTER V
+GRIEVANCE REDRESSAL AND
+DISPUTE RESOLUTION
+Redressal 22. (1) The Government, by notification shall appoint a
+a 
+Grievance Redressal Officer. for redressal of the
+:1,evan- grievances of the Platform Based Gig Workers.
+(2) A Platform Based Gig Worker registered under this
+Act may file an application in the prescribed format either
+in person or through web portal or any other mode before
+the Grievance Redressal Officer appointed under sub-
+section (1), in relation to any grievance arising out of
+entitlements, social security payments and other benefits
+provided by the Board under this Act:
+Provided that, the link to such web portal shall be
+provided on the platform application of every aggregator/
+platform registered under this Act.
+(3) The procedure for disposal of the application filed
+under sub-section (2) shaH be in such manner as may be
+prescribed.
+
+---PAGE 20---
+Apri128, 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+19
+(4) The Grievance Redressal Officer so appointed under
+sub-section (1), shall conduct enquiry on such application
+and shall pass a reasonable order in due compliance with
+the principles of natural justice within thirty (30) days from
+the date of application.
+23. (1) The Government, by notification shall appoint an Appellate
+officer in the cadre of Deputy Commissioner or equivalent AuthorItY
+rank or cadre as an Appellate Authority.
+(2) Any person aggrieved by the orders of the Grievance
+Redressal Officer under sub-section (4) of section 22, may
+prefer an appeal to such Appellate Authority appointed under
+sub-section (1), within ninety (90) days from the date of
+order
+i
+(3)The Appellate Authority shall dispose of the appeal in
+accordance with such procedure as may be prescribed.
+24. (1) Every aggregator/platform, 
+with at least one hundred Resolu'
+(100) Platform Based Gig Workers registered on their Upn
+g 
+: 
+:in::i 
+eEh 
+?! 
+r CtTes 
+t iteu£ 
+: 
+I §: 
+o1: t : 
+: 
+n;iI s : 
+LstEEt 
+es 
+pReecI 
+: 
+Luii 
+: 
+: :jsa?:iT
+Schedule -II ; 
+ajgrega-
+(2) The composition and procedures of the Internal $;;;Fms
+Dispute Resolution Committee shall be such as may be '
+prescribed;
+(3) The Internal Dispute Resolution Committee shall
+complete its proceedings within thirty (30) days on receipt
+of a written complaint or on behalf of the aggrieved party.
+B
+CHAPTER VI
+COMPLIANCE AND ENFORCEMENT
+25. (1) The aggregator/platform shall ensure that Dl&
+information on the grievance redressal mechanism in cp:un
+section 22 is widely published and easily accessible on their :::g&
+platform.
+
+---PAGE 21---
+20
+TELANGANA GAZETTE EXTRAORDINARY 
+[Part IV-B
+(2) The aggregator/platform shall ensure that
+information on the dispute resolution mechanism in section
+24 is'easily accessible on their respective platform.
+(3) The rnanner of publication of disclosure obligations
+by the aggregator / platform shall be such as may be
+prescribed.
+General
+PenaltIes
+and
+PunIsh.
+ments
+for
+offences.
+26. (1 ) Where any aggregator or platform fails to pay any
+amount of fee payable under section 20 within the time as
+may be prescribed, such aggregator or platform shall be
+liable to pay–
+(a) a fine of fifty thousand rupees for the first
+contravention;
+(b) a fine of one lakh rupees for the second
+contravention;
+(c) a fine of one lakh fifty thousand rupees for the third
+contravention; and
+(d) for the fourth and every subsequent contravention,
+a fine which shall be five times the amount of the fee due
+under section 20.
+(2) if an aggregator or platform fails or refuses to submit
+any return, report, statement or any other information
+required under this Act or any Rules, Regulations or
+schemes made or framed thereunder, shall be punishable
+with fine which may extend to rupees fifty thousand.
+(3) if an aggregator or platform fails to pay the Welfare
+Fund Fees payable or the fine imposed under this Act, the
+same shall be recovered as per the provisions of sections
+461 to 462 read with section 471 of the Bharatiya Nagarik
+Suraksha Sanhita, 2023.
+27. (1) No court inferior to that of a Judicial Magistrate of
+the First class shall take cognizance of an offence
+punishable under this Act, except on a complaint made by
+the officer appointed under section 32.
+\C
+Cognl-
+zance of
+Offences.
+
+---PAGE 22---
+Apri128, 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+21
+(2) The offences under this Act are cognizable, bailable
+and compoundable;
+(3) in trying the offences under this Act, the procedure
+prescribed in Chapter XXI of the Bharatiya Nagarik Suraksha Central
+:i;IF!:’f£l?o2::fr 
+trial of summons-cases 
+by Magistrate of;£3'
+28. (1) Where an offence under this Act, has been
+committed by a company, every person who, at the time
+the offence was committed, was directly in charge and
+responsible to the company for the conduct of the business
+of the company, as well as the company, shall be deemed
+to be guilty of the offence and shall be liable to be
+proceeded against and punished accordingly:
+Offences
+by
+cornparl-
+les.
+t
+Provided that, nothing contained in sub-section (1)
+shall render any such person liable to any punishment, if
+he proves that the offence was committed without his
+knowledge or that he exercised all due diligence to prevent
+the commission of such offence.
+t
+(2) Notwithstanding anything contained in sub-section
+(1 ), where an offence has been committed by a company
+and it is proved that the offence has been committed with
+the consent or connivance of, or is attributable to any
+neglect on the part of, any Director, Secretary or other
+officer shall also be deemed to be guilty of that offence
+and shall be liable to be proceeded against and punished
+accordingly.
+Explanation: for the purposes of this section, -
+(a) “Company” means any body corporate, and
+includes a firm or other association of individuals; and
+(b) “Director”, in relation to a firm, means a partner in
+the firm.
+
+---PAGE 23---
+22
+TELANGANA GAZETTE EXTRAORDINARY 
+[Part IV-B
+Com-
+pound-
+Ing of
+offences.
+29. (1 ) The offences under this Act may be compounded
+either before or after institution of the prosecution under
+section 26 or on an application made by the offender on
+payment of compounding fees as may be prescribed:
+Provided that, the offences of the same nature
+committed by the same offender for more than three
+occasions shall not be compoundable.
+(2) if such compounding of offences 
+is permitted 
+before
+prosecution under sub-section (1 ), no further proceedings
+shall be taken against the offender in respect of such
+offence and the offender shall be deemed to have been
+discharged from the offence.
+(3) if the prosecution is already instituted in the
+competent court, the officer appointed under section 32,
+may file an application for withdrawal of the case before
+the competent court and such withdrawal shall have the
+effect of discharge / or acquittal, as the case may be under
+section 280 of the Bharatiya Nagarik Suraksha Sanhita,
+2023
+CHAPTER VII
+REPORTING AND MONITORING
+Sub
+mIssIon
+of Annual
+Returns
+by GIg
+and
+platform
+workers.
+30. The aggregator / platform shall submit annual returns
+to the Board electronically 
+in such form as may be prescribed.
+I
+IT:!!_ 
+31. (1 ) The Board shall submit to the Government an annual
+Reports- report of its work and activities and the budget finally
+adopted by the Board.
+
+---PAGE 24---
+April 28, 20261 TELANGANA GAZETTE EXTRAORDINARY
+23
+(2) The Government shall cause a copy of the annual
+report, budget and the audited accounts together with the
+report of the Accountant-General and the comments of the
+Board thereon to be laid before each House of the State
+legislature.
+32. The Government 
+may appoint 
+officers 
+with such AppoInt-
+Ine;JgennIJLosTt::h 
+! 
+I? 
+:nukJhf 
+tf ftTet : 
+: 
+::\h : 
+: 
+!: 
+S 
+; 
+ul 
+: 
+: 
+LsnJ: 
+cJnLn£ 
+iiI :efno r
+this Act as it may deem fit, for effective enforcement of the e„force_
+provisions of this Act, and the rules made thereunder. 
+ment of
+the Act.
+C
+t
+CHAPTER VIII
+MISCELLANEOUS
+33. The provisions of this Act shall be in addition to, and not pett.o. PP
+in derogation of , any other law for the time being in force. ES:felon
+other law.
+34. No suit, prosecution or other legal proceeding shall lie
+against the Government, any person or authority, for
+anything which is done in good faith and Bonafide belief or
+intended to be done in pursuance of this Act or any rule or
+order made thereunder.
+ProtectIon
+of actIon
+taken in
+good faIth
+and
+bonaflde
+beIIef.
+•
+C
+35. (1) The Government may, by notification in the Powe,to
+Telangana Gazette, make rules not inconsistent with this make
+Act and subject to the condition of previous publication, for rule9.
+the purpose of giving effect to the provisions thereof . after
+previous publication for carry out the purposes of this Act.
+(2) in particular and without prejudice to the generality
+of the foregoing power, such rules may provide for all or
+any of the following matters, namely,-
+
+---PAGE 25---
+24
+TELANG ANA GAZETTE EXTRAORDINARY 
+[Part IV-B
+(a) The time, place and procedure for meetings of the
+Board as required under sub-section (1 ) of section 6;
+(b) The rates of allowances for nominated members of
+the Board under sub-section (5) of section 6;
+(c) The manner of registrations of aggregators/platforms
+with the Board under sub-section (1 ) of section 11 ;
+(d) The manner of publishing of register of aggregators/
+platforms by the Board as per sub-sections (2) and (3) of
+section 11 ;
+(e) The procedure to seek information regarding
+automated monitoring and decision-making systems under
+sub-section (1) of section 12;
+(f) Sector specific occupational safety and health
+standards under sub-section (2) of section 16;
+(g) The manner in which proper accounts, annual
+statements of accounts including balance sheet and other
+relevant records must be maintained under sub-section
+(1 ) of section 18;
+(h) The date of submission of the audited report by the
+Board under sub-section (3) of section 18;
+(i) The manner in which the monies of the Fund shall
+be kept under sub-section (6) of section 18;
+a) Sums received from any other sources under clause
+(b) and (f) of sub-section (1) of section 19;
+(k) The manner of collection 
+of Welfare Fund Fee under
+sub-section (3) and (4) of section 20;
+(1) The manner of deposit of the Welfare Fund Fee by
+the aggregator/platform at end of each month under sub-
+section (4) of section 20;
+(m) The manner of recovery of due amount from
+aggregators etc., under sub-section (5) of section 20;
+
+---PAGE 26---
+Apri128. 20261 
+TELANGANA GAZETrE 
+EXTRAORDINARY
+25
+(n) The form in which payment made to Gig and Platform
+workers and the Welfare Fund Fee deducted shall be
+recorded on the Welfare Fund Fee Verification System
+(WFFVS) for each transaction under sub-section (2) of
+section 21 ;
+(o) The manner of disposal of the petition under sub-
+section (3) of section 22;
+(p) The manner of disposal of appeal under sub-section
+(3) of section 23;
+9
+t
+(q) The manner of the composition and procedure of
+the Internal Dispute Resolution Committee under sub-
+section(2) of section 24;
+(r) The manner of publishing of disclosure obligations
+under sub-section (3) of section 25;
+(s) The manner of compounding under sub-section (1 )
+of section 29;
+(t) The manner of submission of Annual return by the
+aggregator/platform under section 30;
+(u) Any other matter in addition to or ancillary thereto;
+36. (1 ) The Board may, by notification, make regulations, Power to
+not inconsistent with this Act and the rules made or framed make
+thereunder to carry out the provisions of this Act. 
+'egulaUons
+(
+(2) in particular, and without prejudice to the generality
+of the foregoing power, such regulations may provide for
+all or any of the following matters, namely: -
+(a) the manner in which the aggregators / platforms
+shall provide the database of all Gig workers on boarded or
+registered with them to the board under sub-section (2) of
+section 10;
+(b) the manner in which the latest data of all platform-
+based Gig workers engaged by aggregators/platforms shall
+be shared as per sub-section (3) of section 10;
+A 21G+
+
+---PAGE 27---
+26
+TELANGANA GAZETTE EXTRAORDINARY
+IPart IV-B
+(c) Any other matter which the Board may deem fit to
+discharge 
+the functions.
+37. The power to make rules, regulations and schemes
+under this Act, shall be subject to the condition of the
+previous publication of the same being made, in the following
+manner, namely: –
+PrIor
+pubIIc&
+tIon of
+rules,
+regula'
+tIes, etc.
+(a) the date to be specified after a draft of such rules,
+regulations and schemes under consideration, shall not be
+less than forty.five (45) days from the date on which the
+draft of the proposed rules, regulations and schemes is
+published for general information in the Telangana Gazette;
+(b) such rules, regulations and schemes shall finally be
+published in the Official Gazette and, on such publication,
+shall have effect as if enacted in this Act:
+Provided that the Government may, in the
+circumstances of epidemic, pandemic or disaster, dispense
+with the condition of previous publication under this section.
+38. (1) if any doubt or difficulty arises in giving effect to the
+provisions of this Act, the Government may, by notification
+or order, in the Official Gazette, make such provisions, not
+inconsistent with the provisions of this Act, as may be
+necessary or expedient for removing such doubt or
+difficulty:
+Power to
+remove
+dlfflcul.
+tIes
+Provided that, no such order shall be made under this
+section after the expiry of a period of three (3) years from
+the commencement of this Act.
+)
+(2) Every order made under this section shall be laid,
+as soon as may be after it is made, before each House of
+the State Legislature.
+Power to
+amend
+Soho
+dules.
+39. If the Government is satisfied that it is necessary or
+expedient so to do, it may, by notification amend the
+Schedules.
+
+---PAGE 28---
+April 28, 20261 
+TELANGANA GAZETTE EXTRAORDINARY
+27
+40. Every rule, regulation, notification and scheme made LayIng at
+or framed by the Board or Government as the case may be, rulel
+under this Act shall be laid, as soon as may be after it is !!g,ulatlons
+made or framed, before each House of the State Legislature, ;: ie,nes.
+while it is in session, for a total period of thirty days which etc.
+may be comprised in one session or in two or more
+successive sessions, and if, before the expiry of the session
+immediately following the session or the successive
+sessions aforesaid, both Houses agree in making any
+modification in the rule, regulation, notification or scheme,
+as the case may be, or both Houses agree that the rule,
+regulation, notification or scheme, as the case may be,
+should not be mach, such rule, regulation, notification or
+scheme shall thereafter have effect only in such modified
+form or be of no effect, as the case may be; so, however,
+that any such modification or annulment shall be without
+prejudice to the validity of anything previously done under
+that rule, regulation, notification or scheme, as the case
+may be.
+I
+t
+I
+C
+
+---PAGE 29---
+28
+TELANGANA GAZETTE EXTRAORDINARY 
+[Part IV.B
+SCHEDULE - I
+[See clause (a) of sub-section (4) of section 1 ]
+SERVICES PROVIDED BY AGGREGATORS
+1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9
+Ride sharing services.
+Food and grocery delivery services.
+Logistics services.
+e-Market place (both marketplace and inventory model) for
+wholesale/retail sale of goods and / or services Business
+to Business (B2B) / Business to Consumer (B2C).
+Professional activity provider. 
+'
+Healthcare.
+Travel and hospitality.
+Content and media services.
+Any other goods and services provider platform.
+1
+S
+j
+j
+
+---PAGE 30---
+April 28, 20261
+TELANGANA GAZETTE EXTRAORDINARY
+29
+SCHEDULE - II
+[see section 24]
+DISPUTES RAISABLE BY GIG AND
+PLATFORM WORKER
+1. Aggregator/platforms fails to communicate
+information sought by the gig worker regarding
+automated monitoring and decision-making
+systems under sub-section (1) of section 12;
+2. Aggregator/platforms terminates work on
+grounds not mentioned in the contract, in
+violation of section 13;
+3.
+4.
+Aggregator/platforms 
+terminates work without
+notice, in violation of section 14;
+Aggregator/platforms 
+fails to make payout as
+per contract and fails to provide 
+reasons for
+deductions in pay as provided for under section
+15;
+5
+Aggregator/platforms 
+fails to comply with sector
+specific reasonable working conditions as may
+be prescribed, under section 16.
+t
+C
+B. PAPI REDDY,
+Secretary to Government,
+Legal Affairs, Legislative Affairs and Justice,
+Law Department.
