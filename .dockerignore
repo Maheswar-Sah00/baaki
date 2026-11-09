@@ -1,0 +1,41 @@
+# Keep the build context small and secret-free.
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+
+# python
+backend/.venv
+.venv
+backend/data
+backend/tests
+backend/pytest.ini
+
+# node / next
+web/node_modules
+web/.next
+web/.next-*
+web/*.tsbuildinfo
+web/next-env.d.ts
+web/.npmrc
+npm-cache
+pip-cache
+
+# docs, research and media renders (the app never reads them at runtime)
+docs
+scripts
+*.md
+!README.md
+*.mp4
+*.mov
+*.mkv
+*.log
+*.db
+
+# the deploy files themselves
+render.yaml
+fly.toml

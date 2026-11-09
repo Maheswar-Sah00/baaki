@@ -24,3 +24,15 @@ backend/data/
 *.log
 npm-cache/
 pip-cache/
+
+# video and audio renders (filming, edits). Committed fixtures are exempt below.
+*.mp4
+*.mov
+*.mkv
+*.wav
+!backend/seed_cache/**/*.wav
+docs/submission/proof/
+
+# deploy CLIs
+.fly/
+.render/

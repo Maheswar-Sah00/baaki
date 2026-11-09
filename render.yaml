@@ -1,0 +1,64 @@
+# Render Blueprint: one Docker web service with a persistent disk at /data (SQLite, media, TTS cache).
+# New > Blueprint > pick this repo. Render asks for the `sync: false` values (the API keys) on first deploy.
+# A persistent disk needs a paid instance type (Starter or above); the free type has no disk.
+# Keep ONE instance: SQLite on a disk cannot be shared between instances.
+services:
+  - type: web
+    name: baaki                      # the public URL becomes https://baaki.onrender.com if the name is free
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: singapore                # nearest Render region to Hyderabad
+    numInstances: 1
+    healthCheckPath: /api/health     # through Next to FastAPI, so both processes are checked
+    autoDeploy: false
+    disk:
+      name: baaki-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      # --- web build (Render passes env vars to `docker build` as build args) ---
+      - key: BACKEND_URL
+        value: http://127.0.0.1:8000
+      - key: NEXT_PUBLIC_SITE_URL      # change if the service name (and so the URL) is different
+        value: https://baaki.onrender.com
+      - key: NEXT_PUBLIC_BAAKI_INTERIM_MS
+        value: "4500"
+      # --- runtime ---
+      - key: PORT
+        value: "10000"
+      - key: PUBLIC_BASE_URL           # links Baaki writes into messages; must match the public URL
+        value: https://baaki.onrender.com
+      - key: DATABASE_URL
+        value: sqlite:////data/app.db
+      - key: MEDIA_DIR
+        value: /data/media
+      - key: TTS_CACHE_DIR
+        value: /data/tts_cache
+      - key: AUDIO_TMP_DIR
+        value: /data/tmp
+      - key: BAAKI_PUBLIC              # public mode: worker keys, admin-only demo reset, Gnani budget
+        value: "1"
+      - key: TRUSTED_PROXY             # read the visitor IP from the platform proxy's headers (per-IP limits)
+        value: "1"
+      - key: BAAKI_ADMIN_TOKEN         # needed for POST /api/demo/reset in public mode; read it in the dashboard
+        generateValue: true
+      # Gnani credit budget (public mode only; IST day; see .env.example)
+      - key: GNANI_BUDGET_STT          # Prisma calls per day, all visitors
+        value: "400"
+      - key: GNANI_BUDGET_TTS          # new Timbre clips per day (cached clips are free)
+        value: "150"
+      - key: GNANI_BUDGET_VC           # voice-clone calls per day (0 = cloning off on the public deploy)
+        value: "0"
+      - key: GNANI_BUDGET_PER_IP       # Gnani calls one visitor IP may cause per day
+        value: "40"
+      - key: STT_MAX_SECONDS           # longest recording sent to Prisma, in seconds
+        value: "90"
+      - key: LLM_PROVIDER
+        value: groq
+      # --- secrets: set in the dashboard, never in this file ---
+      - key: GNANI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false

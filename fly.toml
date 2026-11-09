@@ -1,0 +1,61 @@
+# Fly.io: one machine, one volume at /data (SQLite, media, TTS cache).
+#   fly apps create baaki-<yourname>            # then set `app` below and both URLs to https://baaki-<yourname>.fly.dev
+#   fly volumes create baaki_data --region bom --size 1
+#   fly secrets set GNANI_API_KEY=... GROQ_API_KEY=... BAAKI_ADMIN_TOKEN=<long random string>
+#   fly deploy
+# Keep ONE machine (fly scale count 1): SQLite on a volume cannot be shared between machines.
+app = "baaki-CHANGE-ME"
+primary_region = "bom"               # Mumbai
+
+[build]
+  dockerfile = "Dockerfile"
+
+  [build.args]
+    BACKEND_URL = "http://127.0.0.1:8000"
+    NEXT_PUBLIC_SITE_URL = "https://baaki-CHANGE-ME.fly.dev"
+    NEXT_PUBLIC_BAAKI_INTERIM_MS = "4500"
+
+[env]
+  PORT = "8080"
+  PUBLIC_BASE_URL = "https://baaki-CHANGE-ME.fly.dev"
+  DATABASE_URL = "sqlite:////data/app.db"
+  MEDIA_DIR = "/data/media"
+  TTS_CACHE_DIR = "/data/tts_cache"
+  AUDIO_TMP_DIR = "/data/tmp"
+  BAAKI_PUBLIC = "1"
+  TRUSTED_PROXY = "1"
+  # Gnani credit budget (public mode only, per IST day; see .env.example)
+  GNANI_BUDGET_STT = "400"
+  GNANI_BUDGET_TTS = "150"
+  GNANI_BUDGET_VC = "0"
+  GNANI_BUDGET_PER_IP = "40"
+  STT_MAX_SECONDS = "90"
+  LLM_PROVIDER = "groq"
+  # Secrets (fly secrets set, never here): GNANI_API_KEY, GROQ_API_KEY, BAAKI_ADMIN_TOKEN
+
+[[mounts]]
+  source = "baaki_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 50
+    hard_limit = 80
+
+  [[http_service.checks]]
+    grace_period = "90s"             # first boot creates the tables and seeds the demo story
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/api/health"             # through Next to FastAPI, so both processes are checked
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
