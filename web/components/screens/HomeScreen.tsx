@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/primitives";
 import { MicIcon } from "@/components/ui/icons";
 import { ExitLink } from "@/components/features/exit/ExitLink";
+import { DuesEntryCard } from "@/components/features/dues/parts";
 
 export function LanguagePicker({ onPick, title }: { onPick: (l: (typeof UI_LANGS)[number]["value"]) => void; title: string }) {
   return (
@@ -166,6 +167,8 @@ export function HomeScreen() {
           ))}
         </ul>
       </section>
+
+      <DuesEntryCard />
 
       <details className="dev-menu">
         <summary aria-label={t("home.dev")}>·</summary>
