@@ -319,11 +319,15 @@ class GnaniClient:
         """Create a speaker embedding from 5-30 s of clean reference audio.
 
         Returns {"embedding": str, "shape": [1, 768], "dtype": "torch.bfloat16"}; cache it.
+        Verified 9 Nov 2026 (docs/research/04_gnani_feasibility.md): a 19.3 s 24 kHz mono WAV gives a
+        [1, 768] torch.bfloat16 embedding (4,096-char string) in ~1.2 s, and the embedding speaks
+        Hinglish, Hindi, Telugu and English (cross-lingual) through vc_tts().
         """
         if not audio_bytes:
             raise ValueError("empty audio")
-        ext = filename.rsplit(".", 1)[-1].lower()
-        mime = {"wav": "audio/wav", "mp3": "audio/mpeg", "ogg": "audio/ogg"}.get(ext, "application/octet-stream")
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        mime = {"wav": "audio/wav", "mp3": "audio/mpeg", "ogg": "audio/ogg", "flac": "audio/flac",
+                "m4a": "audio/mp4", "aac": "audio/aac"}.get(ext, "application/octet-stream")
         resp = await self._request("POST", VC_EMBED_PATH, kind="vc_embed",
                                    files={"audio_file": (filename, audio_bytes, mime)})
         STATS.vc_embed += 1
@@ -333,11 +337,22 @@ class GnaniClient:
             raise GnaniError(resp.status_code, "VC_NO_EMBEDDING", str(body)[:300])
         return {"embedding": emb["embedding"], "shape": emb.get("shape", [1, 768]), "dtype": emb.get("dtype", "torch.bfloat16")}
 
-    async def vc_tts(self, text: str, speaker_embedding: dict[str, Any], container: str = "ogg",
+    async def vc_tts(self, text: str, speaker_embedding: dict[str, Any], container: str = "wav",
                      sample_rate: int = 24000) -> bytes:
-        """Synthesize text in a cloned voice (model vachana-vc-v1; no language/voice fields)."""
+        """Synthesize text in a cloned voice (model vachana-vc-v1; no language/voice fields).
+
+        Default WAV/24 kHz is the verified format; convert with audio.whatsappify() for OGG.
+        Audio tags are a timbre-v3.0 feature; do not rely on them here. Write amounts as words or
+        with Devanagari around them (text normalisation is auto-detected from the script).
+        """
+        if not text or not text.strip():
+            raise ValueError("empty text")
+        if not isinstance(speaker_embedding, dict) or not all(
+                k in speaker_embedding for k in ("embedding", "shape", "dtype")):
+            raise ValueError("speaker_embedding needs embedding, shape and dtype")
         if sample_rate > VC_MAX_SAMPLE_RATE:
             raise ValueError("voice-clone sample_rate max is 44100")
+        speaker_embedding = {k: speaker_embedding[k] for k in ("embedding", "shape", "dtype")}
         payload = {"text": text, "model": VC_MODEL, "speaker_embedding": speaker_embedding,
                    "audio_config": self.audio_config(container, sample_rate)}
         resp = await self._request("POST", TTS_PATH, kind="vc_tts", json=payload)
@@ -381,5 +396,10 @@ async def vc_embedding(audio_bytes: bytes, filename: str) -> dict[str, Any]:
     return await get_client().vc_embedding(audio_bytes, filename)
 
 
-async def vc_tts(text: str, speaker_embedding: dict[str, Any], container: str = "ogg", sample_rate: int = 24000) -> bytes:
+async def voice_clone_embedding(audio_bytes: bytes, filename: str) -> dict[str, Any]:
+    """Alias of vc_embedding(): 5-30 s reference clip -> {"embedding", "shape", "dtype"}."""
+    return await get_client().vc_embedding(audio_bytes, filename)
+
+
+async def vc_tts(text: str, speaker_embedding: dict[str, Any], container: str = "wav", sample_rate: int = 24000) -> bytes:
     return await get_client().vc_tts(text, speaker_embedding, container, sample_rate)
