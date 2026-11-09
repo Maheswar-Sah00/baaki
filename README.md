@@ -30,7 +30,7 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 
 She can speak. She just can't safely ask. A maid or cook in Hyderabad often has no contract and no payslip. The legal rate is buried in a government PDF. Her employer may speak Hindi while she speaks Telugu.
 
-- **81%** of Hyderabad's domestic workers earned below the state's minimum wage (Montfort Social Institute survey, 2023, reported by [Siasat, 27 Aug 2025](https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044)).
+- **81%** of Hyderabad's domestic workers earned below the state's minimum wage (Montfort Social Institute survey of Hyderabad domestic workers, reported by [Siasat, 27 Aug 2025](https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044)).
 - **6 lakh** domestic workers in Hyderabad alone, by a union estimate ([Siasat, 16 Jun 2025](https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/)). Officials say no more than 2 lakh ([Deccan Chronicle, 30 Apr 2025](https://www.deccanchronicle.com/southern-states/telangana/domestic-helps-seek-basic-labour-rights-1875894)).
 - **61.1%** literacy among rural women in Telangana (PLFS 2023-24, [Telangana Today, 8 Dec 2024](https://telanganatoday.com/rural-literacy-rate-plunges-in-telangana-stands-second-from-bottom-among-all-states)). So Baaki works by voice first.
 

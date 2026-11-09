@@ -96,7 +96,7 @@ and <span>can't safely ask for in their employer's language.</span></div>
 
 <div class="stats">
   <div class="stat"><div class="num">81%</div><p>of Hyderabad's domestic workers earned below the state's minimum wage</p>
-    <small>Montfort Social Institute survey, 2023, via Siasat (27 Aug 2025)</small></div>
+    <small>Montfort Social Institute survey, via Siasat (27 Aug 2025)</small></div>
   <div class="stat"><div class="num">6 lakh</div><p>domestic workers in Hyderabad alone</p>
     <small>Union estimate, Siasat (16 Jun 2025). Officials say 2 lakh.</small></div>
   <div class="stat"><div class="num">61.1%</div><p>literacy among rural women in Telangana, so voice comes first</p>
