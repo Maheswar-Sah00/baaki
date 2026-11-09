@@ -1,0 +1,363 @@
+/* Share to Baaki + Promise Keeper. Tokens only (app/theme.css); global classes (.btn, .card, .pill) come from
+   the design system. */
+
+.list {
+  display: grid;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rise {
+  animation: inbox-rise var(--dur-3) var(--ease-out) both;
+}
+
+.fresh {
+  animation: inbox-pop var(--dur-4) var(--ease-spring) both;
+}
+
+@keyframes inbox-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes inbox-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.intro {
+  margin: 0;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.summary {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.when {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.blockLabel {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.quote {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.quote::before {
+  content: "\201C";
+  color: var(--accent-text);
+  font-weight: 800;
+  margin-right: 2px;
+}
+
+.quote::after {
+  content: "\201D";
+  color: var(--accent-text);
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+.translation {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.hash {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.hash svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* ------------------------------------------------------------ promise chip */
+.chip {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  animation: inbox-pop var(--dur-4) var(--ease-spring) both;
+}
+
+.chip[data-status="passed"] {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.chip[data-status="kept"] {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.chip[data-status="broken"] {
+  border-color: var(--error);
+  background: var(--error-soft);
+}
+
+.chipTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.chipMain {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.chipAmount {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.chipDate {
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+.chip[data-status="passed"] .chipDate {
+  color: var(--text);
+}
+
+.chipSub {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.chipActions {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.chipActions > * {
+  flex: 1 1 auto;
+  min-height: 44px;
+}
+
+.edit {
+  display: grid;
+  gap: var(--s-2);
+}
+
+/* ------------------------------------------------------------ reminder */
+.reminderTitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.reminderTitle svg {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-text);
+}
+
+.reminderText {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  color: var(--text);
+}
+
+.note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ sheet */
+.sheetBody {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fileLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 72px;
+  padding: var(--s-4);
+  border: 2px dashed var(--accent-line);
+  border-radius: var(--r-lg);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease-std);
+}
+
+.fileLabel:active {
+  transform: scale(0.97);
+}
+
+.fileLabel:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.fileLabel svg {
+  width: 22px;
+  height: 22px;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+}
+
+@media (max-width: 360px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+.recorder {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+}
+
+/* ------------------------------------------------------------ entry (CaseScreen mount) */
+.entry {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.entryIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  background: var(--grad-diag);
+  color: var(--on-grad);
+}
+
+.entryIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.entryText {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.entryTitle {
+  font-weight: 800;
+}
+
+.entryHint {
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.chain {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.chain[data-ok="false"] {
+  color: var(--error);
+}
+
+.chain svg {
+  width: 16px;
+  height: 16px;
+}

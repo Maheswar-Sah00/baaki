@@ -16,6 +16,7 @@ import { Confetti, ErrorNote, EstimateTag, Illustration, Loading, Money, PlayBut
 import { ConfirmFlow } from "./ConfirmScreen";
 import { VerifyBadge } from "@/components/features/verify/VerifyBadge";
 import { ExitLink } from "@/components/features/exit/ExitLink";
+import { InboxEntryButton } from "@/components/features/inbox/InboxEntryButton";
 
 export function CaseScreen({ caseId }: { caseId: number }) {
   const { t, lang } = useT();
@@ -111,6 +112,8 @@ export function CaseScreen({ caseId }: { caseId: number }) {
           </ol>
         </section>
       ) : null}
+
+      <InboxEntryButton caseId={c.id} />
 
       {kase.replies.length ? (
         <section className="card" aria-label={t("case.replies")}>
