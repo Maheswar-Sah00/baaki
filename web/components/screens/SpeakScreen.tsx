@@ -81,7 +81,7 @@ export function SpeakScreen() {
   };
 
   return (
-    <Screen title={t("speak.title")} back="/" t={t} className="speak-screen">
+    <Screen title={t("speak.title")} back="/app" t={t} className="speak-screen">
       <div className="segmented" role="group" aria-label={t("lang.change")}>
         {LISTEN_LANGS.map((l) => (
           <button

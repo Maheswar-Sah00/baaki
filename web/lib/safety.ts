@@ -25,6 +25,13 @@ export const QUICK_EXIT_PATH = "/r";
  */
 export function quickExit() {
   wipeSession();
+  // Drop the service worker's offline copies of cases and voice notes (public/sw.js).
+  try {
+    navigator.serviceWorker?.controller?.postMessage({ type: "wipe" });
+    void caches?.keys().then((keys) => keys.filter((k) => /^baaki-(api|media|pages)-/.test(k)).forEach((k) => void caches.delete(k)));
+  } catch {
+    /* ignore */
+  }
   try {
     window.history.replaceState(null, "", QUICK_EXIT_PATH);
   } catch {

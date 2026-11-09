@@ -23,7 +23,7 @@ export function DiaryScreen() {
   const nameOf = (id: number | null) => homes.find((h) => h.employer.id === id)?.employer.name ?? "";
 
   return (
-    <Screen title={t("diary.title")} back="/" t={t} className="diary-screen">
+    <Screen title={t("diary.title")} back="/app" t={t} className="diary-screen" nav="diary">
       <section className="stack" aria-label={t("diary.checkin")}>
         <p className="hint">{t("diary.hint")}</p>
         <div className="checkin-grid">

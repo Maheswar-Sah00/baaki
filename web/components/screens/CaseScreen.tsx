@@ -12,7 +12,7 @@ import { mediaKeyUrl } from "@/lib/api";
 import type { StringKey } from "@/lib/i18n";
 import type { LadderStep } from "@/lib/types";
 import { FileIcon, ShareIcon } from "@/components/ui/icons";
-import { ErrorNote, EstimateTag, Loading, Money, PlayButton, Screen } from "@/components/ui/primitives";
+import { Confetti, ErrorNote, EstimateTag, Illustration, Loading, Money, PlayButton, Screen } from "@/components/ui/primitives";
 import { ConfirmFlow } from "./ConfirmScreen";
 
 export function CaseScreen({ caseId }: { caseId: number }) {
@@ -30,14 +30,14 @@ export function CaseScreen({ caseId }: { caseId: number }) {
   const c = kase.caseData;
   if (kase.loading && !c) {
     return (
-      <Screen back="/" t={t}>
+      <Screen back="/app" t={t}>
         <Loading label={t("common.loading")} />
       </Screen>
     );
   }
   if (!c) {
     return (
-      <Screen back="/" t={t}>
+      <Screen back="/app" t={t}>
         <ErrorNote message={kase.error} onRetry={kase.refresh} retryLabel={t("common.retry")} />
       </Screen>
     );
@@ -45,7 +45,7 @@ export function CaseScreen({ caseId }: { caseId: number }) {
 
   if (kase.isDraft) {
     return (
-      <Screen title={c.employer?.name ?? t("case.title")} back="/" t={t} className="case-screen">
+      <Screen title={c.employer?.name ?? t("case.title")} back="/app" t={t} className="case-screen">
         <p className="tag" data-state="draft">
           {t("case.not_confirmed")}
         </p>
@@ -58,7 +58,7 @@ export function CaseScreen({ caseId }: { caseId: number }) {
   const due = c.balance > 0;
 
   return (
-    <Screen title={c.employer?.name ?? t("case.title")} back="/" t={t} className="case-screen">
+    <Screen title={c.employer?.name ?? t("case.title")} back="/app" t={t} className="case-screen">
       <section className="total-box" data-paid={kase.isPaid}>
         <p className="total-label">{t("case.balance")}</p>
         <p className="total-value">{inr(c.balance)}</p>
@@ -184,7 +184,9 @@ export function CaseScreen({ caseId }: { caseId: number }) {
 
       {kase.celebration ? (
         <div className="celebrate" role="dialog" aria-modal="true" aria-labelledby="paisa-title">
+          <Confetti />
           <div className="celebrate-card">
+            <Illustration name="celebrate" animated />
             <p id="paisa-title" className="celebrate-title">
               {t("paisa.title")}
             </p>

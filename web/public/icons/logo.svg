@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fe914b"/><stop offset="0.5" stop-color="#cf82a6"/><stop offset="1" stop-color="#9f73f4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.25" cy="0.15" r="0.75">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#g)"/>
+  <rect width="512" height="512" rx="116" fill="url(#glow)"/>
+  <g transform="translate(256 256) scale(1) translate(-256 -256)">
+    <path fill="#ffffff" d="M150 112h212a76 76 0 0 1 76 76v108a76 76 0 0 1-76 76H218l-76 58 14-58h-6a76 76 0 0 1-76-76V188a76 76 0 0 1 76-76z"/>
+    <text x="258" y="292" font-family="Nirmala UI, Noto Sans Telugu, sans-serif" font-weight="700" font-size="128" text-anchor="middle" fill="#101828" letter-spacing="-4">బాకీ</text>
+    <circle cx="398" cy="128" r="62" fill="#101828"/>
+    <circle cx="398" cy="128" r="62" fill="none" stroke="#ffffff" stroke-width="10"/>
+    <path fill="none" stroke="#fea76f" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" d="M374 102h48M374 122h48M384 102c26 0 26 40 0 40h-10l34 30"/>
+    <g fill="#9f73f4" opacity="0.9"><rect x="196" y="322" width="14" height="22" rx="7"/><rect x="220" y="316" width="14" height="34" rx="7"/><rect x="244" y="324" width="14" height="18" rx="7"/></g>
+  </g>
+</svg>

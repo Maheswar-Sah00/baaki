@@ -1,0 +1,415 @@
+/*
+ * Baaki design tokens. EVERY colour in the app and the website lives in this file.
+ *
+ * Two switches on <html>, both set before first paint by the inline script in app/layout.tsx:
+ *   data-theme   = "light" | "dark"      (saved choice, else prefers-color-scheme)
+ *   data-palette = "gnani" | "warm"      (DEFAULT_PALETTE in lib/theme-config.ts = "gnani";
+ *                                         preview the other with ?palette=warm)
+ *
+ *   gnani (DEFAULT): Gnani.ai's orange #fe914b -> violet #9f73f4 gradient, sky-blue haze,
+ *                    off-white #fcf7f2; dark = deep ink #0c111d/#101828 with orange/violet glow.
+ *   warm  (option) : amber -> orange -> rose glow, cream/peach haze. No blue, navy, violet or teal.
+ *
+ * Cascade note: the bare :root blocks hold the warm values; the gnani blocks override every token
+ * when data-palette="gnani" (always set before paint by the inline script).
+ *
+ * Components never use raw hex values: they use the role tokens below (--bg, --surface, --text,
+ * --accent, --grad, --haze-*, --ill-*, ...). To add a colour, add it to all four blocks.
+ */
+
+/* ------------------------------------------------------------------ scale (palette-free) */
+:root {
+  /* spacing: 4-pt grid */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+  --s-10: 72px;
+  --space: 16px; /* side gutter on phones */
+
+  /* radius */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --radius: var(--r-lg); /* legacy names */
+  --radius-small: var(--r-sm);
+
+  /* sizes */
+  --tap: 56px; /* big primary tap target */
+  --tap-min: 44px; /* never smaller than this */
+  --appbar-h: 56px;
+  --nav-h: 68px;
+  --shell: 480px; /* app column on wide screens */
+  --page: 1180px; /* website max width */
+
+  /* motion */
+  --dur-1: 120ms; /* press, hover */
+  --dur-2: 200ms; /* small state changes */
+  --dur-3: 320ms; /* sheets, cards entering */
+  --dur-4: 560ms; /* hero entrances, count-up steps */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --ease-std: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* type */
+  --font-display: var(--font-serif), var(--font-noto-telugu), var(--font-noto-devanagari), Georgia, serif;
+  --font-sans: var(--font-inter), var(--font-noto-telugu), var(--font-noto-devanagari), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* the quick-exit recipe page is deliberately plain and never themed */
+  --recipe-bg: #fffaf2;
+  --recipe-ink: #2b2118;
+}
+
+/* ------------------------------------------------------------------ WARM · light (default) */
+:root {
+  color-scheme: light;
+  --bg: #fcf7f2;
+  --bg-2: #f6ece2;
+  --surface: #ffffff;
+  --surface-2: #fbf2e9;
+  --raised: var(--surface-2);
+  --glass: rgb(255 250 245 / 0.74);
+  --line: #efdfcf;
+  --line-2: #e2c9b3;
+  --text: #24160e;
+  --text-2: #4a3628;
+  --muted: #76604f;
+  --faint: #a38b78;
+
+  --accent: #f2762e;
+  --accent-text: #ad4a15;
+  --accent-2: #e2457a;
+  --accent-3: #f6a531;
+  --accent-ink: #2a1206;
+  --accent-soft: rgb(242 118 46 / 0.12);
+  --accent-line: rgb(242 118 46 / 0.38);
+
+  --grad: linear-gradient(90deg, #f7a531 0%, #f47a3a 48%, #e2457a 100%);
+  --grad-diag: linear-gradient(135deg, #f7a531 0%, #f47a3a 48%, #e2457a 100%);
+  --grad-text: linear-gradient(90deg, #c2620c 0%, #d34a22 50%, #b5285d 100%);
+  --grad-soft: linear-gradient(135deg, #ffeedd 0%, #ffe3ea 100%);
+  --on-grad: #2a1206;
+
+  --haze-1: #ffbd93;
+  --haze-2: #ffd98f;
+  --haze-3: #ffc4d6;
+  --hero-bg: radial-gradient(82% 80% at 50% 104%, #fff, #ffffffe6 14%, #fff1e480 34%, transparent 66%),
+    linear-gradient(#f7c4c6, #f9cbb9 26%, #fcd5b0 50%, #fde2c3 74%, #fdeedd);
+  --glow: rgb(244 122 58 / 0.42);
+  --glow-2: rgb(226 69 122 / 0.32);
+
+  --success: #3b7d2b;
+  --success-ink: #ffffff;
+  --success-soft: rgb(59 125 43 / 0.12);
+  --warn: #8f5d00;
+  --warn-soft: rgb(230 168 30 / 0.16);
+  --error: #c2382a;
+  --error-soft: rgb(194 56 42 / 0.1);
+  --recording: #e0532e;
+  --estimate: #9c5a22;
+  --overlay: rgb(36 22 14 / 0.5);
+
+  --shadow-1: 0 1px 2px rgb(90 50 20 / 0.06), 0 2px 10px rgb(90 50 20 / 0.06);
+  --shadow-2: 0 4px 14px rgb(90 50 20 / 0.08), 0 14px 36px rgb(90 50 20 / 0.1);
+  --shadow-3: 0 14px 30px rgb(90 50 20 / 0.12), 0 36px 90px rgb(90 50 20 / 0.18);
+  --ring: 0 0 0 3px rgb(242 118 46 / 0.35);
+
+  /* illustrations */
+  --ill-blob: #ffe4cf;
+  --ill-blob-2: #ffdbe5;
+  --ill-skin: #b8724a;
+  --ill-skin-2: #94552f;
+  --ill-hair: #2b1a12;
+  --ill-cloth: #e2457a;
+  --ill-cloth-2: #f6a531;
+  --ill-line: #3a2418;
+  --ill-paper: #ffffff;
+  --ill-paper-2: #fff4ea;
+  --ill-coin: #f4b630;
+  --ill-coin-2: #c98a12;
+  --ill-leaf: #6b9a3a;
+  --ill-roof: #ea6a37;
+  --ill-window: #ffd98f;
+  --ill-phone: #2b1a12;
+  --ill-screen: #fff3e8;
+  --ill-shadow: rgb(90 50 20 / 0.12);
+
+  /* phone mockup + maps */
+  --phone-body: #1d120c;
+  --phone-edge: #4a352a;
+  --map-bg: #fbefe3;
+  --map-road: #f2dcc8;
+  --map-dot: rgb(118 96 79 / 0.22);
+
+  --confetti-1: #f7a531;
+  --confetti-2: #f47a3a;
+  --confetti-3: #e2457a;
+  --confetti-4: #3b7d2b;
+  --meta-bg: #fcf7f2;
+}
+
+/* ------------------------------------------------------------------ WARM · dark */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #120c09;
+  --bg-2: #0b0705;
+  --surface: #1d1410;
+  --surface-2: #281c16;
+  --glass: rgb(26 18 14 / 0.74);
+  --line: #3a2a21;
+  --line-2: #4f3a2e;
+  --text: #fbefe3;
+  --text-2: #e7d4c2;
+  --muted: #c0a690;
+  --faint: #8a7260;
+
+  --accent: #ff8a45;
+  --accent-text: #ffa56d;
+  --accent-2: #ff5d8f;
+  --accent-3: #ffb83f;
+  --accent-ink: #1f0e05;
+  --accent-soft: rgb(255 138 69 / 0.14);
+  --accent-line: rgb(255 138 69 / 0.4);
+
+  --grad: linear-gradient(90deg, #ffb83f 0%, #ff7f45 48%, #ff4f86 100%);
+  --grad-diag: linear-gradient(135deg, #ffb83f 0%, #ff7f45 48%, #ff4f86 100%);
+  --grad-text: linear-gradient(90deg, #ffc65c 0%, #ff8a4c 50%, #ff6b98 100%);
+  --grad-soft: linear-gradient(135deg, rgb(255 138 69 / 0.16) 0%, rgb(255 79 134 / 0.12) 100%);
+  --on-grad: #1f0e05;
+
+  --haze-1: rgb(255 128 60 / 0.5);
+  --haze-2: rgb(255 184 63 / 0.32);
+  --haze-3: rgb(255 79 134 / 0.36);
+  --hero-bg: radial-gradient(82% 80% at 50% 104%, rgb(255 168 104 / 0.3), rgb(255 128 72 / 0.16) 24%, rgb(255 79 134 / 0.06) 44%, transparent 64%),
+    linear-gradient(#1e1012, #1d1110 30%, #170e0b 62%, #120c09);
+  --glow: rgb(255 128 60 / 0.55);
+  --glow-2: rgb(255 79 134 / 0.45);
+
+  --success: #a6cf63;
+  --success-ink: #15200a;
+  --success-soft: rgb(166 207 99 / 0.14);
+  --warn: #f0c15a;
+  --warn-soft: rgb(240 193 90 / 0.14);
+  --error: #ff7a68;
+  --error-soft: rgb(255 122 104 / 0.12);
+  --recording: #ff6a3d;
+  --estimate: #e6ab6c;
+  --overlay: rgb(8 5 3 / 0.78);
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 10px rgb(0 0 0 / 0.25);
+  --shadow-2: 0 6px 16px rgb(0 0 0 / 0.4), 0 16px 40px rgb(0 0 0 / 0.35);
+  --shadow-3: 0 16px 32px rgb(0 0 0 / 0.5), 0 40px 100px rgb(0 0 0 / 0.55);
+  --ring: 0 0 0 3px rgb(255 138 69 / 0.4);
+
+  --ill-blob: rgb(255 138 69 / 0.16);
+  --ill-blob-2: rgb(255 79 134 / 0.14);
+  --ill-skin: #c98458;
+  --ill-skin-2: #a86638;
+  --ill-hair: #140b07;
+  --ill-cloth: #ff5d8f;
+  --ill-cloth-2: #ffb83f;
+  --ill-line: #2a1a12;
+  --ill-paper: #3a2a21;
+  --ill-paper-2: #2c2019;
+  --ill-coin: #ffc247;
+  --ill-coin-2: #d89421;
+  --ill-leaf: #8fbf55;
+  --ill-roof: #ff7f45;
+  --ill-window: #ffcf70;
+  --ill-phone: #0b0705;
+  --ill-screen: #2a1d16;
+  --ill-shadow: rgb(0 0 0 / 0.35);
+
+  --phone-body: #0a0605;
+  --phone-edge: #4f3a2e;
+  --map-bg: #1a120e;
+  --map-road: #2a1e18;
+  --map-dot: rgb(255 210 170 / 0.12);
+
+  --confetti-1: #ffb83f;
+  --confetti-2: #ff7f45;
+  --confetti-3: #ff4f86;
+  --confetti-4: #a6cf63;
+  --meta-bg: #120c09;
+}
+
+/* ------------------------------------------------------------------ GNANI · light */
+:root[data-palette="gnani"] {
+  color-scheme: light;
+  --bg: #fcf7f2;
+  --bg-2: #f4eff8;
+  --surface: #ffffff;
+  --surface-2: #f8f4fc;
+  --glass: rgb(255 255 255 / 0.72);
+  --line: #ebe3f1;
+  --line-2: #d9cfe6;
+  --text: #101828;
+  --text-2: #3c3556;
+  --muted: #655e80;
+  --faint: #9a94b2;
+
+  --accent: #fe914b;
+  --accent-text: #5b4fd6;
+  --accent-2: #9f73f4;
+  --accent-3: #6c62ed;
+  --accent-ink: #101828;
+  --accent-soft: rgb(159 115 244 / 0.12);
+  --accent-line: rgb(159 115 244 / 0.38);
+
+  --grad: linear-gradient(90deg, #fe914b, #9f73f4);
+  --grad-diag: linear-gradient(135deg, #fe914b, #9f73f4);
+  --grad-text: linear-gradient(90deg, #d9631c, #6a48d8);
+  --grad-soft: linear-gradient(135deg, #ffe9db, #e2e0fb);
+  --on-grad: #101828;
+
+  --haze-1: #ffd3b7;
+  --haze-2: #c4c0f8;
+  --haze-3: #a2ebfc;
+  --hero-bg: radial-gradient(82% 80% at 50% 104%, #fff, #ffffffe6 14%, #d2eefa80 34%, transparent 66%),
+    linear-gradient(#c0beea, #b2c7ef 26%, #a6d3f3 50%, #aedef6 74%, #bfe8f9);
+  --glow: rgb(254 145 75 / 0.42);
+  --glow-2: rgb(159 115 244 / 0.4);
+
+  --success: #2f7a3e;
+  --success-ink: #ffffff;
+  --success-soft: rgb(47 122 62 / 0.12);
+  --warn: #8a5a00;
+  --warn-soft: rgb(230 168 30 / 0.16);
+  --error: #c2382a;
+  --error-soft: rgb(194 56 42 / 0.1);
+  --recording: #e0532e;
+  --estimate: #8a5a22;
+  --overlay: rgb(27 21 48 / 0.5);
+
+  --shadow-1: 0 1px 2px rgb(16 24 40 / 0.06), 0 2px 10px rgb(16 24 40 / 0.05);
+  --shadow-2: 0 4px 14px rgb(16 24 40 / 0.07), 0 16px 32px -12px rgb(16 24 40 / 0.14);
+  --shadow-3: 0 14px 30px rgb(16 24 40 / 0.1), 0 34px 64px -12px rgb(16 24 40 / 0.2);
+  --ring: 0 0 0 3px rgb(159 115 244 / 0.35);
+
+  --ill-blob: #e2e0fb;
+  --ill-blob-2: #d1f5fd;
+  --ill-skin: #b8724a;
+  --ill-skin-2: #94552f;
+  --ill-hair: #1f1730;
+  --ill-cloth: #9f73f4;
+  --ill-cloth-2: #fe914b;
+  --ill-line: #2a2240;
+  --ill-paper: #ffffff;
+  --ill-paper-2: #f4f1fd;
+  --ill-coin: #f4b630;
+  --ill-coin-2: #c98a12;
+  --ill-leaf: #5f9a4a;
+  --ill-roof: #fe914b;
+  --ill-window: #bfe8f9;
+  --ill-phone: #1f1730;
+  --ill-screen: #f8f4fc;
+  --ill-shadow: rgb(16 24 40 / 0.12);
+
+  --phone-body: #15111f;
+  --phone-edge: #3c3556;
+  --map-bg: #f3f0fb;
+  --map-road: #e2ddf2;
+  --map-dot: rgb(101 94 128 / 0.22);
+
+  --confetti-1: #fe914b;
+  --confetti-2: #9f73f4;
+  --confetti-3: #a2ebfc;
+  --confetti-4: #ffbd93;
+  --meta-bg: #fcf7f2;
+}
+
+/* ------------------------------------------------------------------ GNANI · dark */
+/* Deep ink from gnani.ai (#0c111d page, #101828 cards) with glowing orange/violet and a soft violet/sky haze. */
+:root[data-palette="gnani"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c111d;
+  --bg-2: #080b14;
+  --surface: #101828;
+  --surface-2: #182230;
+  --glass: rgb(16 24 40 / 0.72);
+  --line: #1f2a3d;
+  --line-2: #344054;
+  --text: #f5f3ff;
+  --text-2: #dcd8f0;
+  --muted: #a9b0c6;
+  --faint: #6f7891;
+
+  --accent: #fe914b;
+  --accent-text: #c4b5ff;
+  --accent-2: #a98bff;
+  --accent-3: #8981f1;
+  --accent-ink: #0c111d;
+  --accent-soft: rgb(169 139 255 / 0.15);
+  --accent-line: rgb(169 139 255 / 0.42);
+
+  --grad: linear-gradient(90deg, #fe914b, #a98bff);
+  --grad-diag: linear-gradient(135deg, #fe914b, #a98bff);
+  --grad-text: linear-gradient(90deg, #ffae78, #c4b5ff);
+  --grad-soft: linear-gradient(135deg, rgb(254 145 75 / 0.14), rgb(169 139 255 / 0.16));
+  --on-grad: #0c111d;
+
+  --haze-1: rgb(254 145 75 / 0.36);
+  --haze-2: rgb(137 129 241 / 0.42);
+  --haze-3: rgb(162 235 252 / 0.2);
+  --hero-bg: radial-gradient(82% 80% at 50% 104%, rgb(169 139 255 / 0.34), rgb(162 235 252 / 0.12) 30%, transparent 62%),
+    radial-gradient(50% 50% at 15% 0%, rgb(254 145 75 / 0.16), transparent 70%),
+    linear-gradient(#151a3a, #131a35 30%, #0f1629 62%, #0c111d);
+  --glow: rgb(254 145 75 / 0.5);
+  --glow-2: rgb(169 139 255 / 0.55);
+
+  --success: #7fd99a;
+  --success-ink: #07170d;
+  --success-soft: rgb(127 217 154 / 0.14);
+  --warn: #f5c26b;
+  --warn-soft: rgb(245 194 107 / 0.14);
+  --error: #ff8a7a;
+  --error-soft: rgb(255 138 122 / 0.12);
+  --recording: #ff6a3d;
+  --estimate: #f0b27a;
+  --overlay: rgb(4 6 12 / 0.78);
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.45), 0 2px 10px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 6px 16px rgb(0 0 0 / 0.45), 0 16px 40px rgb(0 0 0 / 0.4);
+  --shadow-3: 0 16px 32px rgb(0 0 0 / 0.55), 0 40px 100px rgb(0 0 0 / 0.6);
+  --ring: 0 0 0 3px rgb(169 139 255 / 0.45);
+
+  --ill-blob: rgb(169 139 255 / 0.16);
+  --ill-blob-2: rgb(162 235 252 / 0.12);
+  --ill-skin: #c98458;
+  --ill-skin-2: #a86638;
+  --ill-hair: #080b14;
+  --ill-cloth: #a98bff;
+  --ill-cloth-2: #fe914b;
+  --ill-line: #0c111d;
+  --ill-paper: #1f2a3d;
+  --ill-paper-2: #182230;
+  --ill-coin: #ffc247;
+  --ill-coin-2: #d89421;
+  --ill-leaf: #7fd99a;
+  --ill-roof: #fe914b;
+  --ill-window: #a2ebfc;
+  --ill-phone: #05070d;
+  --ill-screen: #182230;
+  --ill-shadow: rgb(0 0 0 / 0.42);
+
+  --phone-body: #05070d;
+  --phone-edge: #344054;
+  --map-bg: #0f1626;
+  --map-road: #1d2638;
+  --map-dot: rgb(196 192 248 / 0.14);
+
+  --confetti-1: #fe914b;
+  --confetti-2: #a98bff;
+  --confetti-3: #a2ebfc;
+  --confetti-4: #ffbd93;
+  --meta-bg: #0c111d;
+}

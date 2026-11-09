@@ -1,7 +1,8 @@
 "use client";
 
 // Small presentational pieces shared by the screens. No data fetching here: props in, events out.
-// Class names are plain and documented in app/globals.css so a design can restyle or replace them.
+// Class names are plain and styled in app/globals.css; colours come from app/theme.css tokens.
+// See docs/DESIGN_SYSTEM.md. Existing props are stable: screens written against them still work.
 
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
@@ -10,15 +11,49 @@ import { inr, inrWhole } from "@/lib/format";
 import type { Translate } from "@/lib/i18n";
 import type { MeterChip } from "@/lib/types";
 import type { PlayerState } from "@/hooks/useAudioPlayer";
-import { BackIcon, MicIcon, PauseIcon, PlayIcon, ShieldIcon, StopIcon } from "./icons";
+import { MicIcon, PauseIcon, PlayIcon, ShieldIcon, StopIcon } from "./icons";
+import { AppBar, BottomNav, Waveform, type NavKey } from "./kit";
+import { ThemeToggle } from "./ThemeToggle";
+
+// The design-system kit, re-exported so screens import everything from one place.
+export {
+  AppBar,
+  BottomNav,
+  BottomSheet,
+  Card,
+  Confetti,
+  CountUp,
+  GlowRing,
+  GradientButton,
+  HomesMap,
+  Skeleton,
+  SkeletonCard,
+  StatusPill,
+  Waveform,
+  toneForState,
+  type CardTone,
+  type MapHome,
+  type NavKey,
+  type PillTone,
+} from "./kit";
+export { Illustration, ILLUSTRATIONS, type IllustrationName } from "./Illustration";
+export { ThemeToggle } from "./ThemeToggle";
+export { InstallButton } from "./InstallButton";
 
 // ------------------------------------------------------------------ layout
+/**
+ * App screen shell: glass AppBar (back, title, theme toggle + Help), warm haze backdrop, content
+ * column (max 480 px, 16 px gutter), optional Uber-style BottomNav (`nav` = the active tab).
+ */
 export function Screen({
   title,
   back,
   children,
   className,
   safetyLink = true,
+  themeToggle = true,
+  nav,
+  right,
   t,
 }: {
   title?: ReactNode;
@@ -26,30 +61,37 @@ export function Screen({
   children: ReactNode;
   className?: string;
   safetyLink?: boolean;
+  themeToggle?: boolean;
+  /** Show the bottom navigation with this tab active. */
+  nav?: NavKey;
+  /** Extra controls in the app bar, before the theme toggle. */
+  right?: ReactNode;
   t?: Translate;
 }) {
+  const showHead = title !== undefined || back || safetyLink || themeToggle || right;
   return (
-    <main className={`screen ${className ?? ""}`}>
-      {title !== undefined || back || safetyLink ? (
-        <header className="screen-head">
-          {back ? (
-            <Link href={back} className="icon-btn" aria-label={t ? t("common.back") : "Back"}>
-              <BackIcon />
-            </Link>
-          ) : (
-            <span className="icon-btn-spacer" />
-          )}
-          {title !== undefined ? <h1 className="screen-title">{title}</h1> : <span />}
-          {safetyLink ? (
-            <Link href="/safety" className="icon-btn" aria-label={t ? t("home.safety") : "Help"}>
-              <ShieldIcon />
-            </Link>
-          ) : (
-            <span className="icon-btn-spacer" />
-          )}
-        </header>
+    <main className={`screen ${nav ? "screen-has-nav" : ""} ${className ?? ""}`}>
+      {showHead ? (
+        <AppBar
+          title={title}
+          back={back}
+          backLabel={t ? t("common.back") : "Back"}
+          right={
+            <span className="appbar-actions">
+              {right}
+              {themeToggle ? <ThemeToggle /> : null}
+              {safetyLink ? (
+                <Link href="/safety" className="icon-btn icon-btn-safety" aria-label={t ? t("home.safety") : "Help"}>
+                  <ShieldIcon />
+                </Link>
+              ) : null}
+              {!themeToggle && !safetyLink && !right ? <span className="icon-btn-spacer" /> : null}
+            </span>
+          }
+        />
       ) : null}
       {children}
+      {nav ? <BottomNav t={t} active={nav} /> : null}
     </main>
   );
 }
@@ -57,7 +99,12 @@ export function Screen({
 export function Loading({ label }: { label: string }) {
   return (
     <p className="loading" role="status" aria-live="polite">
-      <span className="spinner" aria-hidden="true" /> {label}
+      <span className="spinner" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>{" "}
+      {label}
     </p>
   );
 }
@@ -66,6 +113,7 @@ export function ErrorNote({ message, onRetry, retryLabel }: { message: string | 
   if (!message) return null;
   return (
     <div className="error-note" role="alert">
+      <span className="error-note-icon" aria-hidden="true">!</span>
       <p>{message}</p>
       {onRetry ? (
         <button type="button" className="btn" onClick={onRetry}>
@@ -104,19 +152,24 @@ export function MicButton({
 }) {
   const recording = state === "recording";
   return (
-    <div className={`mic-wrap mic-${size}`}>
-      <button
-        type="button"
-        className="mic"
-        data-state={state}
-        style={{ "--level": level } as CSSProperties}
-        disabled={disabled}
-        aria-label={label}
-        aria-pressed={recording}
-        {...handlers}
-      >
-        {recording ? <StopIcon /> : <MicIcon />}
-      </button>
+    <div className={`mic-wrap mic-${size}`} data-state={state}>
+      <span className="mic-stage" style={{ "--level": level } as CSSProperties}>
+        <span className="mic-halo" aria-hidden="true" />
+        <span className="mic-halo mic-halo-2" aria-hidden="true" />
+        <button
+          type="button"
+          className="mic"
+          data-state={state}
+          style={{ "--level": level } as CSSProperties}
+          disabled={disabled}
+          aria-label={label}
+          aria-pressed={recording}
+          {...handlers}
+        >
+          {recording ? <StopIcon /> : <MicIcon />}
+        </button>
+      </span>
+      <Waveform active={recording} level={recording ? Math.max(0.25, level) : 0.15} bars={size === "big" ? 22 : 14} className="mic-wave" />
       <p className="mic-label" aria-live="polite">
         {recording && elapsedMs !== undefined ? `${formatTimer(elapsedMs)} · ${label}` : label}
       </p>
@@ -129,9 +182,12 @@ export function MeterValue({ value, tick, animating, label }: { value: number; t
   return (
     <div className="meter" data-animating={animating} data-tick={tick % 2}>
       <p className="meter-label">{label}</p>
-      <p className="meter-value" aria-live="polite" aria-atomic="true">
-        {inrWhole(value)}
-      </p>
+      <div className="meter-stage">
+        <span key={tick} className="meter-glow" aria-hidden="true" />
+        <p className="meter-value" aria-live="polite" aria-atomic="true">
+          {inrWhole(value)}
+        </p>
+      </div>
     </div>
   );
 }
@@ -212,8 +268,9 @@ export function PlayButton({
       aria-label={label}
       style={{ "--progress": active ? progress ?? 0 : 0 } as CSSProperties}
     >
-      {playing ? <PauseIcon /> : <PlayIcon />}
+      <span className="play-btn-icon">{playing ? <PauseIcon /> : <PlayIcon />}</span>
       <span>{label}</span>
+      <Waveform active={playing} bars={7} level={playing ? 0.8 : 0.3} className="play-btn-wave" />
     </button>
   );
 }

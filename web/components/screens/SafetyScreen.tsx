@@ -12,7 +12,7 @@ export function SafetyScreen() {
   const s = useSafety();
 
   return (
-    <Screen title={t("safety.title")} back="/" t={t} safetyLink={false} className="safety-screen">
+    <Screen title={t("safety.title")} back="/app" t={t} safetyLink={false} className="safety-screen">
       <button type="button" className="quick-exit" onClick={s.quickExit}>
         {t("safety.exit")}
       </button>

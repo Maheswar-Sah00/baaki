@@ -27,7 +27,7 @@ export function VoiceScreen() {
   const seconds = Math.floor(vp.recorder.elapsedMs / 1000);
 
   return (
-    <Screen title={t("voice.title")} back="/" t={t} className="voice-screen">
+    <Screen title={t("voice.title")} back="/app" t={t} className="voice-screen" nav="voice">
       {vp.loading ? <Loading label={t("common.loading")} /> : null}
 
       {vp.exists && vp.profile ? (

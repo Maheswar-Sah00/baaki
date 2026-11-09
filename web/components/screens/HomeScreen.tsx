@@ -1,17 +1,30 @@
 "use client";
 
-// Worker home (/): totals, one card per home, a big mic, and a hidden demo menu.
+// Worker home (/app): totals, a map of her homes, a big glowing mic, one card per home, the bottom
+// nav and a hidden demo menu. The marketing website is at "/".
 
 import Link from "next/link";
 import { useDashboard, useSettings, useT } from "@/hooks";
 import { UI_LANGS, type StringKey } from "@/lib/i18n";
 import { inr, shortDate } from "@/lib/format";
-import { EstimateTag, ErrorNote, Loading, Money, Screen } from "@/components/ui/primitives";
+import {
+  EstimateTag,
+  ErrorNote,
+  GlowRing,
+  HomesMap,
+  Illustration,
+  Loading,
+  Money,
+  Screen,
+  SkeletonCard,
+  toneForState,
+} from "@/components/ui/primitives";
 import { MicIcon } from "@/components/ui/icons";
 
 export function LanguagePicker({ onPick, title }: { onPick: (l: (typeof UI_LANGS)[number]["value"]) => void; title: string }) {
   return (
     <section className="lang-picker" aria-label={title}>
+      <Illustration name="speak" animated size={240} style={{ margin: "0 auto 8px" }} />
       <h2 className="section-title">{title}</h2>
       <div className="stack">
         {UI_LANGS.map((l) => (
@@ -47,7 +60,7 @@ export function HomeScreen() {
 
   const totals = dash.totals;
   return (
-    <Screen title={dash.worker ? `${t("app.name")} · ${dash.worker.name}` : t("app.name")} t={t}>
+    <Screen title={dash.worker ? `${t("app.name")} · ${dash.worker.name}` : t("app.name")} t={t} nav="home">
       <section className="totals" aria-label={t("home.total_baaki")}>
         <div className="total-main">
           <p className="total-label">{t("home.total_baaki")}</p>
@@ -76,19 +89,47 @@ export function HomeScreen() {
       </section>
 
       <Link href="/speak" className="mic-link" aria-label={t("home.speak")}>
-        <span className="mic" data-state="idle">
-          <MicIcon />
-        </span>
+        <GlowRing>
+          <span className="mic" data-state="idle">
+            <MicIcon />
+          </span>
+        </GlowRing>
         <span className="mic-link-label">{t("home.speak")}</span>
         <span className="hint">{t("home.speak_hint")}</span>
       </Link>
 
-      {dash.loading ? <Loading label={t("common.loading")} /> : null}
+      {dash.loading && dash.cards.length === 0 ? (
+        <div className="stack" role="status" aria-label={t("common.loading")}>
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : dash.loading ? (
+        <Loading label={t("common.loading")} />
+      ) : null}
       <ErrorNote message={dash.error} onRetry={dash.refresh} retryLabel={t("common.retry")} />
 
       <section aria-label={t("home.title")}>
         <h2 className="section-title">{t("home.title")}</h2>
-        {!dash.loading && dash.cards.length === 0 && !dash.error ? <p className="muted">{t("home.empty")}</p> : null}
+        {!dash.loading && dash.cards.length === 0 && !dash.error ? (
+          <div className="home-empty">
+            <Illustration name="empty" size={200} />
+            <p className="muted">{t("home.empty")}</p>
+          </div>
+        ) : null}
+        {dash.cards.length > 0 ? (
+          <HomesMap
+            className="home-map"
+            label={t("home.title")}
+            you={dash.worker?.name ?? t("app.name")}
+            homes={dash.cards.map((c) => ({
+              id: c.case_id,
+              name: c.employer?.name ?? "—",
+              amount: c.balance,
+              tone: toneForState(c.state),
+              href: `/case/${c.case_id}`,
+            }))}
+          />
+        ) : null}
         <ul className="cards">
           {dash.cards.map((c) => (
             <li key={c.case_id}>
@@ -123,18 +164,6 @@ export function HomeScreen() {
           ))}
         </ul>
       </section>
-
-      <nav className="quick-nav" aria-label="More">
-        <Link href="/diary" className="btn">
-          {t("home.diary")}
-        </Link>
-        <Link href="/voice" className="btn">
-          {t("home.voice")}
-        </Link>
-        <Link href="/safety" className="btn">
-          {t("home.safety")}
-        </Link>
-      </nav>
 
       <details className="dev-menu">
         <summary aria-label={t("home.dev")}>·</summary>
