@@ -4,8 +4,8 @@
 // Works with no backend at all (the helplines are bundled).
 
 import { useSafety, useT } from "@/hooks";
-import { PhoneIcon } from "@/components/ui/icons";
-import { Screen } from "@/components/ui/primitives";
+import { ArrowRightIcon, PhoneIcon } from "@/components/ui/icons";
+import { Illustration, Screen } from "@/components/ui/primitives";
 
 export function SafetyScreen() {
   const { t } = useT();
@@ -17,14 +17,19 @@ export function SafetyScreen() {
         {t("safety.exit")}
       </button>
 
-      <p className="safety-body">{t("safety.body")}</p>
-      {s.categories.length ? (
-        <ul className="plain-list">
-          {s.categories.map((c) => (
-            <li key={c.key}>{c.label}</li>
-          ))}
-        </ul>
-      ) : null}
+      <section className="card safety-hero">
+        <Illustration name="shield" size={170} animated className="safety-ill" />
+        <p className="safety-body">{t("safety.body")}</p>
+        {s.categories.length ? (
+          <ul className="safety-cats">
+            {s.categories.map((c) => (
+              <li key={c.key} className="pill" data-tone="warn">
+                {c.label}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
 
       <section aria-label={t("safety.helplines")}>
         <h2 className="section-title">{t("safety.helplines")}</h2>
@@ -32,9 +37,14 @@ export function SafetyScreen() {
           {s.callable.map((h) => (
             <li key={h.number}>
               <a href={h.href} className="helpline">
-                <PhoneIcon />
-                <span className="helpline-number">{h.number}</span>
-                <span className="helpline-name">{h.name}</span>
+                <span className="helpline-text">
+                  <span className="helpline-number">{h.number}</span>
+                  <span className="helpline-name">{h.name}</span>
+                </span>
+                <span className="helpline-call">
+                  <PhoneIcon />
+                  <span>{t("safety.call")}</span>
+                </span>
               </a>
             </li>
           ))}
@@ -42,6 +52,7 @@ export function SafetyScreen() {
             <li key={h.name}>
               <a href={h.url} className="helpline helpline-link" target="_blank" rel="noreferrer">
                 <span className="helpline-name">{h.name}</span>
+                <ArrowRightIcon />
               </a>
             </li>
           ))}

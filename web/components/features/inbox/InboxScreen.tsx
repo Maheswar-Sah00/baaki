@@ -60,6 +60,8 @@ export function InboxScreen({ caseId, asOf, shared }: { caseId: number; asOf?: s
 
   useEffect(() => {
     const ac = new AbortController();
+    // load() only sets state after its fetch resolves, not synchronously in this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load(ac.signal);
     return () => ac.abort();
   }, [load]);

@@ -312,6 +312,13 @@
   color: var(--text);
 }
 
+.entry > svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+}
+
 .entryIcon {
   display: grid;
   place-items: center;

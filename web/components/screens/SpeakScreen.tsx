@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import { useListen, useLiveMeter, usePressToTalk, useSafety, useSettings, useT } from "@/hooks";
 import { draftStore } from "@/lib/store";
 import type { ListenLang } from "@/lib/types";
-import { ChipView, ErrorNote, MeterValue, MicButton, Screen } from "@/components/ui/primitives";
+import { BottomSheet, Card, ChipView, ErrorNote, GradientButton, MeterValue, MicButton, Screen } from "@/components/ui/primitives";
+import { CheckIcon, MicIcon, WaveIcon } from "@/components/ui/icons";
 
 /** Opt-in live chunks while recording (each one is a Gnani STT call). e.g. NEXT_PUBLIC_BAAKI_INTERIM_MS=4500 */
 const INTERIM_MS = Number(process.env.NEXT_PUBLIC_BAAKI_INTERIM_MS) || null;
@@ -80,13 +81,16 @@ export function SpeakScreen() {
     setEditingChip(null);
   };
 
+  const editing = live.chips.find((c) => c.id === editingChip) ?? null;
+
   return (
     <Screen title={t("speak.title")} back="/app" t={t} className="speak-screen">
-      <div className="segmented" role="group" aria-label={t("lang.change")}>
+      <div className="segmented speak-langs" role="group" aria-label={t("lang.change")}>
         {LISTEN_LANGS.map((l) => (
           <button
             key={l.value}
             type="button"
+            lang={l.value === "te" ? "te" : undefined}
             aria-pressed={settings.listenLang === l.value}
             onClick={() => settings.setListenLang(l.value)}
             disabled={listen.status === "recording"}
@@ -96,22 +100,25 @@ export function SpeakScreen() {
         ))}
       </div>
 
-      <MeterValue value={live.display} tick={live.tick} animating={live.animating} label={t("speak.meter")} />
-      {live.formula ? <p className="meter-formula">{live.formula}</p> : null}
+      <section className="speak-stage" data-state={listen.status} data-typing={typing} aria-label={t("speak.meter")}>
+        <span className="speak-stage-glow" aria-hidden="true" />
+        <MeterValue value={live.display} tick={live.tick} animating={live.animating} label={t("speak.meter")} />
+        {live.formula ? <p className="meter-formula">{live.formula}</p> : null}
 
-      {!typing ? (
-        <>
-          <MicButton
-            state={listen.status === "listening" ? "busy" : listen.recorder.state}
-            level={listen.level}
-            elapsedMs={listen.elapsedMs}
-            disabled={listen.status === "listening" || listen.status === "starting"}
-            handlers={press}
-            label={micLabel}
-          />
-          {listen.status === "idle" ? <p className="hint center">{t("speak.hold")}</p> : null}
-        </>
-      ) : null}
+        {!typing ? (
+          <>
+            <MicButton
+              state={listen.status === "listening" ? "busy" : listen.recorder.state}
+              level={listen.level}
+              elapsedMs={listen.elapsedMs}
+              disabled={listen.status === "listening" || listen.status === "starting"}
+              handlers={press}
+              label={micLabel}
+            />
+            {listen.status === "idle" ? <p className="hint center">{t("speak.hold")}</p> : null}
+          </>
+        ) : null}
+      </section>
 
       <ErrorNote message={listen.error} />
       {listen.voiceDown ? <p className="hint">{t("speak.voice_down")}</p> : null}
@@ -126,7 +133,7 @@ export function SpeakScreen() {
                 key={c.id}
                 chip={c}
                 t={t}
-                editing={editingChip === c.id}
+                editing={false}
                 setEditing={(v) => setEditingChip(v ? c.id : null)}
                 onRemove={() => {
                   setEditingChip(null);
@@ -139,8 +146,33 @@ export function SpeakScreen() {
         </section>
       ) : null}
 
+      <BottomSheet
+        open={editing !== null}
+        onClose={() => setEditingChip(null)}
+        title={editing ? t(`chip.${editing.kind}` as Parameters<typeof t>[0]) : undefined}
+        closeLabel={t("common.close")}
+        className="chip-sheet"
+      >
+        {editing ? (
+          <>
+            {editing.text ? <p className="chip-sheet-said">&ldquo;{editing.text}&rdquo;</p> : null}
+            <ChipView
+              chip={editing}
+              t={t}
+              editing
+              setEditing={(v) => setEditingChip(v ? editing.id : null)}
+              onRemove={() => {
+                setEditingChip(null);
+                void live.removeChip(editing.id);
+              }}
+              onEdit={(v) => void live.editChip(editing.id, v)}
+            />
+          </>
+        ) : null}
+      </BottomSheet>
+
       {typing ? (
-        <section className="card">
+        <Card as="section" tone="soft" className="speak-type">
           <label className="field">
             <span className="field-label">{t("speak.type")}</span>
             <textarea
@@ -152,21 +184,23 @@ export function SpeakScreen() {
               autoFocus
             />
           </label>
-        </section>
+        </Card>
       ) : listen.transcript ? (
-        <section className="card" aria-live="polite">
-          <h2 className="card-title">{t("speak.transcript")}</h2>
+        <Card as="section" tone="soft" className="speak-transcript" aria-live="polite">
+          <h2 className="card-title">
+            <WaveIcon /> {t("speak.transcript")}
+          </h2>
           <p className="transcript">{listen.transcript}</p>
-        </section>
+        </Card>
       ) : null}
 
-      <div className="actions">
+      <div className="actions speak-actions">
         {hasSomething ? (
-          <button type="button" className="btn btn-primary btn-big" onClick={goConfirm} disabled={live.busy || listen.status === "listening"}>
+          <GradientButton onClick={goConfirm} disabled={live.busy || listen.status === "listening"} icon={<CheckIcon />}>
             {t("speak.continue")}
-          </button>
+          </GradientButton>
         ) : null}
-        <div className="row">
+        <div className="speak-secondary">
           {hasSomething ? (
             <button type="button" className="btn" onClick={again}>
               {t("speak.again")}
@@ -174,17 +208,27 @@ export function SpeakScreen() {
           ) : null}
           <button
             type="button"
-            className="btn"
+            className="btn btn-ghost"
             aria-pressed={typing}
             onClick={() => {
               if (!typing && listen.transcript && !live.text) live.fromText(listen.transcript, settings.listenLang);
               setTyping((v) => !v);
             }}
           >
+            {typing ? <MicIcon /> : <KeyboardIcon />}
             {typing ? t("speak.tap") : t("speak.type")}
           </button>
         </div>
       </div>
     </Screen>
+  );
+}
+
+function KeyboardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+      <path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10" />
+    </svg>
   );
 }

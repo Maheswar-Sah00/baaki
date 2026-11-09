@@ -6,7 +6,8 @@
 import { usePressToTalk, useSettings, useT, useVoiceProfile, VOICE_MAX_MS } from "@/hooks";
 import { allLangs } from "@/lib/i18n";
 import { dateTime } from "@/lib/format";
-import { ErrorNote, Loading, MicButton, Screen, Toggle } from "@/components/ui/primitives";
+import { Card, ErrorNote, Illustration, Loading, MicButton, Screen, StatusPill, Toggle } from "@/components/ui/primitives";
+import { CheckIcon, LockIcon } from "@/components/ui/icons";
 
 const SAMPLE: Record<string, string> = {
   te: "నా పేరు లక్ష్మి. నేను హైదరాబాద్‌లో ఇళ్ళలో పని చేస్తాను. ప్రతి రోజు ఉదయం ఏడు గంటలకు పని మొదలుపెడతాను.",
@@ -31,20 +32,29 @@ export function VoiceScreen() {
       {vp.loading ? <Loading label={t("common.loading")} /> : null}
 
       {vp.exists && vp.profile ? (
-        <section className="card voice-status" data-exists="true">
-          <h2 className="card-title">{t("voice.ready")}</h2>
-          {vp.profile.consent_at ? <p className="meta">{dateTime(vp.profile.consent_at, lang)}</p> : null}
-          {vp.profile.duration_s ? <p className="meta">{vp.profile.duration_s.toFixed(1)} s</p> : null}
+        <Card as="section" tone="success" className="voice-status" data-exists="true">
+          <Illustration name="wave" size={180} className="voice-ill" />
+          <h2 className="voice-status-title">
+            <span className="voice-status-check" aria-hidden="true">
+              <CheckIcon />
+            </span>
+            {t("voice.ready")}
+          </h2>
+          <div className="row voice-status-meta">
+            {vp.profile.consent_at ? <StatusPill tone="success">{dateTime(vp.profile.consent_at, lang)}</StatusPill> : null}
+            {vp.profile.duration_s ? <StatusPill>{vp.profile.duration_s.toFixed(1)} s</StatusPill> : null}
+          </div>
           <button type="button" className="btn btn-no" onClick={() => void vp.remove()} disabled={vp.deleting}>
             {t("voice.delete")}
           </button>
-        </section>
+        </Card>
       ) : null}
 
       {!vp.loading && !vp.exists ? (
         <>
           <section className="card consent" aria-labelledby="consent-title">
-            <h2 id="consent-title" className="card-title">
+            <Illustration name="wave" size={180} animated className="voice-ill" />
+            <h2 id="consent-title" className="consent-title">
               {t("voice.consent_title")}
             </h2>
             {allLangs("voice.consent_body").map((c) => (
@@ -52,6 +62,9 @@ export function VoiceScreen() {
                 {c.text}
               </p>
             ))}
+            <p className="consent-lock">
+              <LockIcon /> {t("voice.none")}
+            </p>
             <Toggle
               checked={vp.consent}
               onChange={vp.setConsent}
@@ -62,10 +75,9 @@ export function VoiceScreen() {
           </section>
 
           {vp.justDeleted ? <p className="meta">{t("voice.deleted")}</p> : null}
-          <p className="hint">{t("voice.none")}</p>
 
           {vp.consent ? (
-            <section className="stack">
+            <section className="stack voice-record">
               <p className="field-label">{t("voice.say_this")}</p>
               <blockquote className="sample">{SAMPLE[lang] ?? SAMPLE.en}</blockquote>
               <MicButton
