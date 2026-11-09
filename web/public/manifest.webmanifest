@@ -1,0 +1,11 @@
+{
+  "name": "Baaki",
+  "short_name": "Baaki",
+  "description": "Money still owed, said in your language.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#17110d",
+  "theme_color": "#17110d",
+  "icons": []
+}

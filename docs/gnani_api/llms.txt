@@ -1,0 +1,135 @@
+# Gnani AI Documentation
+
+> Gnani AI docs for Speech APIs (STT and TTS), Agent Builder, and the Agent Builder Platform API. Build Voice AI for Indian languages and call audio.
+
+- [Gnani.ai Documentation](https://docs.gnani.ai/index.md): Documentation for the Gnani.ai developer platform: Speech APIs, Agent Builder, and the Agent Builder Platform API.
+- [Introduction – Gnani Speech APIs](https://docs.gnani.ai/api/introduction/introduction.md): Speech-to-text, text-to-speech, and voice cloning APIs for Indian languages — REST, streaming, and batch.
+- [Quick Start](https://docs.gnani.ai/api/introduction/quick-start.md): Make your first speech-to-text, text-to-speech or voice-cloned TTS API request in minutes.
+- [LiveKit Plugin](https://docs.gnani.ai/livekit/introduction.md): Use Gnani Prisma (STT) and Timbre (TTS), including Prisma v3.0 and Timbre v3.0, inside LiveKit Agents voice pipelines for Indian languages.
+- [Pipecat Plugin](https://docs.gnani.ai/pipecat/introduction.md): Use Gnani STT and TTS inside Pipecat voice agent pipelines for Indian languages.
+- [Python SDK](https://docs.gnani.ai/python-sdk/introduction.md): Official Python client for Gnani Speech-to-Text and Text-to-Speech across REST, SSE, and WebSocket.
+- [Python SDK — Speech-to-Text](https://docs.gnani.ai/python-sdk/speech-to-text.md): Transcribe files with the REST client and live audio with the realtime WebSocket client.
+- [Python SDK — Batch Speech-to-Text](https://docs.gnani.ai/python-sdk/speech-to-text-batch.md): Transcribe many or long recordings asynchronously with one call: upload, start, wait, and fetch transcripts.
+- [Python SDK — Text-to-Speech](https://docs.gnani.ai/python-sdk/text-to-speech.md): Synthesize speech with the REST, SSE, and realtime WebSocket clients.
+- [Speech-to-Text](https://docs.gnani.ai/api/STT/overview.md): Turn speech into text with Gnani Prisma. Choose a model, then choose how to send your audio: REST, Realtime streaming or Batch.
+- [Models](https://docs.gnani.ai/api/STT/models/overview.md): The Gnani speech-to-text models, what each one is for, and how to choose between them.
+- [Prisma v3.0](https://docs.gnani.ai/api/STT/models/prisma-v3.md): A speech-to-text model for Indian languages that can work out which language is being spoken, handle speech that mixes languages, and use hints such as names and topics to improve accuracy.
+- [Prisma v2.5](https://docs.gnani.ai/api/STT/models/prisma-v2-5.md): The default speech-to-text model for Indian languages. You choose the language, and it returns the words as text, with optional number formatting, find-and-replace and word boosting.
+- [REST transcription](https://docs.gnani.ai/api/STT/speech-to-text.md): Transcribe audio clips of up to 30 seconds over HTTP with Prisma v2.5 or Prisma v3.0.
+- [Realtime streaming](https://docs.gnani.ai/api/STT/stt-websocket.md): Real-time speech-to-text over a persistent WebSocket connection.
+- [Batch transcription](https://docs.gnani.ai/api/STTBatch/Introduction.md): Asynchronous transcription of long or multiple audio files via the Batch Jobs API.
+- [Create job](https://docs.gnani.ai/api/STTBatch/Create_Job.md): Create a new batch transcription job with uploaded files, a ZIP, or public URLs.
+- [Start job](https://docs.gnani.ai/api/STTBatch/Start_Job.md): Start processing a batch transcription job.
+- [Get job status](https://docs.gnani.ai/api/STTBatch/Get_Job.md): Get batch job status and progress counters.
+- [List jobs](https://docs.gnani.ai/api/STTBatch/List_Jobs.md): List batch transcription jobs with optional status filter and pagination.
+- [Get job files](https://docs.gnani.ai/api/STTBatch/Get_Job_Files.md): List per-file results and transcript URLs for a batch job.
+- [Cancel job](https://docs.gnani.ai/api/STTBatch/Cancel_Job.md): Cancel a batch transcription job.
+- [Supported languages](https://docs.gnani.ai/api/STT/languages.md): The languages supported by each Speech-to-Text model.
+- [Limits](https://docs.gnani.ai/api/STT/limits.md): Audio, request and session limits for Speech-to-Text.
+- [Available Voices](https://docs.gnani.ai/api/TTS/available-voices.md): Voice catalogs for Gnani Timbre v2.5 and Timbre v3.0.
+- [Text-to-Speech (REST)](https://docs.gnani.ai/api/TTS/tts-inference.md): Synchronous text-to-speech with full audio returned in one response.
+- [Text-to-Speech (Streaming)](https://docs.gnani.ai/api/TTS/tts-sse.md): Stream audio in chunks as it's generated via Server-Sent Events.
+- [Text-to-Speech (Realtime)](https://docs.gnani.ai/api/TTS/tts-websocket.md): Real-time text-to-speech with streaming audio via WebSocket.
+- [Audio Tags](https://docs.gnani.ai/api/TTS/tts-audio-tags.md): Add expressive delivery to Timbre v3.0 speech using inline audio tags.
+- [Text Normalization Guide](https://docs.gnani.ai/api/TTS/tts-input-formating.md): How the API automatically converts numbers, currency, dates, IDs, and more into natural spoken form.
+- [Voice Clone Embeddings](https://docs.gnani.ai/api/VC/voice-clone-embeddings.md): Generate voice clone embeddings from an audio file.
+- [Voice Cloned TTS (REST)](https://docs.gnani.ai/api/VC/vc-inference.md): Generate cloned voice audio in a single synchronous response.
+- [Voice Cloned TTS (Streaming)](https://docs.gnani.ai/api/VC/vc-sse.md): Stream cloned voice audio in chunks via Server-Sent Events.
+- [Voice Cloned TTS (Realtime)](https://docs.gnani.ai/api/VC/vc-websocket.md): Real-time cloned voice audio streaming via WebSocket.
+- [Podcast Transcription with Speaker Labels](https://docs.gnani.ai/api/use-cases/podcast-transcription.md): Transcribe multi-speaker audio at scale using the Gnani Prisma v2.5 Batch STT API. From submitting an audio file to receiving a clean, speaker-separated transcript — in 10 Indian languages.
+- [Call Analytics Pipeline](https://docs.gnani.ai/api/use-cases/call-analytics.md): A production-ready Python pipeline for call analytics using the Gnani Prisma v2.5 Batch STT API. Covers async transcription with two-speaker diarization, segment-level sentiment, and LLM-powered analysis via Claude or OpenAI.
+- [Real-Time Quality & Compliance Monitoring](https://docs.gnani.ai/api/use-cases/real-time-compliance.md): Build a production-grade monitoring system that streams contact center audio to the Gnani Prisma v2.5 WebSocket STT API, detects compliance violations and quality signals in live transcripts, and triggers alerts in under 200ms of speech completion.
+- [Error Reference](https://docs.gnani.ai/api/introduction/errors.md): Error formats and every error type for Speech-to-Text, Batch, Text-to-Speech and Voice Cloning, and how to retry safely.
+- [Introduction – Agent Builder](https://docs.gnani.ai/introduction.md): Build, configure, test, and deploy voice agents with knowledge bases, integrations, and analytics.
+- [Creating a Knowledge Base](https://docs.gnani.ai/A01_KB.md): Upload documents or import web content so your agent can answer from trusted sources.
+- [Creating Your First Agent](https://docs.gnani.ai/A02_Agent.md): Create an agent from scratch or a template, then configure prompt, voice, and model settings.
+- [Testing Your Agent](https://docs.gnani.ai/A03_Testing.md): Validate agent responses in chat, in the browser with voice, and on a real phone call.
+- [Whitelisting Numbers](https://docs.gnani.ai/A04_Whitelisting.md): Simulate a real call
+- [Creating a Workforce](https://docs.gnani.ai/creating-a-workforce.md)
+- [DTMF Collection](https://docs.gnani.ai/B01_DTMF.md)
+- [Advanced ASR Settings ](https://docs.gnani.ai/B02_Advanced_ASR.md): Control how your voice agent listens, detects, and processes user speech in real-time conversations.
+- [Voicemail Detection](https://docs.gnani.ai/B03_Voicemail.md)
+- [Dynamic Variables & Dynamic Messages](https://docs.gnani.ai/B04_Dynamic_Variables.md): Personalize your agent's responses
+- [Writing a Disposition Prompt](https://docs.gnani.ai/C01_Disposition.md): Configure call dispositions and write prompts that categorize call outcomes for analytics.
+- [Language Switch Prompt](https://docs.gnani.ai/C02_Language_Switch.md): Configure how your agent detects and responds to user requests for changing languages during a conversation.
+- [Using Jinja for Dynamic System Prompts ](https://docs.gnani.ai/C03_Jinja.md): Use Jinja2 templates in system prompts for dynamic, caller-specific agent behavior.
+- [SMS Integration and Action](https://docs.gnani.ai/D01_Twilio_SMS.md)
+- [CRM  Integration and Action](https://docs.gnani.ai/D02_Zoho_CRM.md)
+- [Email Integration and Action](https://docs.gnani.ai/D03_MailSend_Email.md): Allow agents to send emails
+- [Ticketing Integration and Actions](https://docs.gnani.ai/D04_Zoho_Ticket.md)
+- [Custom Integrations and Actions](https://docs.gnani.ai/D05_Custom.md): Build custom HTTP integrations to connect your agent with external APIs and services.
+- [Integrating Gnani Agents with Webex Contact Center](https://docs.gnani.ai/D06_Webex.md)
+- [Conversational Logs](https://docs.gnani.ai/E01_Conversational_Logs.md): Your agent's flight recorder
+- [Dev Logs](https://docs.gnani.ai/E02_Dev_Logs.md): Troubleshoot agent behavior
+- [Agent Analytics](https://docs.gnani.ai/E03_Agent_Analytics.md): Your Agent’s Report Card
+- [Action Logs](https://docs.gnani.ai/E04_Action_Logs.md): Your Integrations’ Detective tool.
+- [Organizations](https://docs.gnani.ai/F02_Org.md)
+- [Environments](https://docs.gnani.ai/F03_Env.md)
+- [Need Help?](https://docs.gnani.ai/F01_Support.md): Get Help, Share Feedback, and Report Issues
+- [Introduction – Agent Builder Platform API](https://docs.gnani.ai/Platform/platform-introduction.md): Create and manage voice agents, FAQs, conversations, and the chat widget over REST.
+- [Create Agent](https://docs.gnani.ai/Platform/Create_Agent.md): Create a new voice agent and get a botId
+- [List Agents](https://docs.gnani.ai/Platform/List_Agents.md): List all agents in your organization and find botId values
+- [Get Agent](https://docs.gnani.ai/Platform/Get_Agent.md): Retrieve the complete configuration of a specific agent
+- [Update Agent](https://docs.gnani.ai/Platform/Update_Agent.md): Update an existing agent's configuration — all fields are optional
+- [Delete Agent](https://docs.gnani.ai/Platform/Delete_Agent.md): Permanently delete an agent and all associated configuration
+- [Trigger Test Call](https://docs.gnani.ai/Platform/Trigger_Call.md): Place an outbound test call from an agent to a whitelisted phone number
+- [Validate Prompt](https://docs.gnani.ai/Platform/Validate_Prompt.md): Validate a Jinja2 system prompt template and receive optimization recommendations
+- [Get Conversation Logs](https://docs.gnani.ai/Platform/Get_Conversation_Logs.md): List past calls and find conversationId values for Stats and Audio
+- [Get Conversation Statistics](https://docs.gnani.ai/Platform/Get_Conversation_Stats.md): Get call outcome, disposition code, and full transcript for one conversation
+- [Get Conversation Audio](https://docs.gnani.ai/Platform/Stream_Conversation_Audio.md): Stream or download the audio recording of a specific conversation
+- [Get Aggregated Stats](https://docs.gnani.ai/Platform/Aggregated_Stats.md): Get call volume, pickup rate, duration, and transfers across agents and campaigns for a date range
+- [Get Languages](https://docs.gnani.ai/Platform/Get_Languages.md): Retrieve the list of supported languages for agent configuration
+- [Get Regions](https://docs.gnani.ai/Platform/Get_Regions.md): Retrieve the list of available deployment regions for agent hosting
+- [Get Timezones](https://docs.gnani.ai/Platform/Get_Timezones.md): Retrieve the list of available timezones for a specific deployment region
+- [Get LLM Models](https://docs.gnani.ai/Platform/Get_LLM_Models.md): Retrieve available Large Language Model providers and models for agent configuration
+- [Get Transcriber Config](https://docs.gnani.ai/Platform/Get_Transcriber_Config.md): Retrieve available ASR providers and models for agent transcription settings
+- [Get TTS Config](https://docs.gnani.ai/Platform/Get_TTS_Config.md): Retrieve available Text-to-Speech providers and voices for agent voice output settings
+- [Add FAQ Entries](https://docs.gnani.ai/Platform/Add_FAQs.md): Add one or more FAQ entries to an agent's knowledge base
+- [List FAQs](https://docs.gnani.ai/Platform/List_FAQs.md): Retrieve all FAQ entries for a specific agent
+- [Update FAQ](https://docs.gnani.ai/Platform/Update_FAQ.md): Update a single FAQ entry by its faqId
+- [Delete FAQs](https://docs.gnani.ai/Platform/Delete_FAQs.md): Delete one or more FAQ entries from an agent
+- [Get FAQ Sample](https://docs.gnani.ai/Platform/FAQ_Sample.md): Download a sample FAQ template showing the expected import format
+- [Bulk Import FAQs](https://docs.gnani.ai/Platform/Import_FAQs.md): Bulk-import FAQ entries into an agent from a JSON payload
+- [Get Chat Widget Config](https://docs.gnani.ai/Platform/Get_Chat_SDK_Config.md): Retrieve the current Chat Widget configuration for an agent
+- [Update Chat Widget Config](https://docs.gnani.ai/Platform/Update_Chat_SDK_Config.md): Update Chat Widget visual customizations and settings for an agent
+- [Upload Chat Widget Icon](https://docs.gnani.ai/Platform/Upload_Chat_SDK_Icon.md): Upload a custom launcher icon for the Chat Widget
+- [Error Reference](https://docs.gnani.ai/Platform/Error_Reference.md): HTTP status codes and known error messages for the Agent Builder Platform API
+- [Changelog](https://docs.gnani.ai/api/introduction/changelog.md): What changed in the Gnani Speech APIs, newest first.
+- [Cancel Job](https://docs.gnani.ai/api/STT/batch/cancel-job.md): Cancel a batch transcription job.
+- [Create Job](https://docs.gnani.ai/api/STT/batch/create-job.md): Create a new batch transcription job with uploaded files, a ZIP, or public URLs.
+- [Get Job Files](https://docs.gnani.ai/api/STT/batch/get-files.md): List per-file results and transcript URLs for a batch job.
+- [Get Job Status](https://docs.gnani.ai/api/STT/batch/get-job.md): Get batch job status and progress counters.
+- [List Jobs](https://docs.gnani.ai/api/STT/batch/list-jobs.md): List batch transcription jobs with optional status filter and pagination.
+- [Start Job](https://docs.gnani.ai/api/STT/batch/start-job.md): Start processing a batch transcription job.
+- [Create Batch Job Test](https://docs.gnani.ai/api/STT/create-batch-test.md): OpenAPI binding test for create.
+- [Start Batch Job Test](https://docs.gnani.ai/api/STT/start-batch-test.md): OpenAPI binding test for start.
+- [Batch STT Introduction](https://docs.gnani.ai/api/STT/stt-batch.md): Asynchronous transcription of long or multiple audio files via the Batch Jobs API.
+- [API Probe](https://docs.gnani.ai/api/STTBatch/_api_probe.md): Probe manual API playground
+- [Changelog](https://docs.gnani.ai/changelog/agents.md): Documentation changes for Gnani AI Agents, newest first.
+- [Changelog](https://docs.gnani.ai/changelog/builder-api.md): Documentation changes for the Gnani AI Agent Builder APIs, newest first.
+- [All changelogs](https://docs.gnani.ai/changelog/index.md): Recent documentation changes across the API, Gnani AI Agents and Builder API sections, newest first.
+- [Setting Up Integrations](https://docs.gnani.ai/M03_Integrations.md): Connect your agent to SMS, email, CRM, ticketing systems, and third-party APIs.
+- [Managing Variables & Actions](https://docs.gnani.ai/M04_Actions.md): Create variables and actions to automate workflows and handle dynamic conversation data.
+- [Agent Chaining](https://docs.gnani.ai/M05_Chains.md): Build multi-step conversational flows that adapt to user needs with agent chaining.
+- [Dynamic Variables & Prompt Validation](https://docs.gnani.ai/M10_Dynamic_Variables.md)
+- [Import Twilio number](https://docs.gnani.ai/M16x_Import_Number.md): Import phone numbers from Twilio and assign them to your voice agents.
+- [Dashboard](https://docs.gnani.ai/M21_Dashboard.md): The Big Picture
+
+## OpenAPI Specs
+
+- [agent_config_openapi](/agent_config_openapi.yml)
+- [agents_openapi](/agents_openapi.yml)
+- [bot_config_openapi](/bot_config_openapi.yml)
+- [STT](/STT.yml)
+- [STTBatch](/STTBatch.yml)
+- [TTS](/TTS.yml)
+- [VC](/VC.yml)
+- [voice-clone-embeddings](/voice-clone-embeddings.yml)
+
+## AsyncAPI Specs
+
+- [stt-websocket](/stt-websocket.yml)
+- [tts-websocket](/tts-websocket.yml)
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
