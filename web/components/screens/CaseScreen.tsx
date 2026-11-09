@@ -14,6 +14,7 @@ import type { LadderStep } from "@/lib/types";
 import { FileIcon, ShareIcon } from "@/components/ui/icons";
 import { Confetti, ErrorNote, EstimateTag, Illustration, Loading, Money, PlayButton, Screen } from "@/components/ui/primitives";
 import { ConfirmFlow } from "./ConfirmScreen";
+import { VerifyBadge } from "@/components/features/verify/VerifyBadge";
 
 export function CaseScreen({ caseId }: { caseId: number }) {
   const { t, lang } = useT();
@@ -280,6 +281,7 @@ function StepCard({
               </a>
             ) : null}
           </div>
+          {view.audioUrl ? <VerifyBadge messageId={view.messageId} workerLang={lang} /> : null}
           <button type="button" className="btn btn-primary btn-big" onClick={onShare} disabled={state.sharing}>
             <ShareIcon /> {t("case.share")}
           </button>
