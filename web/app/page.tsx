@@ -3,9 +3,9 @@ import { Features, FairTeaser, FinalCta, GnaniTech, Hero, HowItWorks, Problem, S
 import { OG_IMAGE } from "@/lib/site";
 import "./site.css";
 
-const TITLE = "Baaki · బాకీ · Say what you’re owed";
+const TITLE = "Baaki · బాకీ · A wage advocate in her pocket";
 const DESCRIPTION =
-  "Baaki is a voice app for Hyderabad’s domestic workers. Speak in Telugu or Hinglish; Baaki adds up unpaid wages and sends the employer a polite voice note in their language.";
+  "81% of Hyderabad’s domestic workers are paid below the legal minimum. Baaki knows the law, does the maths, asks the employer for her and keeps the proof. She just speaks.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

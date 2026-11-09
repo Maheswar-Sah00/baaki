@@ -1949,6 +1949,63 @@ audio {
     0 20px 48px -22px var(--glow),
     0 6px 18px -12px var(--glow-2);
 }
+/* outcome card: money still owed, the yearly hidden baaki (estimate), and what came back */
+.totals-tagline {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--accent-text);
+}
+.total-hidden-year {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  border: 1px solid color-mix(in srgb, var(--estimate) 30%, transparent);
+}
+.total-hidden-label {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--estimate);
+}
+.total-hidden-label .tag-estimate {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.total-hidden-value {
+  margin: 2px 0 0;
+  font-size: clamp(1.7rem, 8vw, 2.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.total-hidden-value .money {
+  font-weight: 800;
+}
+.total-hidden-hint {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.total-hidden-year[data-empty="true"] .total-hidden-value {
+  color: var(--muted);
+}
+.total-row-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.total-recovered .money {
+  color: var(--success);
+  font-weight: 800;
+}
 
 .money {
   font-variant-numeric: tabular-nums;

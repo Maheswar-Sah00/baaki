@@ -334,7 +334,8 @@
     gap: 48px;
   }
   .s-hero-title {
-    font-size: clamp(3.6rem, 5.6vw, 4.9rem);
+    /* the money-first headline is longer: keep the CTAs above the fold at 1280 x 800 */
+    font-size: clamp(3.2rem, 4.6vw, 4.2rem);
   }
   .s-cta {
     flex: 0 0 auto;
@@ -825,6 +826,284 @@
   color: transparent;
   filter: drop-shadow(0 4px 16px var(--glow));
   animation: pop-in var(--dur-4) var(--ease-spring) 300ms both;
+}
+
+/* phone: "Baaki knows" scene (she said ₹13,000; the law supports ₹12,692) */
+.mini-knows {
+  display: grid;
+  gap: 2px;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--grad) border-box;
+  box-shadow: 0 14px 30px -16px var(--glow);
+}
+.mini-knows-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding: 4px 0;
+  font-size: 12px;
+  animation: rise-in var(--dur-3) var(--ease-out) both;
+}
+.mini-knows-row s {
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration-color: var(--error);
+  text-decoration-thickness: 2px;
+}
+.mini-knows-law {
+  animation-delay: 500ms;
+}
+.mini-knows-law b {
+  font-size: 15px;
+  color: var(--accent-text);
+}
+.mini-knows-math {
+  margin: -2px 0 2px;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  animation: rise-in var(--dur-3) var(--ease-out) 700ms both;
+}
+.mini-knows-back {
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+  animation-delay: 1000ms;
+}
+.mini-knows-back b {
+  color: var(--success);
+  font-size: 14px;
+}
+.mini-meter-law {
+  padding-top: 2px;
+}
+.mini-meter-law .mini-meter-value {
+  font-size: 40px;
+}
+.mini-said {
+  font-size: 10.5px;
+  color: var(--muted);
+  animation: fade-in var(--dur-3) var(--ease-out) 1500ms both;
+}
+.mini-source {
+  margin-top: auto;
+  align-self: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- outcomes strip */
+.s-outcomes {
+  position: relative;
+  margin-top: -16px;
+  padding-bottom: 24px;
+}
+.s-outcomes-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 14px;
+}
+.s-outcomes-head .s-kicker {
+  margin: 0;
+}
+.s-outcomes-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.s-outcome-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+.s-outcome {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.s-outcome::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--grad);
+}
+.s-outcome-value {
+  margin: 0;
+  font-size: clamp(1.6rem, 6.4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.s-outcome-value small {
+  font-size: 0.5em;
+  letter-spacing: -0.01em;
+}
+.s-outcome-label {
+  margin: 0;
+  font-weight: 650;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+.s-outcome-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.s-outcome .pill {
+  margin-top: auto;
+  align-self: flex-start;
+  font-size: 0.72rem;
+}
+@media (min-width: 900px) {
+  .s-outcomes {
+    margin-top: -40px;
+  }
+  .s-outcome-list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .s-outcome {
+    padding: 22px 20px 20px;
+  }
+}
+
+/* hero: money-first headline helpers */
+.s-hero-fine {
+  margin: -6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 560px;
+}
+.s-hero-fine .pill {
+  font-size: 0.72rem;
+}
+
+/* ---------------------------------------------------------------- beyond house help */
+.s-beyond {
+  display: grid;
+  gap: 22px;
+  padding: 28px 22px;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.s-beyond-copy > p:not(.s-kicker) {
+  margin: 14px 0 20px;
+  color: var(--text-2);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.s-beyond-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.s-beyond-list li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.s-beyond-list b {
+  display: block;
+  font-size: 1rem;
+}
+.s-beyond-list span:last-child {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.s-beyond-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.s-beyond-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.s-beyond-cta {
+  width: auto;
+  padding: 0 22px;
+}
+@media (min-width: 900px) {
+  .s-beyond {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    padding: 44px;
+  }
+}
+
+/* final CTA: tagline + vision */
+.s-final-en {
+  font-weight: 650;
+  color: var(--text) !important;
+}
+.s-vision {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 4.4vw, 1.6rem) !important;
+  line-height: 1.35;
+  max-width: 640px !important;
+  color: var(--text-2) !important;
+  text-wrap: balance;
+}
+.s-vision em {
+  color: var(--accent-text);
+}
+.s-problem-pitch {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.1rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+.s-problem-pitch em {
+  color: var(--accent-text);
 }
 
 /* ---------------------------------------------------------------- problem */

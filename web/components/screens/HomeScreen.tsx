@@ -61,26 +61,36 @@ export function HomeScreen() {
   }
 
   const totals = dash.totals;
+  // Yearly underpayment estimate: haq_check.monthly_gap is a per-month figure (legal minimum for her
+  // hours minus the agreed wage), so x12 gives a year. totals.hidden_baaki_estimate is NOT monthly
+  // (it sums the gap over the months on record), so it is shown as is, as "so far".
+  const hiddenMonthly = dash.cards.reduce((sum, c) => sum + (c.haq_check?.monthly_gap ?? 0), 0);
+  const hiddenYear = hiddenMonthly * 12;
   return (
     <Screen title={dash.worker ? `${t("app.name")} · ${dash.worker.name}` : t("app.name")} t={t} nav="home">
-      <section className="totals" aria-label={t("home.total_baaki")}>
+      <section className="totals totals-outcome" aria-label={t("home.total_baaki")}>
+        <p className="totals-tagline">{t("home.tagline")}</p>
         <div className="total-main">
           <p className="total-label">{t("home.total_baaki")}</p>
           <p className="total-value">{inr(totals?.baaki ?? 0)}</p>
         </div>
-        <dl className="total-row">
+        <div className="total-hidden-year" data-empty={hiddenYear > 0 ? undefined : "true"}>
+          <p className="total-hidden-label">
+            {t("home.hidden_year")} <EstimateTag t={t} />
+          </p>
+          <p className="total-hidden-value">
+            <Money value={hiddenYear} />
+          </p>
+          <p className="total-hidden-hint">
+            {t("home.hidden_year_hint")}
+            {totals?.hidden_baaki_estimate ? ` · ${t("home.hidden_so_far", { amount: inr(totals.hidden_baaki_estimate) })}` : ""}
+          </p>
+        </div>
+        <dl className="total-row total-row-2">
           <div>
             <dt>{t("home.recovered")}</dt>
-            <dd>
+            <dd className="total-recovered">
               <Money value={totals?.recovered ?? 0} />
-            </dd>
-          </div>
-          <div>
-            <dt>
-              {t("home.hidden")} <EstimateTag t={t} />
-            </dt>
-            <dd>
-              <Money value={totals?.hidden_baaki_estimate ?? 0} />
             </dd>
           </div>
           <div>
@@ -99,6 +109,9 @@ export function HomeScreen() {
         <span className="mic-link-label">{t("home.speak")}</span>
         <span className="hint">{t("home.speak_hint")}</span>
       </Link>
+
+      {/* RAISE MOUNT: the main session mounts <RaiseCard workerId={settings.workerId} /> here (Haq Raise:
+          ask for a raise to the legal minimum; links to /raise/{case}). Built in components/features/raise. */}
 
       {dash.loading && dash.cards.length === 0 ? (
         <div className="stack" role="status" aria-label={t("common.loading")}>
