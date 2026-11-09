@@ -7,6 +7,11 @@ Language presets (form field `lang` on /api/stt), from docs/gnani_api/STT_models
   indic-auto, or 1-4 raw codes such as "te-IN,hi-IN", are passed through.
 Mode `transcribe` (default) writes numbers as digits and keeps English words Latin, which is what
 the wage and date parsers want. `codemix` keeps numbers as words; `transliterate` writes Latin.
+
+Number-drop fix (docs/research/04_gnani_feasibility.md, test 3): `transcribe` with MORE THAN ONE language
+(e.g. hi-IN,en-IN) dropped "बारह" from "बारह हज़ार" in the ITN step. So `transcribe` is only ever sent with a
+single language; with a multi-language list (every preset: te, hinglish, auto) or indic-auto it is switched to
+`codemix`, which keeps numbers as words, and app.lang turns the words into rupees.
 """
 from __future__ import annotations
 
@@ -47,6 +52,13 @@ DOMAIN_KEYTERMS = [
 LATIN_KEYTERMS = [k for k in DOMAIN_KEYTERMS if k.isascii()]
 
 
+def effective_mode(langs: str, mode: str) -> str:
+    """Never `transcribe` with more than one language (feasibility test 3): use `codemix` instead."""
+    if mode == "transcribe" and ("," in langs or langs == "indic-auto"):
+        return "codemix"
+    return mode
+
+
 def parse_langs(lang: str | None) -> str:
     """Validate the `lang` form field: a preset, indic-auto, or a comma list of 1-4 codes."""
     raw = (lang or DEFAULT_LANGS).strip()
@@ -74,6 +86,7 @@ async def transcribe_upload(data: bytes, filename: str, lang: str | None = None,
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}")
     langs = parse_langs(lang)
+    mode = effective_mode(langs, mode)
     client = client or get_client()
     chunks, total = await run_in_threadpool(audio.prepare_for_stt, data, filename)
     keyterms, topic = context_for(mode, use_context)

@@ -43,8 +43,20 @@ LABELS: dict[str, list[str]] = {
                  "పెయింటింగ్", "పెయింట్", "పెయింటు", "రంగులు", "రంగు", "వైట్ వాష్", "సున్నం"],
     "cleaning": ["cleaning", "clean", "deep cleaning", "safai", "safaai", "सफाई", "सफ़ाई", "क्लीनिंग",
                  "క్లీనింగ్", "క్లీనింగు", "క్లీన్", "శుభ్రం"],
-    "deposit": ["deposit", "security deposit", "security", "advance", "डिपॉजिट", "डिपोजिट", "डिपाजिट", "एडवांस",
-                "एडवान्स", "सिक्योरिटी", "అడ్వాన్స్", "అడ్వాన్సు", "డిపాజిట్", "డిపాజిట్టు", "సెక్యూరిటీ"],
+    "deposit": ["deposit", "security deposit", "security", "डिपॉजिट", "डिपोजिट", "डिपाजिट",
+                "सिक्योरिटी", "డిపాజిట్", "డిపాజిట్టు", "సెక్యూరిటీ"],
+    # ---- wage words (Baaki) ------------------------------------------------------------------
+    "wage": ["salary", "salaries", "salari", "sallary", "jeetham", "jeetam", "jitham", "jeetalu", "jeethalu",
+             "jeetaalu", "tankha", "tankhwa", "tankhwah", "tanakha", "tankhah", "pagaar", "pagar", "kooli", "kuli",
+             "majduri", "mazdoori", "majdoori", "wage", "wages", "monthly salary", "pay",
+             "सैलरी", "सेलरी", "तनख्वाह", "तनख़्वाह", "तनखा", "तनख्वा", "पगार", "मजदूरी", "मज़दूरी", "वेतन",
+             "జీతం", "జీతాలు", "జీతా", "జీత", "కూలి", "కూలీ", "శాలరీ", "సాలరీ", "సేలరీ", "వేతనం"],
+    "advance": ["advance", "advanced", "salary advance", "एडवांस", "एडवान्स", "अग्रिम", "అడ్వాన్స్", "అడ్వాన్సు"],
+    "deduction": ["cut", "cuts", "katauti", "katoti", "kataoti", "kaat", "kaata", "kaati", "kaate", "kata", "kati",
+                  "kaatna", "kaatke", "deduct", "deducted", "deduction", "deductions", "cutting", "salary cut",
+                  "कटौती", "काट", "काटा", "काटे", "काटी", "काटके", "कट", "कटिंग",
+                  "కోత", "కోతలు", "కటింగ్", "కట్టింగ్", "డిడక్షన్", "కట్ చేశారు", "కట్ చేసారు", "కట్ చేశాడు",
+                  "కట్ చేసింది", "కట్ చేశాను", "కట్ చేస్తున్నా", "కట్ చేశారండి"],
     "rent": ["rent", "rental", "kiraya", "kiraaya", "kiraye", "bhada", "bhaada", "adde", "addhe", "किराया",
              "किराए", "किराये", "भाड़ा", "रेंट", "అద్దె", "రెంట్", "రెంటు"],
     "lift": ["lift", "elevator", "lift usage", "लिफ्ट", "లిఫ్ట్", "లిఫ్టు"],
@@ -120,11 +132,17 @@ for _slug, _forms in LABELS.items():
 _LABEL_TE.sort(key=lambda x: len(x[0]), reverse=True)
 
 
+# Telugu words matched exactly, never as a prefix: కట్ (cut) must not catch కట్టాను ("I paid").
+_LABEL_TE_EXACT: dict[str, str] = {norm_telu(w): "deduction" for w in ["కట్", "కటు", "కట్టు చేశారు"]}
+
+
 def _label_of(t: Tok) -> str | None:
     if t.kind != "word":
         return None
     if t.script == "telu":
         k = norm_telu(t.w)
+        if k in _LABEL_TE_EXACT:
+            return _LABEL_TE_EXACT[k]
         for form, slug in _LABEL_TE:
             if k.startswith(form) and len(k) - len(form) <= 4:
                 return slug
@@ -231,6 +249,22 @@ def _overlaps(a: tuple[int, int], spans) -> bool:
     return any(a[0] < e and s < a[1] for s, e in spans)
 
 
+# A month word right after a multiplier phrase or a number >= 100 is a rate ("chaar hazaar mahina",
+# "నాలుగు వేలు నెలకు", "4000 month"), not a count of months.
+_RATE_MONTH_AFTER = _keys(["mahina", "mahine", "mahinaa", "month", "monthly", "nela", "nelaku", "nelaki", "maah",
+                           "महीना", "महीने", "माह", "मासिक"])
+_RATE_MONTH_AFTER_TE = [norm_telu(w) for w in ["నెలకు", "నెలకి", "నెల"]]
+
+
+def _rate_after(t: Tok | None) -> bool:
+    if t is None or t.kind != "word":
+        return False
+    if t.script == "telu":
+        k = norm_telu(t.w)
+        return k in _RATE_MONTH_AFTER_TE
+    return _wkey(t) in _RATE_MONTH_AFTER
+
+
 def _count_after(t: Tok | None) -> bool:
     if t is None:
         return False
@@ -335,7 +369,7 @@ def extract_amounts(text: str, lang_hint: str | None = None) -> list[dict]:
                 if key(p.ti0 - 1) in _YEAR_CTX_BEFORE or key(p.ti1 + 1) in _YEAR_CTX_AFTER:
                     continue
                 year_like = True
-        if not has_cur and _count_after(tok(t1 + 1)):
+        if not has_cur and _count_after(tok(t1 + 1)) and not ((has_mult or amount >= 100) and _rate_after(tok(t1 + 1))):
             continue
         cands.append(_Cand(p, amount, t0, t1, start, end, has_cur, year_like))
 

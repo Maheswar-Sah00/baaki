@@ -35,9 +35,9 @@ def work_text(text: str) -> str:
     return text.translate(_WORK_TABLE)
 
 
-# Letters of the scripts we read: Latin (+ accents), Devanagari letters and
+# Letters of the scripts we read: Latin (+ accents, IAST romanisation such as mūḍu), Devanagari letters and
 # signs (not the danda or digits), Telugu letters and signs, ZWNJ/ZWJ.
-LETTERS = "A-Za-zÀ-ɏऀ-ॣॱ-ॿఀ-ౣ‌‍"
+LETTERS = "A-Za-zÀ-ɏ̀-ͯḀ-ỿऀ-ॣॱ-ॿఀ-ౣ‌‍"  # + IAST dots (ḍ ṇ ṭ ṅ) and combining marks
 TOKEN_RE = re.compile(
     rf"(?P<num>[0-9]+(?:[.,][0-9]+)*)|(?P<word>[{LETTERS}][{LETTERS}']*)|(?P<sym>\S)"
 )

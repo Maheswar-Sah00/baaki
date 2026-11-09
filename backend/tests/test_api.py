@@ -59,7 +59,7 @@ def test_stt_telugu(client, mock_gnani, short_ogg):
     def reply(request):
         f = multipart_fields(request)
         assert f["language_code"] == "te-IN,en-IN"
-        assert f["format"] == "transcribe"
+        assert f["format"] == "codemix"  # never transcribe with two languages (feasibility test 3)
         assert f["model"] == "prisma-v3.0"
         assert f["audio_file.filename"].endswith(".ogg")
         assert request.headers["X-API-Key-ID"] == "test-key"
@@ -84,6 +84,7 @@ def test_stt_hinglish_webm_is_converted(client, mock_gnani, short_wav):
     def reply(request):
         f = multipart_fields(request)
         assert f["language_code"] == "hi-IN,en-IN"
+        assert f["format"] == "codemix"  # the Hinglish number-drop fix
         assert f["audio_file.filename"].endswith(".wav")  # webm is not native to Prisma REST
         return httpx.Response(200, json={"success": True, "transcript": "madam ne 3 mahine ki salary nahi di",
                                          "detected_language_code": "hi-IN"})
@@ -155,16 +156,5 @@ def test_tts_validation(client):
     assert client.post("/api/tts", json={"text": "hi", "lang": "te-IN", "voice": "Nobody"}).status_code == 400
 
 
-@pytest.mark.parametrize("method,path", [
-    ("post", "/api/cases"),
-    ("get", "/api/cases/1"),
-    ("post", "/api/cases/1/extract"),
-    ("get", "/api/cases/1/dues"),
-    ("post", "/api/cases/1/letters"),
-    ("get", "/api/cases/1/letters/1/pdf"),
-    ("post", "/api/cases/1/letters/1/voice"),
-])
-def test_placeholders_are_501(client, method, path):
-    r = getattr(client, method)(path)
-    assert r.status_code == 501
-    assert r.json()["detail"]["error"] == "not_implemented"
+# The 501 placeholders are gone: cases routes are tested in tests/test_cases_api.py,
+# letters in tests/test_messages.py.

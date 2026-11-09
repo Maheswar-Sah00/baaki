@@ -1,7 +1,7 @@
 """Database engine and sessions: SQLite (backend/data/app.db, gitignored) or DATABASE_URL (Postgres).
 
-Table models will live in app/models.py (TODO: cases, facts, letters, follow-ups). Import them in
-init_db() so SQLModel registers every table before create_all.
+Table models live in app/models.py; init_db() imports them so SQLModel registers every table
+before create_all.
 """
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def get_engine(url: str | None = None) -> Engine:
 
 def init_db(engine: Engine | None = None) -> Engine:
     eng = engine or get_engine()
-    # TODO(domain): `from . import models  # noqa: F401` once app/models.py exists.
+    from . import models  # noqa: F401  (registers every table)
     SQLModel.metadata.create_all(eng)
     _initialised.add(eng)
     return eng
