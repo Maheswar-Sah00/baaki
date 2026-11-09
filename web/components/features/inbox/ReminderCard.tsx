@@ -4,7 +4,7 @@
 // employer's language that quotes their own words back; she shares it herself (Web Share, WhatsApp or copy).
 
 import { useState } from "react";
-import { Card, StatusPill } from "@/components/ui/primitives";
+import { StatusPill } from "@/components/ui/primitives";
 import { BellIcon, CheckIcon, ShareIcon } from "@/components/ui/icons";
 import { inr, shortDate } from "@/lib/format";
 import { shareMessage, type ShareResult } from "@/lib/share";
@@ -62,21 +62,27 @@ export function ReminderCard({
   }
 
   return (
-    <Card tone={glow ? "glow" : "warn"} className={css.fresh} aria-live="polite">
-      <div className="stack">
+    <section className={`${css.reminder} ${css.fresh}`} data-first={glow ? "true" : undefined} aria-live="polite">
         <p className={css.reminderTitle}>
-          <BellIcon /> {S.passedTitle}
+          <span className={css.reminderIcon} aria-hidden="true">
+            <BellIcon />
+          </span>
+          {S.passedTitle}
         </p>
         <p className={css.intro}>{S.passedBody(what, due)}</p>
-        {promise.quote ? <p className={css.quote}>{promise.quote}</p> : null}
+        {promise.quote ? (
+          <div className={css.bubble}>
+            <p className={css.bubbleText}>“{promise.quote}”</p>
+          </div>
+        ) : null}
 
         {!rem ? (
-          <button type="button" className="btn btn-primary btn-big" onClick={() => void make()} disabled={busy}>
+          <button type="button" className="fx-pill-btn" data-ink style={{ minHeight: 54 }} onClick={() => void make()} disabled={busy}>
             <BellIcon /> {S.makeReminder}
           </button>
         ) : (
           <>
-            <div className={css.block}>
+            <div className={css.out}>
               <p className={css.blockLabel}>{S.reminderLabel}</p>
               <p className={css.reminderText} lang={HTML_LANG[rem.language] ?? undefined}>
                 {rem.text}
@@ -88,7 +94,7 @@ export function ReminderCard({
               ) : null}
             </div>
             {rem.worker_language !== rem.language ? (
-              <details className={css.block}>
+              <details className={css.out} style={{ justifySelf: "stretch", maxWidth: "none" }}>
                 <summary className={css.blockLabel}>{S.reminderMine}</summary>
                 <p className={css.reminderText} lang={HTML_LANG[rem.worker_language] ?? undefined}>
                   {rem.text_worker_lang}
@@ -97,12 +103,14 @@ export function ReminderCard({
             ) : null}
             <button
               type="button"
-              className="btn btn-primary btn-big"
+              className="fx-pill-btn"
+              data-ink
+              style={{ minHeight: 54 }}
               onClick={async () => setShared(await shareMessage({ text: rem.share_text }))}
             >
               <ShareIcon /> {S.share}
             </button>
-            <a className="btn" href={rem.whatsapp_url} target="_blank" rel="noreferrer">
+            <a className="fx-pill-btn" href={rem.whatsapp_url} target="_blank" rel="noreferrer">
               {S.whatsapp}
             </a>
             {shared === "copied" ? <p className={css.note}>{S.copied}</p> : null}
@@ -111,15 +119,14 @@ export function ReminderCard({
         )}
 
         <div className={css.chipActions}>
-          <button type="button" className="btn btn-small" onClick={() => void mark("kept")} disabled={busy}>
+          <button type="button" className="fx-pill-btn" onClick={() => void mark("kept")} disabled={busy}>
             {S.markKept}
           </button>
-          <button type="button" className="btn btn-small btn-ghost" onClick={() => void mark("broken")} disabled={busy}>
+          <button type="button" className="fx-pill-btn" onClick={() => void mark("broken")} disabled={busy}>
             {S.markBroken}
           </button>
         </div>
         {err ? <p className={css.note}>{err}</p> : null}
-      </div>
-    </Card>
+    </section>
   );
 }

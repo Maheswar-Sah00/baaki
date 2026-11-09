@@ -8,7 +8,8 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { formatTimer } from "@/lib/recorder";
 import { inr, inrWhole } from "@/lib/format";
-import type { Translate } from "@/lib/i18n";
+import type { Translate, UiLang } from "@/lib/i18n";
+import { useT } from "@/hooks/useSettings";
 import type { MeterChip } from "@/lib/types";
 import type { PlayerState } from "@/hooks/useAudioPlayer";
 import { MicIcon, PauseIcon, PlayIcon, ShieldIcon, StopIcon } from "./icons";
@@ -26,24 +27,30 @@ export {
   GlowRing,
   GradientButton,
   HomesMap,
+  MoneyFigure,
   Skeleton,
   SkeletonCard,
   StatusPill,
   Waveform,
+  avatarTone,
   toneForState,
   type CardTone,
   type MapHome,
   type NavKey,
   type PillTone,
+  type WashTone,
 } from "./kit";
 export { Illustration, ILLUSTRATIONS, type IllustrationName } from "./Illustration";
 export { ThemeToggle } from "./ThemeToggle";
 export { InstallButton } from "./InstallButton";
 
 // ------------------------------------------------------------------ layout
+const HTML_LANG: Record<UiLang, string> = { te: "te", "hi-en": "hi", en: "en" };
+
 /**
- * App screen shell: glass AppBar (back, title, theme toggle + Help), warm haze backdrop, content
- * column (max 480 px, 16 px gutter), optional Uber-style BottomNav (`nav` = the active tab).
+ * App screen shell: AppBar (back, Cabinet title, theme toggle + Help; turns to glass on scroll), the
+ * paper column (max 480 px, 16 px gutter, a calm pale frame around it on desktop), optional floating
+ * pill BottomNav (`nav` = the active tab).
  */
 export function Screen({
   title,
@@ -54,7 +61,9 @@ export function Screen({
   themeToggle = true,
   nav,
   right,
+  left,
   t,
+  lang,
 }: {
   title?: ReactNode;
   back?: string;
@@ -66,15 +75,25 @@ export function Screen({
   nav?: NavKey;
   /** Extra controls in the app bar, before the theme toggle. */
   right?: ReactNode;
+  /** Replaces the back link on the left of the app bar (e.g. the brand on the home hub). */
+  left?: ReactNode;
   t?: Translate;
+  /**
+   * HTML lang of the screen. Defaults to the worker's UI language on worker screens (those that pass
+   * `t`), so Telugu / Devanagari get Indic type rules (no letter-spaced micro labels, roomier lines).
+   */
+  lang?: string;
 }) {
-  const showHead = title !== undefined || back || safetyLink || themeToggle || right;
+  const showHead = title !== undefined || back || safetyLink || themeToggle || right || left;
+  const { lang: uiLang } = useT();
+  const htmlLang = lang ?? (t ? HTML_LANG[uiLang] : undefined);
   return (
-    <main className={`screen ${nav ? "screen-has-nav" : ""} ${className ?? ""}`}>
+    <main lang={htmlLang} className={`screen ${nav ? "screen-has-nav" : ""} ${className ?? ""}`}>
       {showHead ? (
         <AppBar
           title={title}
           back={back}
+          left={left}
           backLabel={t ? t("common.back") : "Back"}
           right={
             <span className="appbar-actions">
@@ -151,6 +170,34 @@ export function MicButton({
   size?: "big" | "small";
 }) {
   const recording = state === "recording";
+  const text = recording && elapsedMs !== undefined ? `${formatTimer(elapsedMs)} · ${label}` : label;
+  if (size === "small") {
+    // Compact recorder for cards and sheets: one pill-shaped button (40 px ink circle, label/timer,
+    // a tiny live waveform). The whole pill is the press-to-talk target; a single hairline ring
+    // follows the live level. No halos.
+    return (
+      <div className="mic-wrap mic-small" data-state={state}>
+        <button
+          type="button"
+          className="mic-compact"
+          data-state={state}
+          style={{ "--level": level } as CSSProperties}
+          disabled={disabled}
+          aria-label={label}
+          aria-pressed={recording}
+          {...handlers}
+        >
+          <span className="mic-compact-dot" aria-hidden="true">
+            {recording ? <StopIcon /> : <MicIcon />}
+          </span>
+          <span className="mic-compact-text mic-label" aria-live="polite">
+            {text}
+          </span>
+          <Waveform active={recording} level={recording ? Math.max(0.25, level) : 0.15} bars={9} className="mic-compact-wave" />
+        </button>
+      </div>
+    );
+  }
   return (
     <div className={`mic-wrap mic-${size}`} data-state={state}>
       <span className="mic-stage" style={{ "--level": level } as CSSProperties}>
@@ -169,9 +216,9 @@ export function MicButton({
           {recording ? <StopIcon /> : <MicIcon />}
         </button>
       </span>
-      <Waveform active={recording} level={recording ? Math.max(0.25, level) : 0.15} bars={size === "big" ? 22 : 14} className="mic-wave" />
+      <Waveform active={recording} level={recording ? Math.max(0.25, level) : 0.15} bars={22} className="mic-wave" />
       <p className="mic-label" aria-live="polite">
-        {recording && elapsedMs !== undefined ? `${formatTimer(elapsedMs)} · ${label}` : label}
+        {text}
       </p>
     </div>
   );

@@ -1,15 +1,20 @@
 "use client";
 
-// Baaki's original illustration set: flat, rounded shapes on a soft blob, one ground shadow,
-// warm skin tones, cloth in the accent colours, sparkles from the brand gradient.
+// Baaki's original illustration set, pale editorial: flat rounded shapes on a pale wash, one ground
+// shadow, warm skin tones, cloth in pale lilac / peach, ink accents. Calm: no sparkles, no glow.
 // Every fill comes from --ill-* / --accent* tokens (app/theme.css), so each picture follows the
 // palette and the light/dark theme. Classes are styled in app/globals.css (".ill ...").
 //
 //   <Illustration name="speak" />                 decorative (aria-hidden)
 //   <Illustration name="coins" title="Money owed" /> meaningful (role="img" + <title>)
 //   <Illustration name="speak" animated size={220} /> gentle float + live waveform (reduced-motion safe)
+//
+// Supplied art wins: when /assets/ill-<name>.webp exists (a flat cartoon on a transparent background)
+// it is shown as an <img> in the same 4:3 box (object-fit: contain), floating gently when `animated`.
+// Missing file -> this inline SVG, with the same detection as <AssetSlot> (components/ui/asset-probe.ts).
 
 import { useId, type CSSProperties } from "react";
+import { useAssetStatus } from "./asset-probe";
 
 export type IllustrationName =
   | "speak"
@@ -38,6 +43,23 @@ export function Illustration({ name, title, size, animated = false, className, s
   const id = `ill${raw.replace(/[^a-zA-Z0-9]/g, "")}`;
   const g = `url(#${id}g)`;
   const Art = ART[name];
+  const src = `/assets/ill-${name}.webp`;
+  const { status, ref, onLoad, onError } = useAssetStatus(src);
+  if (status !== "missing") {
+    return (
+      <span
+        className={`ill ill-img ill-${name} ${animated ? "ill-anim" : ""} ${className ?? ""}`}
+        data-loaded={status === "ok"}
+        style={{ width: size ?? "100%", ...style }}
+        role={title ? "img" : undefined}
+        aria-label={title}
+        aria-hidden={title ? undefined : true}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img ref={ref} src={src} alt="" decoding="async" onLoad={onLoad} onError={onError} />
+      </span>
+    );
+  }
   return (
     <svg
       viewBox="0 0 240 180"
@@ -51,9 +73,9 @@ export function Illustration({ name, title, size, animated = false, className, s
       {title ? <title>{title}</title> : null}
       <defs>
         <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: "var(--accent-3)" }} />
-          <stop offset="0.5" style={{ stopColor: "var(--accent)" }} />
-          <stop offset="1" style={{ stopColor: "var(--accent-2)" }} />
+          {/* solid ink accent (white in dark): the "gradient" is flat on purpose */}
+          <stop offset="0" style={{ stopColor: "var(--ink-pill, var(--text))" }} />
+          <stop offset="1" style={{ stopColor: "var(--ink-pill, var(--text))" }} />
         </linearGradient>
       </defs>
       <Art g={g} />
@@ -74,13 +96,9 @@ const Shadow = ({ cx = 120, cy = 166, rx = 70 }: { cx?: number; cy?: number; rx?
   <ellipse className="sh" cx={cx} cy={cy} rx={rx} ry="7" />
 );
 
-const Spark = ({ x, y, s = 1, cls = "c2" }: { x: number; y: number; s?: number; cls?: string }) => (
-  <path
-    className={`${cls} ill-spark`}
-    transform={`translate(${x} ${y}) scale(${s})`}
-    d="M0-8C1-3 3-1 8 0 3 1 1 3 0 8-1 3-3 1-8 0-3-1-1-3 0-8z"
-  />
-);
+/** Sparkles were retired in the pale redesign (no shiny things); kept as a no-op so the art reads the same. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const Spark = (_: { x: number; y: number; s?: number; cls?: string }) => null;
 
 const RupeeMark = ({ x, y, s = 1, cls = "ink" }: { x: number; y: number; s?: number; cls?: string }) => (
   <path

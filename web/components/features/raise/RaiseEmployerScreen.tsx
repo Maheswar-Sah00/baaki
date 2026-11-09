@@ -29,6 +29,7 @@ import {
   rupees,
   type EmployerRaiseView,
 } from "@/lib/features/raise";
+import { StepChart } from "./StepChart";
 import { employerStrings } from "./strings";
 import css from "./raise.module.css";
 
@@ -119,7 +120,7 @@ export function RaiseEmployerScreen({ token }: { token: string }) {
 
   if (loading && !v) {
     return (
-      <Screen safetyLink={false}>
+      <Screen safetyLink={false} className="fx">
         <div role="status" aria-label="Loading" className="stack">
           <SkeletonCard />
           <SkeletonCard />
@@ -129,7 +130,7 @@ export function RaiseEmployerScreen({ token }: { token: string }) {
   }
   if (notFound || !v) {
     return (
-      <Screen safetyLink={false}>
+      <Screen safetyLink={false} className="fx">
         <Card tone="soft">
           <p style={{ margin: 0 }}>{notFound ? S.notFound : error}</p>
         </Card>
@@ -142,9 +143,15 @@ export function RaiseEmployerScreen({ token }: { token: string }) {
   const done = v.answer;
 
   return (
-    <Screen title={S.title(worker)} safetyLink={false}>
+    <Screen title={S.title(worker)} safetyLink={false} className="fx">
       <div lang={HTML_LANG[lang]} className="stack">
-        <Card tone="glow" className={`${css.message} ${css.rise}`}>
+        <Card className={`${css.message} ${css.rise}`}>
+          <div className={css.heroTop}>
+            <span className={css.avatar} aria-hidden="true">
+              {(worker || "?").trim().charAt(0).toUpperCase()}
+            </span>
+            <p className={css.heroName}>{worker}</p>
+          </div>
           {audio ? (
             <PlayButton
               state={player.state}
@@ -160,20 +167,21 @@ export function RaiseEmployerScreen({ token }: { token: string }) {
 
         <Card className={css.rise}>
           <p className={css.eyebrow}>{S.request}</p>
-          <div className={css.ask}>
-            <div>
-              <p className={css.small}>{S.now}</p>
-              <p className={css.askValue}>{rupees(v.current)}</p>
-            </div>
-            <span className={css.arrow} aria-hidden="true">
-              →
-            </span>
-            <div>
-              <p className={css.small}>{step ? S.from(v.start_display ?? "") : S.from(v.start_display ?? "")}</p>
-              <p className={`${css.askValue} ${css.askGrad}`}>{rupees(step ? v.step1_amount : v.ask_amount)}</p>
-            </div>
-          </div>
-          {step ? <p className={css.small}>{S.then(rupees(v.ask_amount), v.step_display ?? "")}</p> : null}
+          <StepChart
+            steps={[
+              { label: S.now, amount: v.current },
+              ...(step && v.step1_amount
+                ? [
+                    { label: v.start_display ?? "", amount: v.step1_amount },
+                    { label: v.step_display ?? "", amount: v.ask_amount },
+                  ]
+                : [{ label: v.start_display ?? "", amount: v.ask_amount }]),
+            ]}
+          />
+          <p className={css.small}>
+            {S.from(v.start_display ?? "")} · {rupees(step ? v.step1_amount : v.ask_amount)}
+            {step ? ` · ${S.then(rupees(v.ask_amount), v.step_display ?? "")}` : ""}
+          </p>
         </Card>
 
         <Card tone="soft" className={`${css.why} ${css.rise}`}>
@@ -195,21 +203,19 @@ export function RaiseEmployerScreen({ token }: { token: string }) {
         {done ? (
           <Card tone="success" className={`${css.won} ${css.rise}`}>
             <Illustration name="handshake" size={140} />
-            <p className="display" style={{ margin: 0, fontSize: "2rem" }}>
-              {S.doneTitle}
-            </p>
+            <p className="fx-h">{S.doneTitle}</p>
             <p style={{ margin: 0 }}>{S.doneText(worker, rupees(done.new_wage), v.start_display ?? "")}</p>
             {done.step_up_to ? (
               <p className={css.small}>{S.then(rupees(done.step_up_to), v.step_display ?? v.step_offer?.step_display ?? "")}</p>
             ) : null}
             <div className={css.links}>
               {v.agreement_url ? (
-                <a className="btn" href={media(v.agreement_url) ?? "#"} target="_blank" rel="noopener noreferrer">
+                <a className="fx-pill-btn" href={media(v.agreement_url) ?? "#"} target="_blank" rel="noopener noreferrer">
                   <FileIcon /> {S.agreement}
                 </a>
               ) : null}
               {v.ics_url ? (
-                <a className="btn" href={v.ics_url} download>
+                <a className="fx-pill-btn" href={v.ics_url} download>
                   <BellIcon /> {S.ics}
                 </a>
               ) : null}
@@ -302,7 +308,7 @@ export function RaiseEmployerScreen({ token }: { token: string }) {
               onChange={(e) => setTalkText(e.target.value)}
               maxLength={600}
             />
-            <button type="submit" className="btn" disabled={busy !== null || !talkText.trim()}>
+            <button type="submit" className="fx-pill-btn" data-ink disabled={busy !== null || !talkText.trim()}>
               {busy === "talk" ? S.sending : S.sendReply}
             </button>
           </form>

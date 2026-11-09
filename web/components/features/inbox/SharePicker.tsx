@@ -36,7 +36,7 @@ export function SharePicker() {
   }, [hydrated, workerId, S.error]);
 
   return (
-    <Screen title={S.title} back="/app" t={t}>
+    <Screen title={S.title} back="/app" t={t} className="fx">
       <h2 className="section-title">{S.pickTitle}</h2>
       {file === null ? <p className="hint">{S.pickNone}</p> : <p className="hint">{file ? S.chosen(file.name) : S.pickHint}</p>}
       <ErrorNote message={err} />
@@ -45,6 +45,9 @@ export function SharePicker() {
         {(cards ?? []).map((c) => (
           <li key={c.case_id}>
             <Card href={`/inbox/${c.case_id}?shared=1`} className={css.entry}>
+              <span className="fx-avatar" aria-hidden="true">
+                {(c.employer?.name ?? "#").trim().charAt(0).toUpperCase()}
+              </span>
               <span className={css.entryText}>
                 <span className={css.entryTitle}>{c.employer?.name ?? `#${c.case_id}`}</span>
                 <span className={css.entryHint}>{inr(c.balance)}</span>

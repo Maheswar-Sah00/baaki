@@ -45,6 +45,7 @@ import {
   type RaiseStatus,
   type RaiseView,
 } from "@/lib/features/raise";
+import { StepChart, type Step } from "./StepChart";
 import { workerStrings, type WorkerStrings } from "./strings";
 import css from "./raise.module.css";
 
@@ -77,6 +78,15 @@ function statusTone(s: RaiseStatus): PillTone {
 }
 
 type Custom = { step1: number | null; ask: number | null; months: number | null };
+
+/** "2026-12" + 6 -> "2027-06" */
+function addMonths(ym: string | null | undefined, n: number): string | null {
+  if (!ym) return null;
+  const [y, m] = ym.split("-").map(Number);
+  if (!y || !m) return null;
+  const d = new Date(Date.UTC(y, m - 1 + n, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
 
 export function RaiseWorkerScreen({ caseId }: { caseId: number }) {
   const { t, lang } = useT();
@@ -240,8 +250,30 @@ export function RaiseWorkerScreen({ caseId }: { caseId: number }) {
   const r = v?.raise ?? null;
   const showForm = v && n && n.gap_monthly > 0 && (!r || (editing && !isAnswered(r.status)));
 
+  // The plan as steps for the chart: what she earns now, then each step with its month.
+  const chartSteps: Step[] = [];
+  if (v && n && (n.gap_monthly > 0 || r?.answer)) {
+    chartSteps.push({ label: S.yourPay, amount: n.current });
+    if (r?.answer) {
+      chartSteps.push({ label: monthLabel(r.answer.new_wage_from.slice(0, 7), lang), amount: r.answer.new_wage });
+      if (r.answer.step_up_to && r.answer.step_up_from)
+        chartSteps.push({ label: monthLabel(r.answer.step_up_from.slice(0, 7), lang), amount: r.answer.step_up_to });
+    } else if (r && !showForm) {
+      if (r.plan === "step" && r.step1_amount) {
+        chartSteps.push({ label: monthLabel(r.start_month, lang), amount: r.step1_amount });
+        chartSteps.push({ label: monthLabel(r.step_month ?? addMonths(r.start_month, r.step_months ?? 6), lang), amount: r.ask_amount });
+      } else chartSteps.push({ label: monthLabel(r.start_month, lang), amount: r.ask_amount });
+    } else {
+      const startM = v.plans[plan]?.start_month ?? v.plans.full?.start_month ?? null;
+      if (plan === "step" && step1) {
+        chartSteps.push({ label: monthLabel(startM, lang), amount: step1 });
+        chartSteps.push({ label: monthLabel(addMonths(startM, months), lang), amount: ask });
+      } else chartSteps.push({ label: monthLabel(startM, lang), amount: ask });
+    }
+  }
+
   return (
-    <Screen title={S.title} back={`/case/${caseId}`} t={t}>
+    <Screen title={S.title} back={`/case/${caseId}`} t={t} className="fx">
       {loading && !v ? (
         <div role="status" aria-label={S.loading} className="stack">
           <SkeletonCard />
@@ -252,7 +284,7 @@ export function RaiseWorkerScreen({ caseId }: { caseId: number }) {
 
       {v && n ? (
         <>
-          <Hero v={v} S={S} lang={lang} />
+          <Hero v={v} S={S} lang={lang} steps={chartSteps} />
 
           {n.gap_monthly <= 0 && !r ? (
             <Card tone="soft">
@@ -410,7 +442,10 @@ export function RaiseWorkerScreen({ caseId }: { caseId: number }) {
           <span className="celebrate-rays" aria-hidden="true" />
           <Confetti />
           <div className="celebrate-card">
-            <Illustration name="celebrate" animated />
+            {/* raise accepted = an agreement: the handshake (Paisa aa gaya keeps the celebrate art) */}
+            <span className="celebrate-art" data-bleed="sides">
+              <Illustration name="handshake" />
+            </span>
             <p id="raise-cel-title" className="celebrate-title">
               {celebrate.title_latin}
             </p>
@@ -439,12 +474,12 @@ export function RaiseWorkerScreen({ caseId }: { caseId: number }) {
 }
 
 // ------------------------------------------------------------------ hero
-function Hero({ v, S, lang }: { v: RaiseCaseView; S: WorkerStrings; lang: string }) {
+function Hero({ v, S, lang, steps }: { v: RaiseCaseView; S: WorkerStrings; lang: string; steps: Step[] }) {
   const n = v.numbers;
   const max = Math.max(n.target, n.current, 1);
   const won = v.raise?.answer;
   return (
-    <Card tone="glow" className={`${css.hero} ${css.rise}`}>
+    <section className={`${css.hero} ${css.rise}`}>
       <div className={css.heroTop}>
         <span className={css.avatar} aria-hidden="true">
           {(v.employer.name || "?").trim().charAt(0).toUpperCase()}
@@ -455,7 +490,6 @@ function Hero({ v, S, lang }: { v: RaiseCaseView; S: WorkerStrings; lang: string
             {S.work[n.work_type] ?? n.work_label} · {S.hoursDay(String(n.hours_per_day))}
           </p>
         </div>
-        <Illustration name="coins" size={56} />
       </div>
       <div className={css.compare}>
         <div className={css.compareCell}>
@@ -470,14 +504,18 @@ function Hero({ v, S, lang }: { v: RaiseCaseView; S: WorkerStrings; lang: string
           <p className={css.compareValue}>≈ {rupees(n.target)}</p>
         </div>
       </div>
-      <div className={css.bars} aria-hidden="true">
-        <div className={css.bar}>
-          <div className={`${css.barFill} ${css.barNow}`} style={{ width: `${(n.current / max) * 100}%` }} />
+      {steps.length > 1 ? (
+        <StepChart steps={steps} legal={n.target} legalLabel={`≈ ${rupees(n.target)}`} />
+      ) : (
+        <div className={css.bars} aria-hidden="true">
+          <div className={css.bar}>
+            <div className={`${css.barFill} ${css.barNow}`} style={{ width: `${(n.current / max) * 100}%` }} />
+          </div>
+          <div className={css.bar}>
+            <div className={`${css.barFill} ${css.barLegal}`} style={{ width: `${(n.target / max) * 100}%` }} />
+          </div>
         </div>
-        <div className={css.bar}>
-          <div className={`${css.barFill} ${css.barLegal}`} style={{ width: `${(n.target / max) * 100}%` }} />
-        </div>
-      </div>
+      )}
       {n.gap_yearly > 0 ? (
         <>
           <div className={css.yearRow}>
@@ -491,7 +529,7 @@ function Hero({ v, S, lang }: { v: RaiseCaseView; S: WorkerStrings; lang: string
           </p>
         </>
       ) : null}
-    </Card>
+    </section>
   );
 }
 
@@ -545,7 +583,7 @@ function MessageCard({
           <p className={css.bigSub}>{S.yearWon(rupees(r.answer.yearly_gain))}</p>
           {r.agreement_url ? (
             <div className={css.links}>
-              <a className="btn" href={media(r.agreement_url) ?? "#"} target="_blank" rel="noopener noreferrer">
+              <a className="fx-pill-btn" href={media(r.agreement_url) ?? "#"} target="_blank" rel="noopener noreferrer">
                 <FileIcon /> {S.agreement}
               </a>
             </div>

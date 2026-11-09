@@ -1,9 +1,9 @@
-/* Share to Baaki + Promise Keeper. Tokens only (app/theme.css); global classes (.btn, .card, .pill) come from
-   the design system. */
+/* Share to Baaki + Promise Keeper: evidence cards for the employer's WhatsApp replies. Tokens only; shared .fx-*
+   classes come from app/screens.css. No glow, no gradient. */
 
 .list {
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -14,35 +14,44 @@
 }
 
 .fresh {
-  animation: inbox-pop var(--dur-4) var(--ease-spring) both;
+  animation: inbox-pop var(--dur-4) var(--ease-out) both;
 }
 
 @keyframes inbox-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes inbox-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
 }
 
 .intro {
   margin: 0;
   color: var(--text-2);
   line-height: 1.5;
+}
+
+.head {
+  display: grid;
+  gap: 6px;
+  padding: 4px 2px 0;
+}
+
+/* ------------------------------------------------------------ evidence card */
+.card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+
+.card[data-fresh="true"] {
+  border-color: var(--text);
 }
 
 .cardHead {
@@ -54,33 +63,99 @@
 
 .summary {
   margin: 0;
-  font-size: 1.12rem;
-  font-weight: 700;
-  line-height: 1.4;
+  font: 600 1.06rem/1.35 var(--font-display);
+  letter-spacing: -0.012em;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.proof {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  background: var(--pale-sage);
+  color: var(--pale-sage-ink);
+  font: 600 0.72rem/1.2 var(--font-sans);
+  white-space: nowrap;
+}
+
+.proof svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* the employer's own words, as the WhatsApp bubble they came in */
+.chat {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+.chatWho {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 0.72rem/1.2 var(--font-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bubble {
+  justify-self: start;
+  position: relative;
+  max-width: 92%;
+  padding: 10px 14px 8px;
+  border-radius: 4px 18px 18px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.bubbleText {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.bubbleTime {
+  display: block;
+  margin-top: 4px;
+  text-align: right;
+  font-size: 0.7rem;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .when {
   margin: 0;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .block {
   display: grid;
   gap: var(--s-2);
-  padding: var(--s-3);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pale-lilac);
+}
+
+.block .blockLabel {
+  color: var(--pale-lilac-ink);
 }
 
 .blockLabel {
   margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font: 600 0.7rem/1.3 var(--font-sans);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -92,23 +167,9 @@
   white-space: pre-wrap;
 }
 
-.quote::before {
-  content: "\201C";
-  color: var(--accent-text);
-  font-weight: 800;
-  margin-right: 2px;
-}
-
-.quote::after {
-  content: "\201D";
-  color: var(--accent-text);
-  font-weight: 800;
-  margin-left: 2px;
-}
-
 .translation {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1.55;
   color: var(--text);
 }
@@ -120,41 +181,39 @@
   gap: var(--s-2);
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   word-break: break-all;
 }
 
 .hash svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   flex: none;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-2);
 }
 
 /* ------------------------------------------------------------ promise chip */
 .chip {
   display: grid;
   gap: var(--s-2);
-  padding: var(--s-3) var(--s-4);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--accent-line);
-  background: var(--accent-soft);
-  animation: inbox-pop var(--dur-4) var(--ease-spring) both;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--pale-sky);
+  --chip-ink: var(--pale-sky-ink);
+  animation: inbox-pop var(--dur-3) var(--ease-out) both;
 }
 
-.chip[data-status="passed"] {
-  border-color: var(--warn);
-  background: var(--warn-soft);
-}
-
-.chip[data-status="kept"] {
-  border-color: var(--success);
-  background: var(--success-soft);
-}
-
-.chip[data-status="broken"] {
-  border-color: var(--error);
-  background: var(--error-soft);
-}
+.chip[data-status="passed"] { background: var(--pale-butter); --chip-ink: var(--pale-butter-ink); }
+.chip[data-status="kept"] { background: var(--pale-sage); --chip-ink: var(--pale-sage-ink); }
+.chip[data-status="broken"] { background: var(--pale-rose); --chip-ink: var(--pale-rose-ink); }
 
 .chipTop {
   display: flex;
@@ -173,25 +232,21 @@
 }
 
 .chipAmount {
-  font-size: 1.35rem;
-  font-weight: 800;
+  font: 700 1.4rem/1.05 var(--font-display);
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
 .chipDate {
-  font-weight: 700;
-  color: var(--accent-text);
-}
-
-.chip[data-status="passed"] .chipDate {
-  color: var(--text);
+  font-weight: 600;
+  color: var(--chip-ink);
 }
 
 .chipSub {
   margin: 0;
-  color: var(--text-2);
-  font-size: 0.85rem;
+  color: var(--chip-ink);
+  font-size: 0.84rem;
 }
 
 .chipActions {
@@ -203,6 +258,7 @@
 .chipActions > * {
   flex: 1 1 auto;
   min-height: 44px;
+  border-radius: var(--r-pill) !important;
 }
 
 .edit {
@@ -211,20 +267,59 @@
 }
 
 /* ------------------------------------------------------------ reminder */
+.reminder {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--pale-butter);
+}
+
 .reminderTitle {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: var(--s-2);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--text);
+  gap: 10px;
+  font: 600 1.2rem/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--pale-butter-ink);
 }
 
 .reminderTitle svg {
-  width: 22px;
-  height: 22px;
-  color: var(--accent-text);
+  width: 20px;
+  height: 20px;
+}
+
+.reminderIcon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--pale-butter-ink);
+  flex: none;
+}
+
+.reminder .intro {
+  color: var(--text);
+}
+
+.reminder .bubble {
+  background: var(--surface);
+  border-color: transparent;
+}
+
+/* her outgoing reminder: a sent bubble */
+.out {
+  justify-self: end;
+  display: grid;
+  gap: 8px;
+  max-width: 94%;
+  padding: 12px 14px;
+  border-radius: 18px 4px 18px 18px;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .reminderText {
@@ -236,7 +331,7 @@
 
 .note {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--muted);
 }
 
@@ -259,24 +354,30 @@
   align-items: center;
   justify-content: center;
   gap: var(--s-2);
-  min-height: 72px;
+  min-height: 84px;
   padding: var(--s-4);
-  border: 2px dashed var(--accent-line);
-  border-radius: var(--r-lg);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-weight: 700;
+  border: 1.5px dashed var(--line-2);
+  border-radius: 20px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
   text-align: center;
   cursor: pointer;
-  transition: transform var(--dur-1) var(--ease-std);
+  transition: transform var(--dur-1) var(--ease-std), border-color var(--dur-2) var(--ease-std);
+}
+
+@media (hover: hover) {
+  .fileLabel:hover {
+    border-color: var(--text);
+  }
 }
 
 .fileLabel:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .fileLabel:focus-within {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -325,9 +426,9 @@
   flex: none;
   width: 44px;
   height: 44px;
-  border-radius: var(--r-pill);
-  background: var(--grad-diag);
-  color: var(--on-grad);
+  border-radius: 14px;
+  background: var(--pale-sage);
+  color: var(--pale-sage-ink);
 }
 
 .entryIcon svg {
@@ -343,7 +444,7 @@
 }
 
 .entryTitle {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .entryHint {
@@ -352,19 +453,25 @@
 }
 
 .chain {
+  justify-self: start;
   margin: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--s-2);
-  font-size: 0.85rem;
-  color: var(--muted);
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--pale-sage);
+  color: var(--pale-sage-ink);
 }
 
 .chain[data-ok="false"] {
-  color: var(--error);
+  background: var(--pale-rose);
+  color: var(--pale-rose-ink);
 }
 
 .chain svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }

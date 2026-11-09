@@ -119,7 +119,7 @@ export function NewDuesScreen({ initialKind }: { initialKind?: DuesKind | null }
 
   if (!kind) {
     return (
-      <Screen title={S.newTitle} back="/dues" t={t}>
+      <Screen title={S.newTitle} back="/dues" t={t} className="fx">
         <h2 className="section-title">{S.pickKind}</h2>
         <div className={css.tiles}>
           {KINDS.map((k, i) => (
@@ -143,7 +143,7 @@ export function NewDuesScreen({ initialKind }: { initialKind?: DuesKind | null }
 
   const dl = duesLang(lang);
   return (
-    <Screen title={S.kinds[kind]} back="/dues" t={t}>
+    <Screen title={S.kinds[kind]} back="/dues" t={t} className="fx">
       <button type="button" className={`${css.tile} ${css.rise}`} aria-pressed="true" onClick={() => setKind(null)}>
         <DuesArt kind={kind} size={56} />
         <span>

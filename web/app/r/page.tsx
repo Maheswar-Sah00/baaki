@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { RecipeScreen } from "@/components/screens/RecipeScreen";
+import "./r.css";
 
 // Neutral quick-exit page: its tab title and content must not mention Baaki.
 export const metadata: Metadata = {

@@ -1,10 +1,10 @@
 // Fair or Not? page chrome. Card text, labels and the disclaimer come from the API (backend/app/quiz_data.py).
 import type { QuizLang } from "@/lib/features/quiz";
 
-export const LANG_OPTIONS: { id: QuizLang; label: string }[] = [
-  { id: "en", label: "English" },
-  { id: "hi-en", label: "Hinglish" },
-  { id: "te", label: "తెలుగు" },
+export const LANG_OPTIONS: { id: QuizLang; label: string; html: string }[] = [
+  { id: "en", label: "English", html: "en" },
+  { id: "hi-en", label: "Hinglish", html: "hi" },
+  { id: "te", label: "తెలుగు", html: "te" },
 ];
 
 const en = {
@@ -29,6 +29,12 @@ const en = {
   retry: "Try again",
   you: "You said",
   review: "Your answers",
+  tag: "Fair or Not?",
+  of: "of",
+  progress: "Progress",
+  language: "Language",
+  answer: "The answer",
+  open: "Open",
 };
 
 type Dict = typeof en;
@@ -55,6 +61,12 @@ const hiEn: Dict = {
   retry: "फिर try करें",
   you: "आपने कहा",
   review: "आपके जवाब",
+  tag: "Fair or Not?",
+  of: "/",
+  progress: "Progress",
+  language: "भाषा",
+  answer: "सही जवाब",
+  open: "खोलें",
 };
 
 const te: Dict = {
@@ -79,6 +91,12 @@ const te: Dict = {
   retry: "మళ్ళీ ప్రయత్నించండి",
   you: "మీరు చెప్పింది",
   review: "మీ జవాబులు",
+  tag: "Fair or Not?",
+  of: "/",
+  progress: "పురోగతి",
+  language: "భాష",
+  answer: "సరైన జవాబు",
+  open: "తెరవండి",
 };
 
 const DICTS: Record<QuizLang, Dict> = { en, "hi-en": hiEn, te };

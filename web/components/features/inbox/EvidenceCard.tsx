@@ -1,10 +1,10 @@
 "use client";
 
 // One forwarded WhatsApp reply, saved as proof: the one-line summary ("Sharma ji said on 9 Nov: will pay
-// ₹12,000 by 14 Nov"), the promise chip(s), the translation with its Timbre read-out, the employer's own words
-// and voice note, and the hash that links it into her diary chain.
+// ₹12,000 by 14 Nov"), the employer's own words as the chat bubble they came in (with their voice note), the
+// promise chip(s), the translation with its Timbre read-out, and the hash that links it into her diary chain.
 
-import { Card, PlayButton, StatusPill } from "@/components/ui/primitives";
+import { PlayButton } from "@/components/ui/primitives";
 import { LockIcon } from "@/components/ui/icons";
 import { shortDate } from "@/lib/format";
 import type { UiLang } from "@/lib/i18n";
@@ -47,44 +47,47 @@ export function EvidenceCard({
     ) : null;
 
   return (
-    <Card as="article" tone={fresh ? "soft" : "default"} className={fresh ? css.fresh : css.rise}>
-      <div className="stack">
-        <div className={css.cardHead}>
-          <p className={css.summary} lang={HTML_LANG[card.summary.language] ?? undefined}>
-            {card.summary.text}
-          </p>
-          <StatusPill tone="success" dot={false}>
-            <LockIcon /> {duplicate ? S.duplicate : S.proofSaved}
-          </StatusPill>
-        </div>
+    <article className={`${css.card} ${fresh ? css.fresh : css.rise}`} data-fresh={fresh ? "true" : undefined}>
+      <div className={css.cardHead}>
+        <p className={css.summary} lang={HTML_LANG[card.summary.language] ?? undefined}>
+          {card.summary.text}
+        </p>
+        <span className={css.proof}>
+          <LockIcon /> {duplicate ? S.duplicate : S.proofSaved}
+        </span>
+      </div>
 
-        {card.promises.length ? (
-          card.promises.map((p) => <PromiseChip key={p.id} promise={p} S={S} lang={lang} asOf={asOf} onChanged={onPromise} />)
-        ) : (
-          <p className={css.note}>{S.noPromise}</p>
-        )}
-
-        <div className={css.block}>
-          <p className={css.blockLabel}>{S.inYourLang}</p>
-          <p className={css.translation} lang={HTML_LANG[card.translation_lang] ?? undefined}>
-            {card.translation}
-          </p>
-          {card.audio_url ? play(card.audio_url, S.listen) : null}
-        </div>
-
-        <details className={css.block}>
-          <summary className={css.blockLabel}>{S.theySaid}</summary>
-          <p className={css.quote} lang={HTML_LANG[card.language_code] ?? undefined}>
+      <div className={css.chat}>
+        <p className={css.chatWho}>{S.theySaid}</p>
+        <div className={css.bubble}>
+          <p className={css.bubbleText} lang={HTML_LANG[card.language_code] ?? undefined}>
             {card.transcript}
           </p>
-          {card.original_audio_url ? play(card.original_audio_url, S.original) : null}
-        </details>
+          <span className={css.bubbleTime}>{shortDate(card.said_on, lang)}</span>
+        </div>
+        {card.original_audio_url ? play(card.original_audio_url, S.original) : null}
+      </div>
 
+      {card.promises.length ? (
+        card.promises.map((p) => <PromiseChip key={p.id} promise={p} S={S} lang={lang} asOf={asOf} onChanged={onPromise} />)
+      ) : (
+        <p className={css.note}>{S.noPromise}</p>
+      )}
+
+      <div className={css.block}>
+        <p className={css.blockLabel}>{S.inYourLang}</p>
+        <p className={css.translation} lang={HTML_LANG[card.translation_lang] ?? undefined}>
+          {card.translation}
+        </p>
+        {card.audio_url ? play(card.audio_url, S.listen) : null}
+      </div>
+
+      <div className={css.foot}>
         <p className={css.when}>{shortDate(card.said_on, lang)}</p>
         <p className={css.hash} title={card.card.hash}>
           <LockIcon /> {S.hash(card.card.hash.slice(0, 12))}
         </p>
       </div>
-    </Card>
+    </article>
   );
 }

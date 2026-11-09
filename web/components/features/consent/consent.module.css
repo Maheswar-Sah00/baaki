@@ -1,0 +1,104 @@
+/* G13 spoken consent (10 Nov 2026 redesign): calm and trustworthy. A pale hero with Lakshmi speaking (rising from
+   the panel's bottom edge), the sentence in large type, a crisp ink karaoke marker, words that light up in ink when
+   heard. Tokens only (app/theme.css + app/theme-pale.css). No glow, no gradient. */
+
+@keyframes cs-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes cs-lit { from { color: var(--muted); text-decoration-color: transparent; } }
+
+.screen { gap: 16px; }
+
+/* ------------------------------------------------------------ hero */
+.hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 36%; min-height: 170px; border-radius: 26px; overflow: hidden; animation: cs-rise var(--dur-3) var(--ease-out) both; }
+.heroText { display: grid; gap: 8px; align-content: center; padding: 18px 4px 18px 18px; position: relative; z-index: 1; }
+.title { font-size: clamp(1.7rem, 7.4vw, 2.1rem); color: var(--wash-ink); }
+.title em { color: var(--text); }
+.heroSub { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--wash-ink); }
+/* the figure is cut at the bottom: flush on the panel's bottom edge */
+.heroArt.heroArt { align-self: end; width: 100%; height: auto; aspect-ratio: 900 / 887; margin-top: 12px; }
+.heroArt.heroArt :global(img) { object-position: center bottom; }
+
+/* ------------------------------------------------------------ language */
+.langs { justify-self: start; display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 4px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface-2); }
+.langs button { min-height: 40px; padding: 6px 14px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--text-2); font: 600 0.9rem/1 var(--font-sans); cursor: pointer; transition: background var(--dur-2) var(--ease-std), color var(--dur-2) var(--ease-std); }
+.langs button[aria-pressed="true"] { background: var(--ink-pill); color: var(--on-ink-pill); }
+
+/* ------------------------------------------------------------ the sentence */
+.script { display: grid; gap: 14px; padding: 18px; border-radius: 26px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); animation: cs-rise var(--dur-3) var(--ease-out) 40ms both; }
+.scriptLabel { margin: 0; font-size: 0.72rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.words { display: flex; flex-wrap: wrap; gap: 0.2em 0.38em; margin: 0; font-size: 1.32rem; line-height: 1.55; color: var(--text); }
+.words:lang(te),
+.words:lang(hi) { font-size: 1.26rem; line-height: 1.75; }
+.word { padding: 0 0.12em; margin: 0 -0.12em; border-radius: 7px; font-weight: 600; color: var(--text); transition: color var(--dur-2) var(--ease-std), background-color var(--dur-2) var(--ease-std), box-shadow var(--dur-2) var(--ease-std); }
+.word[data-kind="filler"] { font-weight: 500; color: var(--text-2); }
+.word[data-kind="name"] { font-weight: 750; }
+/* karaoke: ink up to the word being read, a solid ink marker on it, grey after it */
+.word[data-pos="before"] { color: var(--text); }
+.word[data-pos="at"] { background: var(--ink-pill); color: var(--on-ink-pill); }
+.word[data-pos="after"] { color: var(--muted); }
+/* after the check: heard words light up in turn (ink + an ink underline on a faint ink tint); missed stay grey */
+.words[data-mode="result"] .word { color: var(--muted); }
+.words[data-mode="result"] .word[data-heard="yes"] {
+  color: var(--text);
+  text-decoration: underline solid var(--text);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  animation: cs-lit 420ms var(--ease-out) both;
+  animation-delay: calc(var(--n, 0) * 55ms);
+}
+.words[data-mode="result"] .word[data-heard="no"] { color: var(--muted); text-decoration: underline dotted var(--error); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+.listen { display: inline-flex; align-items: center; gap: 8px; min-height: 56px; padding: 4px 16px 4px 6px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font: 600 0.94rem/1.1 var(--font-sans); cursor: pointer; }
+.listen:disabled { opacity: 0.5; cursor: default; }
+.listenIcon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--surface-2); }
+.listenIcon svg { width: 14px; height: 14px; }
+.record { display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 16px 6px 6px; border-radius: var(--r-pill); border: 1px solid transparent; background: var(--ink-pill); color: var(--on-ink-pill); font: 650 1rem/1.1 var(--font-sans); cursor: pointer; transition: transform var(--dur-1) var(--ease-std), background var(--dur-2) var(--ease-std); }
+.record:active:not(:disabled) { transform: scale(0.98); }
+.record:disabled { opacity: 0.5; cursor: progress; }
+.recordDot { position: relative; display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--on-ink-pill); color: var(--ink-pill); }
+.recordDot svg { width: 19px; height: 19px; }
+.recordDot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid transparent; transform: scale(calc(1 + var(--level, 0) * 0.18)); transition: transform 140ms linear; }
+.recordText { flex: 1; min-width: 0; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.recordWave { height: 16px; gap: 2px; color: currentColor; }
+.recordWave :global(.waveform-bar) { width: 2px; background: currentColor; }
+.record[data-state="recording"] { background: var(--recording); color: var(--surface); }
+.record[data-state="recording"] .recordDot { background: var(--surface); color: var(--recording); }
+.record[data-state="recording"] .recordDot::after { border-color: color-mix(in srgb, var(--surface) 60%, transparent); }
+.minWrap { display: grid; gap: 6px; }
+.minBar { display: block; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.minBar span { display: block; height: 100%; background: var(--text); transform-origin: left; transition: transform 200ms linear; }
+.minText { font-size: 0.82rem; color: var(--muted); }
+.meaning { margin: 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.86rem; line-height: 1.5; color: var(--muted); }
+
+/* ------------------------------------------------------------ results */
+.panel { display: grid; gap: 10px; padding: 18px; border-radius: 24px; animation: cs-rise var(--dur-3) var(--ease-out) both; }
+.okTitle { display: flex; align-items: center; gap: 10px; margin: 0; font: 650 1.2rem/1.25 var(--font-display); letter-spacing: -0.02em; color: var(--wash-ink); }
+.okIcon { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--ink-pill); color: var(--on-ink-pill); }
+.okIcon svg { width: 17px; height: 17px; }
+.warnTitle { margin: 0; font: 650 1.08rem/1.35 var(--font-display); letter-spacing: -0.015em; color: var(--wash-ink); }
+.panelText { margin: 0; font-size: 0.92rem; line-height: 1.5; color: var(--text); }
+.count { margin: 0; font-size: 0.9rem; color: var(--wash-ink); }
+.count b { font: 700 1.2rem/1 var(--font-display); font-variant-numeric: tabular-nums; color: var(--text); }
+.hash { margin: 0; font: 500 0.74rem/1.45 var(--font-mono); color: var(--wash-ink); overflow-wrap: anywhere; }
+.missed { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: 0.86rem; color: var(--wash-ink); }
+.choices { display: grid; gap: 8px; }
+.primary,
+.secondary,
+.danger { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; padding: 0 20px; border-radius: var(--r-pill); font: 600 0.98rem/1.2 var(--font-sans); cursor: pointer; text-align: center; }
+.primary { border: 1px solid transparent; background: var(--ink-pill); color: var(--on-ink-pill); }
+.secondary { border: 1px solid var(--line-2); background: var(--surface); color: var(--text); }
+.secondary:disabled { opacity: 0.5; cursor: default; }
+.danger { min-height: 48px; border: 1px solid color-mix(in srgb, var(--error) 35%, transparent); background: transparent; color: var(--error); }
+.lock { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); color: var(--text-2); font-size: 0.84rem; line-height: 1.45; }
+.lock svg { width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--muted); }
+.withdraw { display: grid; gap: 10px; padding: 16px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); }
+.log { padding: 14px 16px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); }
+.log summary { min-height: 28px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text); }
+.log ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; }
+.log li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
+.log code { font: 500 0.74rem/1.4 var(--font-mono); color: var(--text-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero, .script, .panel { animation: none; }
+  .words[data-mode="result"] .word[data-heard="yes"] { animation: none; }
+  .word, .recordDot::after, .minBar span { transition: none; }
+}

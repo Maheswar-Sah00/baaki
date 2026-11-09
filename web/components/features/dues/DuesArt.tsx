@@ -1,12 +1,38 @@
+"use client";
+
 // Small tile illustrations for the three kinds, in the Illustration.tsx style: flat rounded shapes on a soft blob,
 // one ground shadow, fills from the --ill-* / --accent* tokens only (works in both palettes and themes).
+// Supplied art wins: /assets/dues-<kind>.webp (dues-vendor, dues-chit, dues-other; flat cartoon, transparent
+// background) is shown when it exists, in the same square (object-fit: contain); otherwise this inline SVG.
 import type { DuesKind } from "@/lib/features/dues";
+import { useAssetStatus } from "@/components/ui/asset-probe";
 
 export function DuesArt({ kind, size = 72 }: { kind: DuesKind; size?: number }) {
+  const src = `/assets/dues-${kind}.webp`;
+  const { status, ref, onLoad, onError } = useAssetStatus(src);
+  if (status !== "missing") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        ref={ref}
+        src={src}
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        decoding="async"
+        className="dues-art-img"
+        data-loaded={status === "ok"}
+        style={{ width: size, height: size, objectFit: "contain", flex: "none", display: "block" }}
+        onLoad={onLoad}
+        onError={onError}
+      />
+    );
+  }
   return (
     <svg width={size} height={size} viewBox="0 0 96 96" aria-hidden="true" focusable="false">
       <ellipse cx="48" cy="86" rx="28" ry="4" fill="var(--ill-shadow)" />
-      <circle cx="48" cy="46" r="38" fill="var(--ill-blob)" />
+      <circle cx="48" cy="46" r="38" fill={kind === "vendor" ? "var(--pale-butter)" : kind === "chit" ? "var(--pale-lilac)" : "var(--pale-sky)"} />
       {kind === "vendor" ? <Milk /> : kind === "chit" ? <Chit /> : <Other />}
     </svg>
   );

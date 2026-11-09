@@ -118,7 +118,7 @@ export function PromiseChip({
             <button type="button" className="btn btn-yes" disabled={busy} onClick={() => void patch({ confirmed: true })}>
               <CheckIcon /> {S.yes}
             </button>
-            <button type="button" className="btn" disabled={busy} onClick={() => setEditing(true)}>
+            <button type="button" className="fx-pill-btn" disabled={busy} onClick={() => setEditing(true)}>
               {S.fix}
             </button>
           </div>
@@ -127,15 +127,15 @@ export function PromiseChip({
 
       {!editing && open && (p.confirmed || p.status === "passed") ? (
         <div className={css.chipActions}>
-          <button type="button" className="btn btn-small" disabled={busy} onClick={() => void patch({ status: "kept" })}>
+          <button type="button" className="fx-pill-btn" disabled={busy} onClick={() => void patch({ status: "kept" })}>
             {S.markKept}
           </button>
           {p.status === "passed" ? (
-            <button type="button" className="btn btn-small" disabled={busy} onClick={() => void patch({ status: "broken" })}>
+            <button type="button" className="fx-pill-btn" disabled={busy} onClick={() => void patch({ status: "broken" })}>
               {S.markBroken}
             </button>
           ) : (
-            <button type="button" className="btn btn-small btn-ghost" disabled={busy} onClick={() => setEditing(true)}>
+            <button type="button" className="fx-pill-btn" disabled={busy} onClick={() => setEditing(true)}>
               {S.fix}
             </button>
           )}

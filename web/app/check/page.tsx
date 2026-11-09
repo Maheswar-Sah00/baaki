@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { FairPayCheck } from "@/components/features/check/FairPayCheck";
+import { SiteFooter } from "@/components/site/Site";
+import { existingAssets } from "@/components/site/assets";
+import "../site.css";
 
 const TITLE = "Am I paying my house help fairly?";
 const DESCRIPTION =
@@ -16,11 +19,20 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     locale: "en_IN",
-    images: [{ url: "/icons/icon-512.png", width: 512, height: 512, alt: "Baaki" }],
+    images: [{ url: "/og/check-og.png", width: 1200, height: 630, alt: "Am I paying my house help fairly? Baaki Fair Pay Check" }],
   },
-  twitter: { card: "summary", title: TITLE, description: DESCRIPTION, images: ["/icons/icon-512.png"] },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og/check-og.png"] },
 };
 
+// The photo slot renders only once its file exists (checked here, on the server), so a missing photo
+// never 404s in the browser. The shared site footer closes the page (site.css styles it).
 export default function Page() {
-  return <FairPayCheck />;
+  return (
+    <>
+      <FairPayCheck photo={existingAssets(["check-payday-envelope"]).length > 0} />
+      <div className="site fc-site-foot">
+        <SiteFooter />
+      </div>
+    </>
+  );
 }

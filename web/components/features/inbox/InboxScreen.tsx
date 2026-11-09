@@ -5,7 +5,8 @@
 // `asOf` (from ?as_of=YYYY-MM-DD) shifts "today" for the demo ("a week later").
 
 import { useCallback, useEffect, useState } from "react";
-import { ErrorNote, GradientButton, Illustration, Screen, SkeletonCard } from "@/components/ui/primitives";
+import { ErrorNote, GradientButton, Screen, SkeletonCard } from "@/components/ui/primitives";
+import { AssetSlot } from "@/components/ui/AssetSlot";
 import { LockIcon } from "@/components/ui/icons";
 import { useAudioPlayer, useT } from "@/hooks";
 import { getInbox, type InboxAdded, type InboxList, type InboxPromise } from "@/lib/features/inbox";
@@ -98,7 +99,7 @@ export function InboxScreen({ caseId, asOf, shared }: { caseId: number; asOf?: s
   const passed = data?.passed ?? [];
 
   return (
-    <Screen title={S.title} back={`/case/${caseId}`} t={t}>
+    <Screen title={S.title} back={`/case/${caseId}`} t={t} className="fx">
       {loading && !data ? (
         <div role="status" aria-label={t("common.loading")} className="stack">
           <SkeletonCard />
@@ -115,7 +116,7 @@ export function InboxScreen({ caseId, asOf, shared }: { caseId: number; asOf?: s
 
           <p className={css.intro}>{S.intro(employer)}</p>
           {passed.length ? (
-            <button type="button" className="btn btn-big" onClick={() => setSheet(true)}>
+            <button type="button" className="fx-pill-btn" style={{ minHeight: 54 }} onClick={() => setSheet(true)}>
               {S.add}
             </button>
           ) : (
@@ -123,10 +124,10 @@ export function InboxScreen({ caseId, asOf, shared }: { caseId: number; asOf?: s
           )}
 
           {data.cards.length === 0 ? (
-            <div className="stack" style={{ justifyItems: "center", textAlign: "center" }}>
-              <Illustration name="speak" animated />
-              <p className="section-title">{S.empty}</p>
-              <p className="hint">{S.emptyHint}</p>
+            <div className="stack slot-empty" style={{ justifyItems: "center", textAlign: "center" }}>
+              <AssetSlot name="inbox-empty-whatsapp" alt="" ratio="16/10" tone="sage" rounded="var(--card-r)" fit="contain" />
+              <p className="fx-h2">{S.empty}</p>
+              <p className="fx-muted">{S.emptyHint}</p>
             </div>
           ) : (
             <ul className={css.list}>

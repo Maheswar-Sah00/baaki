@@ -56,7 +56,7 @@ export function VerifyBadge({ messageId, workerLang }: { messageId: number; work
       <div className={styles.badge} data-tone="warn" role="status" aria-live="polite">
         <p className={styles.line}>{state.noAudio ? s.noAudio : s.error}</p>
         {state.noAudio ? null : (
-          <button type="button" className="btn btn-small" onClick={retry}>
+          <button type="button" className="fx-pill-btn" onClick={retry}>
             {s.retry}
           </button>
         )}

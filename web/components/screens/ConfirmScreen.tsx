@@ -1,13 +1,15 @@
 "use client";
 
-// Confirm (/case/new): which home → facts + calculation with sources + read-back → ✓ Haan / ✗ Nahi.
+// Confirm (/case/new): which home → a receipt-style read-back (each fact with ✓ / Fix), the money
+// worked out step by step with the law source → ✓ Haan / ✗ Nahi.
 // Also used by the Case screen to finish a case that is still a draft (resumeCaseId).
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAudioPlayer, useDashboard, useHydrated, useNewCase, useSafety, useSettings, useT, type HomeChoice } from "@/hooks";
 import { inr, itemLabel } from "@/lib/format";
+import type { UiLang } from "@/lib/i18n";
 import type { Employer, LangCode } from "@/lib/types";
 import {
   Card,
@@ -16,14 +18,58 @@ import {
   GradientButton,
   Loading,
   Money,
+  MoneyFigure,
   PlayButton,
   Screen,
   Skeleton,
   Sources,
   StatusPill,
   Toggle,
+  avatarTone,
 } from "@/components/ui/primitives";
-import { CheckIcon, HomeIcon } from "@/components/ui/icons";
+import { CheckIcon, HomeIcon, PenIcon } from "@/components/ui/icons";
+
+// Confirm-only labels (kept local so the shared i18n table stays untouched).
+const CONF: Record<
+  UiLang,
+  {
+    how: string;
+    checked: (n: number, m: number) => string;
+    law: string;
+    heard: string;
+    check: string;
+    retold: (employer: string, was: string | null) => string;
+    noWorker: string;
+  }
+> = {
+  en: {
+    how: "How it adds up",
+    checked: (n, m) => `${n} of ${m} checked`,
+    law: "Law",
+    heard: "What Baaki heard",
+    check: "Check each line",
+    retold: (e, was) => `Updating your ${e} case${was ? ` (was ${was})` : ""}. Check the new numbers.`,
+    noWorker: "No profile on this server yet. Open Baaki from the start to begin.",
+  },
+  "hi-en": {
+    how: "Hisaab kaise bana",
+    checked: (n, m) => `${n}/${m} sahi`,
+    law: "Kanoon",
+    heard: "Baaki ne kya suna",
+    check: "Har line check karein",
+    retold: (e, was) => `${e} वाला case update हो रहा है${was ? ` (पहले ${was})` : ""}। नए नंबर देख लीजिए।`,
+    noWorker: "इस server पर अभी कोई profile नहीं है। Baaki शुरू से खोलिए।",
+  },
+  te: {
+    how: "లెక్క ఎలా వచ్చింది",
+    checked: (n, m) => `${n}/${m} సరి`,
+    law: "చట్టం",
+    heard: "బాకీ విన్నది",
+    check: "ప్రతి వివరం చూడండి",
+    retold: (e, was) => `${e} కేసు మారుస్తున్నాం${was ? ` (ముందు ${was})` : ""}. కొత్త లెక్క చూడండి.`,
+    noWorker: "ఈ సర్వర్‌లో ఇంకా ప్రొఫైల్ లేదు. బాకీని మొదటి నుంచి తెరవండి.",
+  },
+};
 
 const EMPLOYER_LANGS: { value: LangCode; label: string }[] = [
   { value: "hi-en", label: "Hinglish" },
@@ -98,6 +144,9 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
 
   const [newName, setNewName] = useState<string | null>(null);
   const [newLang, setNewLang] = useState<LangCode | null>(null);
+  // ✓ per read-back line: a checklist for her while she listens (Send stays her own tap).
+  const [okLines, setOkLines] = useState<Record<string, boolean>>({});
+  const C = CONF[lang];
 
   if (flow.phase === "extracting" || flow.phase === "creating" || (!flow.caseData && flow.phase === "saving")) {
     return (
@@ -115,7 +164,7 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
   if (flow.phase === "error") {
     return (
       <div className="stack">
-        <ErrorNote message={flow.error === "nothing_said" ? t("speak.tap") : flow.error} />
+        <ErrorNote message={flow.noWorker ? CONF[lang].noWorker : flow.error === "nothing_said" ? t("speak.tap") : flow.error} />
         <Link href="/speak" className="btn btn-primary btn-big">
           {t("speak.again")}
         </Link>
@@ -142,7 +191,7 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
                 aria-pressed={pickedId === e.id}
                 onClick={() => flow.setHome({ kind: "existing", employerId: e.id, name: e.name })}
               >
-                <span className="choice-icon" aria-hidden="true">
+                <span className="choice-icon" data-tone={avatarTone(e.name)} aria-hidden="true">
                   <HomeIcon />
                 </span>
                 <span className="choice-text">
@@ -221,15 +270,25 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
     else router.replace(`/case/${id}`);
   };
 
+  const factRows: { k: string; label: string; value: ReactNode }[] = f
+    ? [
+        { k: "employer", label: t("confirm.employer"), value: employerName },
+        { k: "wage", label: t("confirm.wage"), value: <Money value={Number(f.monthly_wage ?? 0)} /> },
+        { k: "months", label: t("confirm.months"), value: flow.caseData?.months_unpaid ?? f.months_unpaid ?? "—" },
+        ...(f.hours_per_day ? [{ k: "hours", label: t("confirm.hours"), value: f.hours_per_day as ReactNode }] : []),
+        ...(f.deductions?.length ? [{ k: "cuts", label: t("confirm.cuts"), value: f.deductions.map((d) => inr(d.amount)).join(", ") as ReactNode }] : []),
+      ]
+    : [];
+  const okCount = factRows.filter((r) => okLines[r.k]).length;
+
   return (
     <div className="stack confirm-review">
+      {flow.retold ? (
+        <p className="retold-note" role="status">
+          {C.retold(employerName, flow.retold.previousTotal != null ? inr(flow.retold.previousTotal) : null)}
+        </p>
+      ) : null}
       <Card as="section" tone="glow" className="readback" aria-live="polite">
-        <h2 className="card-title readback-title">{t("confirm.title")}</h2>
-        <ol className="readback-lines">
-          {flow.readbackSentences.map((s, i) => (
-            <li key={i}>{s}</li>
-          ))}
-        </ol>
         <div className="readback-play">
           {audioUrl ? (
             <PlayButton
@@ -245,16 +304,24 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
             <p className="hint">{t("common.audio_failed")}</p>
           )}
         </div>
+        <h2 className="card-title readback-title">{C.heard}</h2>
+        <ol className="readback-lines">
+          {flow.readbackSentences.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ol>
       </Card>
 
       <section className="card receipt" aria-label={t("confirm.total")}>
         <div className="receipt-head">
-          <span className="receipt-avatar" aria-hidden="true">
+          <span className="receipt-avatar" data-tone={avatarTone(employerName)} aria-hidden="true">
             {employerName.slice(0, 1).toUpperCase()}
           </span>
           <div className="receipt-head-text">
             <p className="total-label">{t("confirm.total")}</p>
-            <p className="total-value">{inr(flow.total)}</p>
+            <p className="total-value">
+              <MoneyFigure value={flow.total} size="lg" />
+            </p>
             {flow.draft.summary && flow.draft.summary.total !== flow.total ? (
               <p className="meta">
                 {t("confirm.you_said")}: {inr(flow.draft.summary.total)}
@@ -263,61 +330,72 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
           </div>
         </div>
 
-        {f ? (
-          <dl className="facts receipt-facts">
-            <div>
-              <dt>{t("confirm.employer")}</dt>
-              <dd>{employerName}</dd>
+        {factRows.length ? (
+          <div className="receipt-section receipt-check">
+            <div className="receipt-section-head">
+              <p className="eyebrow">{C.check}</p>
+              <span className="receipt-count" data-all={okCount === factRows.length}>
+                {C.checked(okCount, factRows.length)}
+              </span>
             </div>
-            <div>
-              <dt>{t("confirm.wage")}</dt>
-              <dd>
-                <Money value={Number(f.monthly_wage ?? 0)} />
-              </dd>
-            </div>
-            <div>
-              <dt>{t("confirm.months")}</dt>
-              <dd>{flow.caseData?.months_unpaid ?? f.months_unpaid ?? "—"}</dd>
-            </div>
-            {f.hours_per_day ? (
-              <div>
-                <dt>{t("confirm.hours")}</dt>
-                <dd>{f.hours_per_day}</dd>
-              </div>
-            ) : null}
-            {f.deductions?.length ? (
-              <div>
-                <dt>{t("confirm.cuts")}</dt>
-                <dd>{f.deductions.map((d) => inr(d.amount)).join(", ")}</dd>
-              </div>
-            ) : null}
-          </dl>
+            <dl className="facts receipt-facts">
+              {factRows.map((r) => (
+                <div key={r.k} className="fact-row" data-ok={!!okLines[r.k]}>
+                  <dt>{r.label}</dt>
+                  <dd>{r.value}</dd>
+                  <span className="fact-actions">
+                    <button
+                      type="button"
+                      className="fact-ok"
+                      aria-pressed={!!okLines[r.k]}
+                      aria-label={`${r.label}: ${t("confirm.yes")}`}
+                      onClick={() => setOkLines((o) => ({ ...o, [r.k]: !o[r.k] }))}
+                    >
+                      <CheckIcon />
+                    </button>
+                    <button type="button" className="fact-fix" onClick={flow.no} disabled={flow.phase === "saving"} aria-label={`${r.label}: ${t("speak.fix")}`}>
+                      <PenIcon />
+                      <span>{t("speak.fix")}</span>
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </dl>
+          </div>
         ) : null}
 
         {items.length ? (
-          <ul className="items receipt-items">
-            {items.map((it, i) => (
-              <li
-                key={`${it.kind}-${it.month}-${i}`}
-                className="item"
-                data-kind={it.kind}
-                data-included={it.included_in_total || (flow.includeShortfall && it.kind === "min_wage_shortfall")}
-              >
-                <div className="item-row">
-                  <span className="item-label" title={it.label}>
-                    {itemLabel(t, it, lang)} {it.is_estimate ? <EstimateTag t={t} /> : null}
+          <div className="receipt-section">
+            <p className="eyebrow">{C.how}</p>
+            <ol className="items receipt-items">
+              {items.map((it, i) => (
+                <li
+                  key={`${it.kind}-${it.month}-${i}`}
+                  className="item"
+                  data-kind={it.kind}
+                  data-included={it.included_in_total || (flow.includeShortfall && it.kind === "min_wage_shortfall")}
+                >
+                  <span className="item-no" aria-hidden="true">
+                    {i + 1}
                   </span>
-                  <Money value={it.amount} />
-                </div>
-                {it.note ? <p className="meta">{it.note}</p> : null}
-                <details className="item-source">
-                  <summary>{t("common.source")}</summary>
-                  <p className="meta">{it.label}</p>
-                  <p>{it.source}</p>
-                </details>
-              </li>
-            ))}
-          </ul>
+                  <div className="item-body">
+                    <div className="item-row">
+                      <span className="item-label" title={it.label}>
+                        {itemLabel(t, it, lang)} {it.is_estimate ? <EstimateTag t={t} /> : null}
+                      </span>
+                      <Money value={it.amount} />
+                    </div>
+                    {it.note ? <p className="meta">{it.note}</p> : null}
+                    <details className="item-source">
+                      <summary>{t("common.source")}</summary>
+                      <p className="meta">{it.label}</p>
+                      <p>{it.source}</p>
+                    </details>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         ) : null}
 
         <div className="receipt-total">
@@ -348,6 +426,10 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
           ) : (
             <p>{t("confirm.haq_none")}</p>
           )}
+          <p className="haq-law">
+            <span className="haq-law-tag">{C.law}</span>
+            <span>{t("confirm.haq_source")}</span>
+          </p>
           <details className="item-source">
             <summary>
               {t("common.source")}: {t("confirm.haq_source")}

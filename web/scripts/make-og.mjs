@@ -1,47 +1,135 @@
-// Generates the default link-preview image public/og/baaki-og.png (1200x630) from the Baaki logo with sharp.
-//   node scripts/make-og.mjs
-// Generic on purpose: no names and no amounts, so it is safe for every route (including /e/{token}).
-// Telugu text is shaped by librsvg with "Nirmala UI" (Windows) or "Noto Sans Telugu"; the PNG is committed.
-import sharp from "sharp";
-import { mkdirSync, readFileSync } from "node:fs";
+// Generates the link-preview images (1200x630) in public/og with a headless browser, so the real
+// brand fonts render: Cabinet Grotesk (local woff2), Instrument Serif italic and Inter (Google Fonts).
+//   node scripts/make-og.mjs                      (BAAKI_URL=http://localhost:3013 for the proof card)
+//
+//   og/baaki-og.png   default for every route (lib/site.ts OG_IMAGE). Generic on purpose: no names
+//                     and no amounts, so it is safe for every route, including /e/{token}.
+//   og/check-og.png   Fair Pay Check (/check)
+//   og/proof-og.png   Noise proof (/proof): the headline number, read live from GET /api/proof.
+//                     Skipped (old file kept) when the API is not reachable.
+//
+// Look: the pale painted sky (public/sky.webp), a Cabinet headline with an Instrument Serif italic
+// line, ink pill, hairline cards. Colours are the `pale` palette from app/theme-pale.css.
+// Playwright comes from B:/Projects/appwrite (like scripts/shots.cjs); the PNGs are committed, so
+// other machines never need to run this.
+import { createRequire } from "node:module";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const WEB = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(WEB, "public", "og");
 mkdirSync(OUT, { recursive: true });
+const require = createRequire(import.meta.url);
+let chromium;
+for (const p of ["playwright", "B:/Projects/appwrite/node_modules/playwright"]) {
+  try {
+    ({ chromium } = require(p));
+    break;
+  } catch {
+    /* try the next */
+  }
+}
+if (!chromium) throw new Error("Playwright not found (npm i -D playwright, or keep B:/Projects/appwrite)");
 
-const W = 1200;
-const H = 630;
-const LOGO = 280;
-const logo = await sharp(readFileSync(path.join(WEB, "public", "icons", "logo.svg")))
-  .resize(LOGO, LOGO)
-  .png()
-  .toBuffer();
+const b64 = (f) => readFileSync(f).toString("base64");
+const SKY = `data:image/webp;base64,${b64(path.join(WEB, "public", "sky.webp"))}`;
+const CABINET = `data:font/woff2;base64,${b64(path.join(WEB, "app", "fonts", "CabinetGrotesk-Variable.woff2"))}`;
+const MARK =
+  "M80 120a64 64 0 0 1 128 0V170a160 160 0 0 1 248 134V480L400 432H144a64 64 0 0 1-64-64Z M296 246a58 58 0 1 0 0.01 0Z";
 
-const bg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <defs>
-    <linearGradient id="haze" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fff4ea"/><stop offset="0.55" stop-color="#fcf7f2"/><stop offset="1" stop-color="#f1eafe"/>
-    </linearGradient>
-    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#fe914b"/><stop offset="0.5" stop-color="#cf82a6"/><stop offset="1" stop-color="#9f73f4"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.2" cy="0.3" r="0.6">
-      <stop offset="0" stop-color="#fe914b" stop-opacity="0.22"/><stop offset="1" stop-color="#fe914b" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="${W}" height="${H}" fill="url(#haze)"/>
-  <rect width="${W}" height="${H}" fill="url(#glow)"/>
-  <rect x="0" y="${H - 14}" width="${W}" height="14" fill="url(#brand)"/>
-  <text x="450" y="270" font-family="Georgia, 'Instrument Serif', serif" font-size="112" fill="#101828">Baaki</text>
-  <text x="450" y="350" font-family="Nirmala UI, Noto Sans Telugu, sans-serif" font-weight="700" font-size="54" fill="#9f73f4">బాకీ · money still owed</text>
-  <text x="450" y="430" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="31" fill="#344054">Say what you are owed, in Telugu or Hinglish.</text>
-  <text x="450" y="478" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="31" fill="#344054">Baaki works out the money and speaks for you.</text>
-</svg>`;
+const INK = "#0e0e0c";
+const css = `
+@font-face { font-family: "Cabinet"; src: url(${CABINET}) format("woff2"); font-weight: 100 900; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1200px; height: 630px; overflow: hidden; }
+body { font-family: Inter, "Segoe UI", sans-serif; color: ${INK}; background: #fbfaf7; }
+.card { position: relative; width: 1200px; height: 630px; padding: 56px 72px; display: flex; flex-direction: column;
+  background: url(${SKY}) center 30% / cover no-repeat; }
+.card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(251 250 247 / 0) 40%, rgb(251 250 247 / 0.86) 100%); }
+.card > * { position: relative; z-index: 1; }
+.top { display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo svg { width: 38px; height: 38px; }
+.word { font-family: Cabinet; font-weight: 700; font-size: 38px; letter-spacing: -0.045em; line-height: 1; }
+.te { font-family: "Nirmala UI", "Noto Sans Telugu", sans-serif; font-size: 19px; font-weight: 500; color: #4a4843; margin-left: 4px; }
+.pill { font-weight: 600; font-size: 19px; padding: 12px 22px; border-radius: 999px; background: ${INK}; color: #fff; }
+.pill.ghost { background: rgb(255 255 255 / 0.72); color: ${INK}; border: 1px solid rgb(14 14 12 / 0.08); }
+h1 { font-family: Cabinet; font-weight: 700; font-size: 104px; line-height: 0.96; letter-spacing: -0.045em; }
+h1 em { display: block; font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: -0.02em; font-size: 1.06em; }
+.sub { margin-top: 26px; font-size: 27px; line-height: 1.38; color: #3f3d39; max-width: 820px; }
+.mid { margin-top: auto; }
+.row { margin-top: 34px; display: flex; gap: 12px; align-items: center; }
+.chip { font-size: 18px; font-weight: 600; padding: 10px 18px; border-radius: 999px; background: rgb(255 255 255 / 0.8); border: 1px solid rgb(14 14 12 / 0.07); color: #3f3d39; }
+.big { font-family: Cabinet; font-weight: 700; font-size: 250px; line-height: 0.8; letter-spacing: -0.06em; }
+.big span { color: #a8a49b; }
+.center { align-items: center; text-align: center; }
+.center .top { width: 100%; }
+`;
 
-await sharp(Buffer.from(bg))
-  .composite([{ input: logo, left: 110, top: Math.round((H - LOGO) / 2) - 10 }])
-  .png({ compressionLevel: 9 })
-  .toFile(path.join(OUT, "baaki-og.png"));
-console.log("wrote public/og/baaki-og.png");
+const logo = `<div class="logo"><svg viewBox="56 56 424 424"><path fill="${INK}" d="${MARK}"/></svg><span class="word">Baaki</span><span class="te" lang="te">బాకీ</span></div>`;
+
+const cards = {
+  "baaki-og.png": `
+  <div class="card">
+    <div class="top">${logo}<span class="pill">Telugu · Hinglish</span></div>
+    <div class="mid">
+      <h1>Money still owed?<em>Just say it.</em></h1>
+      <p class="sub">Baaki works out what a domestic worker is owed and speaks to the employer for her, in their language.</p>
+      <div class="row"><span class="chip">Voice first</span><span class="chip">Read back before Send</span><span class="chip">Telangana minimum wage</span></div>
+    </div>
+  </div>`,
+  "check-og.png": `
+  <div class="card">
+    <div class="top">${logo}<span class="pill ghost">Fair Pay Check</span></div>
+    <div class="mid">
+      <h1>Am I paying my<em>house help fairly?</em></h1>
+      <p class="sub">A 30-second check against Telangana's minimum wage (G.O.Ms.No.6, Hyderabad). Nothing you enter is saved.</p>
+    </div>
+  </div>`,
+};
+
+async function proofCard() {
+  const base = process.env.BAAKI_URL || "http://localhost:3013";
+  try {
+    const res = await fetch(`${base}/api/proof`, { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    const h = data?.summary?.headline;
+    if (!h) return null;
+    return `
+  <div class="card center">
+    <div class="top">${logo}<span class="pill ghost">Noise proof</span></div>
+    <div class="mid" style="margin-top:auto;margin-bottom:auto;padding-top:20px">
+      <div class="big">${h.exact}<span>/${h.amounts}</span></div>
+      <h1 style="font-size:64px;margin-top:22px">rupee amounts heard <em style="display:inline;font-size:1.08em">exactly</em></h1>
+      <p class="sub" style="margin:18px auto 0;max-width:900px">${h.clips} noisy clips of Telugu and Hinglish: a loud kitchen, a phone line, WhatsApp compression.</p>
+    </div>
+  </div>`;
+  } catch {
+    return null;
+  }
+}
+
+const proof = await proofCard();
+if (proof) cards["proof-og.png"] = proof;
+else console.log("skipped proof-og.png (API not reachable)");
+
+let browser;
+try {
+  browser = await chromium.launch({ channel: "msedge" });
+} catch {
+  browser = await chromium.launch();
+}
+const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+for (const [name, body] of Object.entries(cards)) {
+  const html = `<!doctype html><html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=block" rel="stylesheet">
+<style>${css}</style></head><body>${body}</body></html>`;
+  await page.setContent(html, { waitUntil: "networkidle" }).catch(() => page.setContent(html));
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: path.join(OUT, name), type: "png" });
+  console.log("wrote public/og/" + name);
+}
+await browser.close();
+if (!existsSync(path.join(OUT, "baaki-og.png"))) process.exitCode = 1;

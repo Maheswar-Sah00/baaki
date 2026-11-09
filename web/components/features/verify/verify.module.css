@@ -1,42 +1,44 @@
 .badge {
   display: grid;
   gap: var(--s-2);
-  padding: var(--s-3) var(--s-4);
-  border-radius: var(--r-md);
-  border: 1px solid var(--line);
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 0;
   background: var(--surface-2);
   color: var(--text);
   animation: verify-rise var(--dur-3) var(--ease-out) both;
 }
 .badge[data-tone="ok"] {
-  background: var(--success-soft);
-  border-color: var(--success);
+  background: var(--pale-sage);
 }
 .badge[data-tone="warn"] {
-  background: var(--warn-soft);
-  border-color: var(--warn);
+  background: var(--pale-butter);
 }
 .title {
   display: flex;
   align-items: flex-start;
   gap: var(--s-2);
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
 }
 .badge[data-tone="ok"] .title {
-  color: var(--success);
+  color: var(--pale-sage-ink);
 }
 .badge[data-tone="warn"] .title {
-  color: var(--warn);
+  color: var(--pale-butter-ink);
 }
 .icon {
   flex: none;
   width: 20px;
   height: 20px;
   margin-top: 1px;
-  animation: verify-pop var(--dur-4) var(--ease-spring) both;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--pale-sage-ink);
+  color: var(--pale-sage);
+  animation: verify-pop var(--dur-3) var(--ease-out) both;
 }
 .bang {
   flex: none;
@@ -45,8 +47,8 @@
   width: 20px;
   height: 20px;
   border-radius: var(--r-pill);
-  background: var(--warn);
-  color: var(--surface);
+  background: var(--pale-butter-ink);
+  color: var(--pale-butter);
   font-size: 13px;
   font-weight: 800;
 }

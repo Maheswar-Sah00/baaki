@@ -1,6 +1,9 @@
 /* Baaki service worker (registered by components/pwa/ServiceWorkerRegister.tsx, production only).
  *
- *   App shell + static assets   precached on install; /_next/static, /icons, fonts: cache-first
+ *   App shell + static assets   precached on install; /_next/static (hashed) and fonts: cache-first
+ *   Brand images                /sky.webp, /icons/*, /og/*, /assets/* (AssetSlot photos the user
+ *                               supplies later under the same name): stale-while-revalidate, so a
+ *                               replaced image shows up on the next visit instead of sticking forever
  *   Pages (navigations)         network-first; cached copy, then /offline when there is no network
  *   /api/media/* (voice notes)  network-first; offline copy kept at most MEDIA_MAX_AGE and
  *                               MEDIA_MAX entries (never forever); Range requests bypass the cache
@@ -9,7 +12,7 @@
  *
  * Bump VERSION to drop every old cache on the next visit.
  */
-const VERSION = "v1";
+const VERSION = "v2-pale"; // v2: Vyra-style redesign (pale palette, new mark); drops every v1 cache
 const SHELL = `baaki-shell-${VERSION}`;
 const STATIC = `baaki-static-${VERSION}`;
 const PAGES = `baaki-pages-${VERSION}`;
@@ -17,7 +20,18 @@ const API = `baaki-api-${VERSION}`;
 const MEDIA = `baaki-media-${VERSION}`;
 const KEEP = [SHELL, STATIC, PAGES, API, MEDIA];
 
-const SHELL_URLS = ["/", "/app", "/offline", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/favicon.svg"];
+const SHELL_URLS = [
+  "/",
+  "/app",
+  "/offline",
+  "/manifest.webmanifest",
+  "/sky.webp",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/maskable-192.png",
+  "/icons/apple-touch-icon.png",
+  "/icons/favicon.svg",
+];
 const MEDIA_MAX = 30;
 const MEDIA_MAX_AGE = 24 * 60 * 60 * 1000; // 1 day
 const NETWORK_TIMEOUT = 8000;
@@ -122,6 +136,24 @@ async function cacheFirst(request) {
   return res;
 }
 
+// Brand images can be replaced in place (same file name), so serve the cached copy at once and
+// refresh it in the background.
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(STATIC);
+  const hit = await cache.match(request);
+  const fresh = fetch(request)
+    .then((res) => {
+      if (res && res.ok && res.status === 200) cache.put(request, res.clone()).catch(() => {});
+      return res;
+    })
+    .catch(() => null);
+  if (hit) {
+    fresh.catch(() => {});
+    return hit;
+  }
+  return (await fresh) || Response.error();
+}
+
 async function page(request) {
   const url = new URL(request.url);
   if (NO_CACHE_PAGES.some((re) => re.test(url.pathname))) {
@@ -157,8 +189,18 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(page(request));
     return;
   }
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || /\.(?:woff2?|png|svg|jpg|webp|ico)$/.test(url.pathname)) {
-    event.respondWith(cacheFirst(request));
+  if (url.pathname.startsWith("/_next/static/") || /\.(?:woff2?|ttf|otf)$/.test(url.pathname)) {
+    event.respondWith(cacheFirst(request)); // content-hashed: safe to keep forever
+    return;
+  }
+  if (
+    url.pathname === "/sky.webp" ||
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/og/") ||
+    url.pathname.startsWith("/assets/") ||
+    /\.(?:png|svg|jpe?g|webp|avif|gif|ico)$/.test(url.pathname)
+  ) {
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
   if (url.pathname.startsWith("/_next/")) return; // RSC payloads, HMR: network only

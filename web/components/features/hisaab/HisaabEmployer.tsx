@@ -1,8 +1,9 @@
 "use client";
 
-// Employer side of Hisaab Milao: "Something's different?" Say (or type) what you remember; it goes to her as a
-// proposal she accepts or rejects. Nothing changes until she agrees.
-import { useCallback, useEffect, useState } from "react";
+// Employer side of Hisaab Milao (/hisaab/e/[token]): "Something's different?" He says (or types) what he
+// remembers; it goes to the worker as a proposal she accepts or rejects. Nothing changes until she agrees.
+// Chrome is in the employer's language (like /e/[token]); amounts, months and statuses come from the backend.
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { errorMessage } from "@/lib/api";
 import {
   getEmployerHisaab,
@@ -12,17 +13,16 @@ import {
   type HisaabSummary,
   type ProposeResult,
 } from "@/lib/features/hisaab";
-import { useRecorder, type Recording } from "@/lib/recorder";
+import { formatTimer, useRecorder, type Recording } from "@/lib/recorder";
+import Link from "next/link";
+import { uiLangOf, type UiLang } from "@/lib/i18n";
+import { ErrorNote, MoneyFigure, Screen, SkeletonCard, Waveform } from "@/components/ui/primitives";
+import { ArrowRightIcon, ChevronRightIcon, LockIcon, MicIcon, PenIcon, StopIcon } from "@/components/ui/icons";
 import { ProposalChip } from "./ProposalChip";
+import { HTML_LANG, employerStrings } from "./strings";
 import s from "./hisaab.module.css";
 
-const KINDS: { value: HisaabKind | ""; label: string }[] = [
-  { value: "", label: "Kaise diya? (auto)" },
-  { value: "cash", label: "Cash" },
-  { value: "upi", label: "UPI / online" },
-  { value: "advance", label: "Advance" },
-  { value: "other", label: "Other" },
-];
+const KINDS: (HisaabKind | "")[] = ["", "cash", "upi", "advance", "other"];
 
 export function HisaabEmployer({ token }: { token: string }) {
   const [data, setData] = useState<HisaabSummary | null>(null);
@@ -33,17 +33,23 @@ export function HisaabEmployer({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null);
   const [needAmount, setNeedAmount] = useState(false);
   const [last, setLast] = useState<ProposeResult | null>(null);
+  const ui = uiLangOf(data?.employer.language);
+  const E = employerStrings(ui);
+  const worker = data?.worker.name ?? "";
 
   const load = useCallback(() => {
     getEmployerHisaab(token)
-      .then(setData)
+      .then((d) => {
+        setData(d);
+        setError(null);
+      })
       .catch((e) => setError(errorMessage(e)));
   }, [token]);
 
   useEffect(() => {
     load();
-    const t = window.setInterval(load, 5000); // her decision lands here
-    return () => window.clearInterval(t);
+    const id = window.setInterval(load, 5000); // her decision lands here
+    return () => window.clearInterval(id);
   }, [load]);
 
   const send = useCallback(
@@ -67,7 +73,7 @@ export function HisaabEmployer({ token }: { token: string }) {
         if (na) {
           setNeedAmount(true);
           if (na.transcript) setText(na.transcript); // keep his words; he only types the amount
-          setError(na.message_en);
+          setError(na.message || na.message_en);
         } else setError(errorMessage(e));
       } finally {
         setBusy(false);
@@ -78,92 +84,150 @@ export function HisaabEmployer({ token }: { token: string }) {
 
   const onRecorded = useCallback((r: Recording) => void send(r.blob), [send]);
   const rec = useRecorder({ onRecorded, maxMs: 25_000 });
+  const recording = rec.state === "recording";
+  const htmlLang = HTML_LANG[ui];
 
   return (
-    <main className={s.page}>
-      <section className={s.card}>
-        <h1>Something&apos;s different?</h1>
-        <p className={s.muted}>
-          Remember it differently? Say it in your own words, for example &ldquo;Maine October mein do hazaar cash diye
-          the&rdquo;. {data?.worker.name ?? "She"} hears it in her language and decides. Nothing changes until she
-          agrees.
-        </p>
-        {data && (
-          <p>
-            Still owed: <span className={s.balance}>{data.balance_display}</span>
-          </p>
-        )}
-        <div className={s.row}>
+    <Screen title={worker ? E.title(worker) : undefined} safetyLink={false} className={`fx ${s.screen} ${s.wide}`}>
+      <div className={s.empGrid} lang={htmlLang}>
+        <header className={`${s.head} ${s.aHead}`}>
+          <p className="fx-eyebrow">{E.eyebrow}</p>
+          <h1 className={`fx-h ${s.h}`}>
+            {E.lead} <em>{E.accent}</em>
+          </h1>
+          <p className="fx-sub">{worker ? E.sub(worker) : null}</p>
+        </header>
+
+        <div className={s.aBal}>
+          {data ? (
+            <section className={s.statement} aria-label={E.stillOwed(worker)}>
+              <div className={s.stTop}>
+                <span className="fx-avatar" data-wash="peach" aria-hidden="true">
+                  {Array.from(worker)[0]?.toUpperCase()}
+                </span>
+                <div className={s.stWho}>
+                  <p className={s.stName}>{worker}</p>
+                  <p className="fx-muted">{E.stillOwed(worker)}</p>
+                </div>
+                <span />
+              </div>
+              <p className={s.stFigure} aria-live="polite">
+                <MoneyFigure value={data.balance} size="xl" />
+              </p>
+              <p className={s.owedLine}>
+                <LockIcon /> {E.untilAgree}
+              </p>
+            </section>
+          ) : error ? (
+            <ErrorNote message={error} onRetry={load} />
+          ) : (
+            <SkeletonCard />
+          )}
+        </div>
+
+        <section className={`${s.composer} ${s.aComp}`} aria-label={E.words}>
           <button
             type="button"
-            className={`${s.btn} ${rec.state === "recording" ? s.rec : s.primary}`}
+            className={s.recBtn}
+            data-state={rec.state}
             onClick={rec.toggle}
             disabled={busy}
+            aria-pressed={recording}
+            style={{ "--level": rec.level } as CSSProperties}
           >
-            {rec.state === "recording" ? `Stop (${Math.round(rec.elapsedMs / 1000)} s)` : "Bol ke batayein (tap to speak)"}
+            <span className={s.recDot} aria-hidden="true">
+              {recording ? <StopIcon /> : <MicIcon />}
+            </span>
+            <span className={s.recText} aria-live="polite">
+              {recording ? E.stop(formatTimer(rec.elapsedMs)) : busy ? E.sending : E.speak}
+            </span>
+            <Waveform active={recording} level={recording ? Math.max(0.25, rec.level) : 0.2} bars={12} className={s.recWave} />
           </button>
-        </div>
-        {rec.error && <p className={s.error}>{rec.error}</p>}
-        <p className={s.muted}>Or type it:</p>
-        <textarea
-          className={s.input}
-          rows={2}
-          placeholder="Maine October mein 2000 cash diye the"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <div className={s.row}>
-          <input
-            className={s.input}
-            style={{ maxWidth: 160, borderColor: needAmount ? "var(--error)" : undefined }}
-            inputMode="numeric"
-            placeholder="₹ amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <select className={s.input} style={{ maxWidth: 200 }} value={kind} onChange={(e) => setKind(e.target.value as HisaabKind | "")}>
-            {KINDS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className={s.btn}
-            disabled={busy || (!text.trim() && !amount.trim())}
-            onClick={() => void send()}
-          >
-            {busy ? "Sending…" : "Send"}
-          </button>
-        </div>
-        {error && <p className={s.error}>{error}</p>}
-        {last && (
-          <div>
-            <p className={s.muted}>Heard: &ldquo;{last.proposal.transcript}&rdquo;</p>
-            <ProposalChip p={last.proposal} side="employer" />
-          </div>
-        )}
-      </section>
+          <p className={s.example}>{E.example}</p>
+          <ErrorNote message={rec.error} />
 
-      {data && data.proposals.length > 0 && (
-        <section className={s.card}>
-          <h2>Your corrections</h2>
-          {data.proposals.map((p) => (
-            <ProposalChip key={p.id} p={p} side="employer" />
-          ))}
-          <p className={s.muted}>{data.notice}</p>
+          <p className={s.divider}>
+            <span>{E.orType}</span>
+          </p>
+
+          <label className={s.field}>
+            <span className={s.fieldLabel}>{E.words}</span>
+            <textarea className={s.textarea} rows={2} placeholder={E.placeholder} value={text} onChange={(e) => setText(e.target.value)} />
+          </label>
+          <label className={s.field}>
+            <span className={s.fieldLabel}>{E.amount}</span>
+            <span className={s.amountWrap} data-invalid={needAmount}>
+              <span aria-hidden="true">₹</span>
+              <input
+                className={s.input}
+                inputMode="numeric"
+                placeholder="2,000"
+                value={amount}
+                aria-invalid={needAmount || undefined}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </span>
+          </label>
+          <fieldset className={s.kinds}>
+            <legend className={s.fieldLabel}>{E.how}</legend>
+            <div className={s.kindRow}>
+              {KINDS.map((k) => (
+                <button key={k || "auto"} type="button" className={s.kind} aria-pressed={kind === k} onClick={() => setKind(k)}>
+                  {E.kinds[k]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <button type="button" className={s.send} disabled={busy || (!text.trim() && !amount.trim())} onClick={() => void send()}>
+            {busy ? E.sending : E.send(worker || "…")} {busy ? null : <ArrowRightIcon />}
+          </button>
+          {data ? <ErrorNote message={error} /> : null}
+          {last ? (
+            <div className={s.heard} role="status">
+              <p className="fx-eyebrow">{E.heard}</p>
+              <p className={s.heardText}>&ldquo;{last.proposal.transcript}&rdquo;</p>
+              <ProposalChip p={last.proposal} side="employer" lang={ui} />
+            </div>
+          ) : null}
         </section>
-      )}
-    </main>
+
+        <section className={`${s.section} ${s.aList}`} aria-label={E.yours}>
+          <h2 className="section-title" style={{ margin: 0 }}>
+            {E.yours}
+          </h2>
+          {data && data.proposals.length > 0 ? (
+            <div className={s.ledger}>
+              <ul className={s.ledgerList}>
+                {data.proposals.map((p) => (
+                  <li key={p.id}>
+                    <ProposalChip p={p} side="employer" lang={ui} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="fx-muted">{E.none}</p>
+          )}
+          <p className="fx-muted">{E.notice}</p>
+        </section>
+      </div>
+    </Screen>
   );
 }
 
-/** Mount on the employer page (/e/[token]): a small link into this flow. */
-export function SomethingDifferentLink({ token }: { token: string }) {
+/**
+ * Mount on the employer page (/e/[token]): a quiet secondary link into this flow, under the statement.
+ * `lang` = the employer's language (e.g. uiLangOf(page.employer.language)); defaults to English.
+ */
+export function SomethingDifferentLink({ token, lang = "en" }: { token: string; lang?: UiLang }) {
+  const E = employerStrings(lang);
   return (
-    <a className={s.btn} href={`/hisaab/e/${encodeURIComponent(token)}`} style={{ display: "inline-flex", alignItems: "center" }}>
-      Something&apos;s different?
-    </a>
+    <Link className={s.somethingLink} href={`/hisaab/e/${encodeURIComponent(token)}`} lang={HTML_LANG[lang]}>
+      <span aria-hidden="true">
+        <PenIcon />
+      </span>
+      {E.lead} {E.accent}
+      <ChevronRightIcon />
+    </Link>
   );
 }

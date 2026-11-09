@@ -1,0 +1,53 @@
+/* Quick-exit page (/r): a plain, neutral recipe page. Deliberately NOT the Baaki look (no brand
+ * fonts, no theme switch, no washes) so a glance at the screen reveals nothing. Only the
+ * --recipe-* tokens from app/theme.css. Restores the typography that Tailwind's preflight resets. */
+
+main.recipe {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 40px 20px 72px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+main.recipe h1 {
+  margin: 0 0 6px;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+main.recipe h1 + p {
+  margin: 0 0 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--recipe-ink) 14%, transparent);
+  font-style: italic;
+  color: color-mix(in srgb, var(--recipe-ink) 70%, transparent);
+}
+main.recipe h2 {
+  margin: 28px 0 10px;
+  font-size: 1.35rem;
+  line-height: 1.3;
+  font-weight: 700;
+}
+main.recipe ul,
+main.recipe ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+main.recipe ul {
+  list-style: disc;
+}
+main.recipe ol {
+  list-style: decimal;
+}
+main.recipe li {
+  padding: 4px 0 4px 4px;
+}
+main.recipe ol li {
+  padding: 6px 0 6px 4px;
+}
+main.recipe li::marker {
+  color: color-mix(in srgb, var(--recipe-ink) 55%, transparent);
+}

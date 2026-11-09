@@ -182,9 +182,27 @@ export function BottomSheet({
 }
 
 // ------------------------------------------------------------------ Card
-export type CardTone = "default" | "glow" | "gradient" | "soft" | "success" | "warn";
+export type CardTone =
+  | "default"
+  | "glow"
+  | "gradient"
+  | "soft"
+  | "success"
+  | "warn"
+  // pale washes (pale palette) and a solid ink card
+  | "sky"
+  | "lilac"
+  | "peach"
+  | "butter"
+  | "sage"
+  | "rose"
+  | "ink";
 
-/** Surface for one idea. tone="glow" = gradient border + halo (use once per screen). */
+/**
+ * Surface for one idea: white card + 1px hairline. tone="glow" = the emphasised card (darker hairline,
+ * no glow; once per screen). Pale washes: sky | lilac | peach | butter | sage | rose. "gradient" and
+ * "ink" = solid ink card (celebration only).
+ */
 export function Card({
   children,
   tone = "default",
@@ -220,7 +238,7 @@ export function Card({
 // ------------------------------------------------------------------ StatusPill
 export type PillTone = "neutral" | "accent" | "success" | "warn" | "error" | "estimate" | "live";
 
-/** Small rounded status label with a dot. tone="live" pulses (recording, sending). */
+/** Small rounded status label: pale tint + ink text, with a dot. tone="live" pulses (recording, sending). */
 export function StatusPill({ tone = "neutral", children, dot = true, className }: { tone?: PillTone; children: ReactNode; dot?: boolean; className?: string }) {
   return (
     <span className={cx("pill", className)} data-tone={tone}>
@@ -248,8 +266,24 @@ export function toneForState(state: string | null | undefined): PillTone {
   }
 }
 
+// ------------------------------------------------------------------ avatarTone
+export type WashTone = "sky" | "lilac" | "rose" | "peach" | "butter" | "sage";
+const AVATAR_WASHES: WashTone[] = ["sky", "lilac", "rose", "peach", "butter", "sage"];
+
+/**
+ * One stable pale wash per person, from the first word of the name, so a home (or a person who owes
+ * her) has the same colour on every screen: <span className="hub-avatar" data-tone={avatarTone(name)}>.
+ * Demo story: Sharma = sky, Reddy = peach, Mehta = lilac, Rao = sage.
+ */
+export function avatarTone(name: string | null | undefined): WashTone {
+  const key = (name ?? "").trim().toLowerCase().split(/\s+/)[0] ?? "";
+  let x = 7;
+  for (const ch of key) x = (x * 13 + (ch.codePointAt(0) ?? 0)) % 1000003;
+  return AVATAR_WASHES[x % AVATAR_WASHES.length];
+}
+
 // ------------------------------------------------------------------ GradientButton
-/** The one big primary action: brand gradient, glow, press scale. Link when `href` is set. */
+/** The one big primary action: solid ink pill (white in dark), press scale. Link when `href` is set. */
 export function GradientButton({
   children,
   href,
@@ -292,7 +326,7 @@ export function GradientButton({
 }
 
 // ------------------------------------------------------------------ GlowRing
-/** Pulsing halo rings around any round child (the mic). `level` 0..1 swells the glow live. */
+/** Calm concentric hairline rings that breathe around any round child (the mic). `level` 0..1 swells them live. */
 export function GlowRing({ children, active = true, level = 0, className }: { children: ReactNode; active?: boolean; level?: number; className?: string }) {
   return (
     <span className={cx("glow-ring-wrap", className)} data-active={active} style={{ "--level": level } as CSSProperties}>
@@ -305,7 +339,7 @@ export function GlowRing({ children, active = true, level = 0, className }: { ch
 
 // ------------------------------------------------------------------ Waveform
 /**
- * Animated voice bars in the brand gradient. `active` animates them; `level` (0..1, e.g. the mic
+ * Crisp ink voice bars. `active` animates them; `level` (0..1, e.g. the mic
  * level from usePressToTalk) scales their height live. Static and short when idle.
  */
 export function Waveform({ active = true, level, bars = 24, className, label }: { active?: boolean; level?: number; bars?: number; className?: string; label?: string }) {
@@ -458,10 +492,43 @@ export function CountUp({
   );
 }
 
+// ------------------------------------------------------------------ MoneyFigure
+/**
+ * Big money figure: a small muted ₹ and Cabinet Grotesk tabular digits in ink (never gradient).
+ * `count` counts up once when it scrolls into view. size: sm (24) · md (34) · lg (52) · xl (64).
+ */
+export function MoneyFigure({
+  value,
+  count = false,
+  size = "lg",
+  className,
+}: {
+  value: number;
+  count?: boolean;
+  size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
+}) {
+  const digits = (n: number) => inrWhole(n).replace("₹", "");
+  return (
+    <span className={cx("figure", `figure-${size}`, className)}>
+      <span className="figure-cur">₹</span>
+      {count ? <CountUp value={value} format={digits} className="figure-num" /> : <span className="figure-num">{digits(value)}</span>}
+    </span>
+  );
+}
+
 // ------------------------------------------------------------------ HomesMap
 export type MapHome = { id: string | number; name: string; amount: number; tone?: PillTone; href?: string };
 
 // Pin tips (pins hang above their tip). Spread so labels never cover "you" at (46%, 66%).
+const ROADS = [
+  "M-5 40 C 20 36, 40 46, 60 40 S 90 30, 105 34",
+  "M-5 78 C 25 70, 45 82, 70 74 S 95 66, 105 70",
+  "M30 -5 C 34 20, 26 50, 34 105",
+  "M76 -5 C 70 30, 80 60, 72 105",
+];
+const LANES = ["M34 58 H 74", "M52 40 V 76", "M8 20 C 16 24, 22 22, 31 18", "M76 52 C 84 50, 92 54, 104 52", "M34 92 H 72"];
+
 const PIN_SLOTS = [
   { x: 22, y: 40 },
   { x: 74, y: 30 },
@@ -472,18 +539,26 @@ const PIN_SLOTS = [
 ];
 
 /**
- * Map-like hero (Uber style): a dotted city with one pin per home showing what is owed.
- * Pins sit in fixed slots, so up to 6 homes; the first pin pulses.
+ * Pale paper map: hairline roads, a lake and a park, one ink pin per home with an amount chip.
+ * Pins sit in fixed slots, so up to 6 homes; the first chip is solid ink.
  */
 export function HomesMap({ homes, you = "You", className, label }: { homes: MapHome[]; you?: string; className?: string; label?: string }) {
   const shown = homes.slice(0, PIN_SLOTS.length);
   return (
     <div className={cx("homes-map", className)} role="group" aria-label={label}>
       <svg className="homes-map-roads" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M-5 40 C 20 36, 40 46, 60 40 S 90 30, 105 34" />
-        <path d="M-5 78 C 25 70, 45 82, 70 74 S 95 66, 105 70" />
-        <path d="M30 -5 C 34 20, 26 50, 34 105" />
-        <path d="M76 -5 C 70 30, 80 60, 72 105" />
+        <path className="homes-map-water" d="M58 -2 C 64 10, 92 8, 102 14 L 102 -2 Z" />
+        <path className="homes-map-park" d="M4 56 h18 a3 3 0 0 1 3 3 v10 a3 3 0 0 1 -3 3 h-18 a3 3 0 0 1 -3 -3 v-10 a3 3 0 0 1 3 -3 z" />
+        <path className="homes-map-park" d="M84 80 h12 a3 3 0 0 1 3 3 v14 h-18 v-14 a3 3 0 0 1 3 -3 z" />
+        {ROADS.map((d, i) => (
+          <path key={`c${i}`} className="homes-map-casing" d={d} />
+        ))}
+        {ROADS.map((d, i) => (
+          <path key={`r${i}`} className="homes-map-road" d={d} />
+        ))}
+        {LANES.map((d, i) => (
+          <path key={`l${i}`} className="homes-map-lane" d={d} />
+        ))}
         <path className="homes-map-route" d="M46 66 C 40 58, 30 50, 22 42" />
       </svg>
       <span className="homes-map-you" style={{ left: "46%", top: "66%" }}>

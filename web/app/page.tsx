@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Features, FairTeaser, FinalCta, GnaniTech, Hero, HowItWorks, Problem, Showcase, SiteFooter, SiteHeader, Trust } from "@/components/site/Site";
+import { Faq, Features, FinalCta, Hero, HowItWorks, Interfaces, Problem, ProofBand, SiteFooter, SiteHeader, Trust } from "@/components/site/Site";
+import { SITE_SLOTS, existingAssets } from "@/components/site/assets";
 import { OG_IMAGE } from "@/lib/site";
 import "./site.css";
 
 const TITLE = "Baaki · బాకీ · A wage advocate in her pocket";
 const DESCRIPTION =
-  "81% of Hyderabad’s domestic workers are paid below the legal minimum. Baaki knows the law, does the maths, asks the employer for her and keeps the proof. She just speaks.";
+  "81% of Hyderabad’s domestic workers earn below the minimum wage. Baaki knows the law, does the maths, asks the employer for her and keeps the proof. She just speaks.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -17,19 +18,20 @@ export const metadata: Metadata = {
 
 // Marketing website. The worker app lives at /app.
 export default function Home() {
+  const art = existingAssets(SITE_SLOTS);
   return (
-    <div className="site">
+    <div className="site site-home">
       <SiteHeader />
       <main>
         <Hero />
         <Problem />
         <HowItWorks />
-        <Showcase />
-        <Features />
-        <FairTeaser />
-        <GnaniTech />
+        <Features photos={art} />
+        <Interfaces art={art} />
+        <ProofBand art={art} />
         <Trust />
-        <FinalCta />
+        <Faq />
+        <FinalCta art={art} />
       </main>
       <SiteFooter />
     </div>

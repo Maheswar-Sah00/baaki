@@ -3,11 +3,15 @@
 // Fair Pay Check (V01): an employer answers four quick questions (or says them, "Bolo") and sees the
 // G.O.Ms.No.6 Hyderabad Zone-I minimum, the gap and the cost per working day. Information, not
 // accusation. Nothing is stored server-side; only the UI language is remembered in this browser.
+// Layout (10 Nov 2026 redesign): a calm calculator. Phone: hero, questions, result. Desktop: the
+// questions on the left and the result live in a sticky column on the right.
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { AppBar, Confetti, GradientButton, StatusPill, ThemeToggle, Waveform } from "@/components/ui/primitives";
+import { ThemeToggle, Waveform } from "@/components/ui/primitives";
+import { AssetSlot } from "@/components/ui/AssetSlot";
+import { Motif } from "@/components/site/Motif";
 import { CheckIcon, MicIcon, ShareIcon, StopIcon } from "@/components/ui/icons";
 import { Logo } from "@/components/ui/Logo";
 import { inr, inrWhole } from "@/lib/format";
@@ -30,11 +34,11 @@ import { useCountTo } from "./useCountTo";
 import "./check.css";
 
 const LANG_KEY = "baaki-check-lang";
-const WORK: { id: WorkType; Icon: (p: { className?: string }) => React.JSX.Element }[] = [
-  { id: "maid", Icon: BroomGlyph },
-  { id: "cooking", Icon: PotGlyph },
-  { id: "both", Icon: BothGlyph },
-  { id: "care", Icon: CareGlyph },
+const WORK: { id: WorkType; tone: string; Icon: (p: { className?: string }) => React.JSX.Element }[] = [
+  { id: "maid", tone: "sky", Icon: BroomGlyph },
+  { id: "cooking", tone: "peach", Icon: PotGlyph },
+  { id: "both", tone: "lilac", Icon: BothGlyph },
+  { id: "care", tone: "sage", Icon: CareGlyph },
 ];
 const HOUR_CHIPS = [1, 2, 3, 4, 6, 8];
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
@@ -60,7 +64,8 @@ type Voice =
   | { kind: "heard"; transcript: string; missing: string[] }
   | { kind: "rest" };
 
-export function FairPayCheck() {
+/** `photo`: whether /assets/check-payday-envelope.webp exists (checked on the server by app/check/page.tsx). */
+export function FairPayCheck({ photo = false }: { photo?: boolean }) {
   const [lang, setLang] = useState<CheckLang>("en");
   const t = useMemo(() => makeT(lang), [lang]);
   const htmlLang = LANG_OPTIONS.find((l) => l.id === lang)?.htmlLang ?? "en";
@@ -125,7 +130,7 @@ export function FairPayCheck() {
     };
   }, [complete, work, hours, days, pay, attempt]);
 
-  // Bring the result into view the first time it appears (phones).
+  // Bring the result into view the first time it appears (phones; on desktop it is already beside the form).
   const resultRef = useRef<HTMLElement>(null);
   const scrolled = useRef(false);
   const hasResult = status.kind === "done";
@@ -200,23 +205,35 @@ export function FairPayCheck() {
     window.setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
+  const answered = [work !== null, hours !== null, true, pay !== ""].filter(Boolean).length;
+  // The photo slot renders after mount so its onError (missing file -> pale placeholder) is always attached.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
-    <main className={cx("screen", "fc-page")} lang={htmlLang}>
-      <AppBar
-        left={
-          <Link href="/" className="fc-brand" aria-label="Baaki home">
-            <Logo size={30} telugu={false} />
-          </Link>
-        }
-        right={<ThemeToggle />}
-      />
+    <main className="fc-page" lang={htmlLang}>
+      <div className="fc-sky" aria-hidden="true" />
+      <header className="fc-nav">
+        <Link href="/" className="fc-brand" aria-label="Baaki home">
+          <Logo size={30} telugu={false} />
+        </Link>
+        <div className="fc-nav-right">
+          <span className="fc-nav-tag">{t("page.title")}</span>
+          <ThemeToggle />
+        </div>
+      </header>
 
       {/* ---------------------------------------------------------- hero */}
       <header className="fc-hero">
         <p className="fc-kicker">{t("hero.kicker")}</p>
-        <h1 className={cx("display", "fc-title")}>{t("hero.title")}</h1>
+        <h1 className="fc-title">
+          {t("hero.title.lead")} <em>{t("hero.title.accent")}</em>
+        </h1>
         <p className="fc-sub">{t("hero.sub")}</p>
-        <div className={cx("segmented", "fc-langs")} role="group" aria-label={t("lang.label")}>
+        <div className="fc-langs" role="group" aria-label={t("lang.label")}>
           {LANG_OPTIONS.map((l) => (
             <button key={l.id} type="button" aria-pressed={lang === l.id} onClick={() => chooseLang(l.id)} lang={l.htmlLang}>
               {l.label}
@@ -225,193 +242,250 @@ export function FairPayCheck() {
         </div>
       </header>
 
-      {/* ---------------------------------------------------------- the questions */}
-      <section className={cx("card", "fc-form")} data-tone="glow" aria-label={t("page.title")}>
-        {tries > 0 || voice.kind !== "idle" ? (
-          <div className="fc-bolo">
-            {voice.kind !== "rest" && tries > 0 ? (
-              <button
-                type="button"
-                className={cx("fc-bolo-btn", recording && "fc-bolo-live")}
-                onClick={() => rec.toggle()}
-                disabled={!micUsable && !recording}
-                aria-pressed={recording}
-              >
-                <span className="fc-bolo-icon" aria-hidden="true">
-                  {recording ? <StopIcon /> : <MicIcon />}
-                </span>
-                <span className="fc-bolo-text">
-                  {recording ? t("bolo.listening") : voice.kind === "working" ? t("bolo.working") : t("bolo.button")}
-                </span>
-                {recording ? <Waveform active level={Math.max(0.25, rec.level)} bars={12} className="fc-bolo-wave" /> : null}
-              </button>
-            ) : null}
-            {voice.kind === "idle" && !recording ? <p className="fc-bolo-hint">{t("bolo.example")}</p> : null}
-            {voice.kind === "heard" ? (
-              <p className="fc-heard" aria-live="polite">
-                <span className="fc-heard-label">{t("bolo.heard")}:</span> “{voice.transcript || "…"}”
-                {voice.missing.length ? <> {t("bolo.missing")}</> : null}
-              </p>
-            ) : null}
-            {voice.kind === "rest" || rec.error ? (
-              <p className="fc-bolo-hint" role="status">
-                {t("bolo.rest")}
-              </p>
-            ) : null}
-            {tries > 0 && voice.kind !== "rest" ? (
-              <p className="fc-bolo-meta">
-                {t("bolo.left", { n: tries })} · {t("bolo.privacy")}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+      <div className="fc-grid">
+        {/* -------------------------------------------------------- the questions */}
+        <section className="fc-form" aria-label={t("page.title")}>
+          {tries > 0 || voice.kind !== "idle" ? (
+            <div className="fc-bolo">
+              {voice.kind !== "rest" && tries > 0 ? (
+                <button
+                  type="button"
+                  className={cx("fc-bolo-btn", recording && "fc-bolo-live")}
+                  onClick={() => rec.toggle()}
+                  disabled={!micUsable && !recording}
+                  aria-pressed={recording}
+                >
+                  <span className="fc-bolo-icon" aria-hidden="true">
+                    {recording ? <StopIcon /> : <MicIcon />}
+                  </span>
+                  <span className="fc-bolo-text">
+                    {recording ? t("bolo.listening") : voice.kind === "working" ? t("bolo.working") : t("bolo.button")}
+                  </span>
+                  {recording ? <Waveform active level={Math.max(0.25, rec.level)} bars={12} className="fc-bolo-wave" /> : null}
+                </button>
+              ) : null}
+              {voice.kind === "idle" && !recording ? <p className="fc-bolo-hint">{t("bolo.example")}</p> : null}
+              {voice.kind === "heard" ? (
+                <p className="fc-heard" aria-live="polite">
+                  <span className="fc-heard-label">{t("bolo.heard")}</span> “{voice.transcript || "…"}”
+                  {voice.missing.length ? <> {t("bolo.missing")}</> : null}
+                </p>
+              ) : null}
+              {voice.kind === "rest" || rec.error ? (
+                <p className="fc-bolo-hint" role="status">
+                  {t("bolo.rest")}
+                </p>
+              ) : null}
+              {tries > 0 && voice.kind !== "rest" ? (
+                <p className="fc-bolo-meta">
+                  {t("bolo.left", { n: tries })} · {t("bolo.privacy")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
-        <fieldset className="fc-q">
-          <legend className="fc-q-label">
-            <span className="fc-q-num">1</span>
-            {t("q.work")}
-          </legend>
-          <div className="fc-work-grid">
-            {WORK.map((w) => (
-              <button
-                key={w.id}
-                type="button"
-                className={cx("choice", "fc-work")}
-                aria-pressed={work === w.id}
-                onClick={() => setWork(w.id)}
-              >
-                <span className="fc-work-icon" aria-hidden="true">
-                  <w.Icon />
-                </span>
-                <span className="fc-work-name">{t(`work.${w.id}` as const)}</span>
-                <span className="fc-work-sub">{t(`work.${w.id}.sub` as const)}</span>
-              </button>
-            ))}
-          </div>
-        </fieldset>
+          <fieldset className="fc-q">
+            <legend className="fc-q-label">
+              <span className="fc-q-num">01</span>
+              {t("q.work")}
+            </legend>
+            <div className="fc-work-grid">
+              {WORK.map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  className="fc-work"
+                  data-tone={w.tone}
+                  aria-pressed={work === w.id}
+                  onClick={() => setWork(w.id)}
+                >
+                  <span className="fc-work-icon" aria-hidden="true">
+                    <w.Icon />
+                  </span>
+                  <span className="fc-work-name">{t(`work.${w.id}` as const)}</span>
+                  <span className="fc-work-sub">{t(`work.${w.id}.sub` as const)}</span>
+                  <span className="fc-work-tick" aria-hidden="true">
+                    <CheckIcon />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
-        <fieldset className="fc-q">
-          <legend className="fc-q-label">
-            <span className="fc-q-num">2</span>
-            {t("q.hours")}
-            <span className="fc-stepper">
-              <button
-                type="button"
-                className="fc-step"
-                aria-label={t("hours.less")}
-                onClick={() => setHours((h) => Math.max(0.5, (h ?? 1) - 0.5))}
-              >
-                −
-              </button>
-              <span className="fc-q-value" aria-live="polite">
-                {hours !== null ? `${hours} ${t("hours.unit")}` : "–"}
+          <fieldset className="fc-q">
+            <legend className="fc-q-label">
+              <span className="fc-q-num">02</span>
+              {t("q.hours")}
+              <span className="fc-stepper">
+                <button
+                  type="button"
+                  className="fc-step"
+                  aria-label={t("hours.less")}
+                  onClick={() => setHours((h) => Math.max(0.5, (h ?? 1) - 0.5))}
+                >
+                  −
+                </button>
+                <span className="fc-q-value" aria-live="polite" data-empty={hours === null || undefined}>
+                  {hours !== null ? `${hours} ${t("hours.unit")}` : `– ${t("hours.unit")}`}
+                </span>
+                <button
+                  type="button"
+                  className="fc-step"
+                  aria-label={t("hours.more")}
+                  onClick={() => setHours((h) => Math.min(16, (h ?? 0) + 0.5))}
+                >
+                  +
+                </button>
               </span>
-              <button
-                type="button"
-                className="fc-step"
-                aria-label={t("hours.more")}
-                onClick={() => setHours((h) => Math.min(16, (h ?? 0) + 0.5))}
-              >
-                +
-              </button>
-            </span>
-          </legend>
-          <div className="fc-chips">
-            {HOUR_CHIPS.map((h) => (
-              <button key={h} type="button" className="fc-chip" aria-pressed={hours === h} onClick={() => setHours(h)}>
-                {h}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+            </legend>
+            <div className="fc-chips">
+              {HOUR_CHIPS.map((h) => (
+                <button key={h} type="button" className="fc-chip" aria-pressed={hours === h} onClick={() => setHours(h)}>
+                  {h}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
-        <fieldset className="fc-q">
-          <legend className="fc-q-label">
-            <span className="fc-q-num">3</span>
-            {t("q.days")}
-          </legend>
-          <div className="fc-days">
-            {DAYS.map((d) => (
-              <button key={d} type="button" className="fc-chip" aria-pressed={days === d} onClick={() => setDays(d)}>
-                {d}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+          <fieldset className="fc-q">
+            <legend className="fc-q-label">
+              <span className="fc-q-num">03</span>
+              {t("q.days")}
+            </legend>
+            <div className="fc-days">
+              {DAYS.map((d) => (
+                <button key={d} type="button" className="fc-chip" aria-pressed={days === d} onClick={() => setDays(d)}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
-        <div className="fc-q">
-          <label className="fc-q-label" htmlFor="fc-pay">
-            <span className="fc-q-num">4</span>
-            {t("q.pay")}
-          </label>
-          <div className="fc-pay-box">
-            <span className="fc-rupee" aria-hidden="true">
-              ₹
-            </span>
-            <input
-              id="fc-pay"
-              className="fc-pay-input"
-              inputMode="numeric"
-              autoComplete="off"
-              enterKeyHint="done"
-              placeholder={t("pay.placeholder")}
-              value={grouped(pay)}
-              onChange={(e) => setPay(digits(e.target.value))}
-            />
-            <span className="fc-pay-unit">/ {t("result.month")}</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------- the result */}
-      <section ref={resultRef} className="fc-result-wrap" aria-live="polite" aria-busy={status.kind === "loading"}>
-        {!complete ? (
-          <p className="fc-placeholder">{t("result.fill")}</p>
-        ) : status.kind === "error" ? (
-          <div className={cx("card", "fc-error")}>
-            <p>{t("err.generic")}</p>
-            <button type="button" className="btn btn-small" onClick={() => setAttempt((a) => a + 1)}>
-              {t("err.retry")}
-            </button>
-          </div>
-        ) : status.kind === "done" ? (
-          <Result r={status.result} t={t} />
-        ) : (
-          <div className={cx("card", "fc-loading-card")} role="status">
-            <span className="fc-shimmer" />
-            <span className="fc-shimmer-sm" />
-            <span className="visually-hidden">{t("result.loading")}</span>
-          </div>
-        )}
-      </section>
-
-      {/* ---------------------------------------------------------- next steps */}
-      {status.kind === "done" ? (
-        <section className="fc-next" aria-label={t("next.title")}>
-          <h2 className="fc-next-title">{t("next.title")}</h2>
-          <GradientButton onClick={tellHer} icon={<HeartGlyph />}>
-            {t("next.tell")}
-          </GradientButton>
-          <a
-            className="btn btn-big"
-            href={googleCalendarUrl(t("reminder.title"), t("reminder.details"))}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <CalendarGlyph />
-            <span>{t("next.reminder")}</span>
-          </a>
-          <div className="fc-next-row">
-            <button type="button" className="btn btn-ghost btn-small" onClick={downloadIcs}>
-              {t("next.ics")}
-            </button>
-            <button type="button" className="btn btn-ghost btn-small" onClick={tellFriend}>
-              <UsersGlyph />
-              <span>{t("next.friend")}</span>
-            </button>
+          <div className="fc-q">
+            <label className="fc-q-label" htmlFor="fc-pay">
+              <span className="fc-q-num">04</span>
+              {t("q.pay")}
+            </label>
+            <div className="fc-pay-box">
+              <span className="fc-rupee" aria-hidden="true">
+                ₹
+              </span>
+              <input
+                id="fc-pay"
+                className="fc-pay-input"
+                inputMode="numeric"
+                autoComplete="off"
+                enterKeyHint="done"
+                placeholder={t("pay.placeholder")}
+                value={grouped(pay)}
+                onChange={(e) => setPay(digits(e.target.value))}
+              />
+              <span className="fc-pay-unit">/ {t("result.month")}</span>
+            </div>
           </div>
         </section>
-      ) : null}
+
+        {/* -------------------------------------------------------- the result (sticky on desktop) */}
+        <aside className="fc-side">
+          <section ref={resultRef} className="fc-result-wrap" aria-live="polite" aria-busy={status.kind === "loading"}>
+            {!complete ? (
+              <div className="fc-placeholder">
+                {photo && mounted ? (
+                  <AssetSlot
+                    name="check-payday-envelope"
+                    alt="A salary envelope and a phone with the Fair Pay Check on a kitchen table"
+                    ratio="4/3"
+                    tone="butter"
+                    rounded="var(--r-lg)"
+                    className="fc-ph-art fc-ph-photo"
+                    fit="contain"
+                  />
+                ) : photo ? (
+                  <div className="fc-ph-art fc-ph-art-pre" />
+                ) : (
+                  // until the photo exists: a quiet preview of the wage meter the answer will fill
+                  <div className="fc-ph-art fc-ph-canvas" aria-hidden="true">
+                    <Motif name="letter" className="fc-ph-motif" />
+                    <div className="fc-ph-card">
+                      <div className="fc-ph-track">
+                        <span style={{ width: `${18 + answered * 12}%` }} />
+                        <i />
+                      </div>
+                      <div className="fc-ph-legend">
+                        <span>
+                          <i className="fc-dot fc-dot-pay" />
+                          {t("result.youpay")}
+                          <em />
+                        </span>
+                        <span>
+                          <i className="fc-dot fc-dot-min" />
+                          {t("result.meter.min")}
+                          <em />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="fc-ph-steps" aria-hidden="true">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span key={i} data-on={i < answered || undefined} />
+                  ))}
+                </div>
+                <p className="fc-ph-title">{t("result.fill")}</p>
+                <p className="fc-ph-sub">{t("result.side")}</p>
+              </div>
+            ) : status.kind === "error" ? (
+              <div className="fc-error">
+                <p>{t("err.generic")}</p>
+                <button type="button" className="fc-btn fc-btn-line fc-btn-sm" onClick={() => setAttempt((a) => a + 1)}>
+                  {t("err.retry")}
+                </button>
+              </div>
+            ) : status.kind === "done" ? (
+              <Result r={status.result} t={t} />
+            ) : (
+              <div className="fc-loading-card" role="status">
+                <span className="fc-shimmer" />
+                <span className="fc-shimmer-sm" />
+                <span className="fc-shimmer-bar" />
+                <span className="visually-hidden">{t("result.loading")}</span>
+              </div>
+            )}
+          </section>
+
+          {/* ------------------------------------------------------ next steps */}
+          {status.kind === "done" ? (
+            <section className="fc-next" aria-label={t("next.title")}>
+              <h2 className="fc-next-title">{t("next.title")}</h2>
+              <button type="button" className="fc-btn fc-btn-ink" onClick={tellHer}>
+                <HeartGlyph />
+                <span>{t("next.tell")}</span>
+              </button>
+              <a
+                className="fc-btn fc-btn-line"
+                href={googleCalendarUrl(t("reminder.title"), t("reminder.details"))}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <CalendarGlyph />
+                <span>{t("next.reminder")}</span>
+              </a>
+              <div className="fc-next-row">
+                <button type="button" className="fc-link-btn" onClick={downloadIcs}>
+                  {t("next.ics")}
+                </button>
+                <button type="button" className="fc-link-btn" onClick={tellFriend}>
+                  <UsersGlyph />
+                  <span>{t("next.friend")}</span>
+                </button>
+              </div>
+              <Link href="/quiz" className="fc-quiz-link" lang="en">
+                <span>Think you know the rules?</span> <b>Try Fair or Not?</b> <span aria-hidden="true">→</span>
+              </Link>
+            </section>
+          ) : null}
+        </aside>
+      </div>
 
       <p className="fc-foot">
         <CheckIcon className="fc-foot-icon" /> {t("foot.private")}
@@ -425,31 +499,72 @@ export function FairPayCheck() {
   );
 }
 
+// ------------------------------------------------------------------ wage meter: what you pay vs the minimum
+function Meter({ r, t }: { r: CheckResult; t: CheckT }) {
+  const top = Math.max(r.monthly_pay, r.minimum_monthly) * 1.12 || 1;
+  const payPct = Math.min(100, (100 * r.monthly_pay) / top);
+  const minPct = Math.min(100, (100 * r.minimum_monthly) / top);
+  return (
+    <div className="fc-meter" role="img" aria-label={`${t("result.youpay")} ${inr(r.monthly_pay)}, ${t("result.meter.min")} ${inr(r.minimum_monthly)}`}>
+      <div className="fc-meter-track">
+        <span className="fc-meter-fill" style={{ width: `${payPct}%` }} />
+        {r.verdict !== "fair" ? (
+          <span className="fc-meter-gap" style={{ left: `${payPct}%`, width: `${Math.max(0, minPct - payPct)}%` }} />
+        ) : null}
+        <span className="fc-meter-min" style={{ left: `${minPct}%` }} />
+      </div>
+      <div className="fc-meter-legend">
+        <span>
+          <i className="fc-dot fc-dot-pay" />
+          {t("result.youpay")} <b>{inr(r.monthly_pay)}</b>
+        </span>
+        <span>
+          <i className="fc-dot fc-dot-min" />
+          {t("result.meter.min")} <b>{inr(r.minimum_monthly)}</b>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ result card
 function Result({ r, t }: { r: CheckResult; t: CheckT }) {
   const minimum = useCountTo(r.minimum_monthly);
+  const gap = useCountTo(r.gap_monthly, 900);
   const perDay = useCountTo(r.per_day_to_close, 1100);
   const fair = r.verdict === "fair";
   const minLabel = r.is_estimate ? t("result.minimum.est") : t("result.minimum");
 
   return (
-    <article className={cx("card", "fc-result", fair && "fc-result-fair")} data-verdict={r.verdict}>
-      {fair ? <Confetti pieces={28} /> : null}
-
+    <article className={cx("fc-result", fair && "fc-result-fair")} data-verdict={r.verdict}>
       {fair ? (
         <div className="fc-fair-head">
           <span className="fc-fair-tick" aria-hidden="true">
             <CheckIcon />
           </span>
-          <h2 className={cx("display", "fc-fair-title")}>{t("result.fair.title")}</h2>
+          <h2 className="fc-fair-title">{t("result.fair.title")}</h2>
           <p className="fc-fair-sub">{t("result.fair.sub", { pay: inr(r.monthly_pay), min: inr(r.minimum_monthly) })}</p>
         </div>
-      ) : null}
+      ) : (
+        <div className="fc-verdict">
+          <p className="fc-verdict-label">{t("result.below")}</p>
+          <p className="fc-verdict-value">
+            <span className="fc-verdict-num" aria-hidden="true">
+              {inrWhole(gap)}
+            </span>
+            <span className="visually-hidden">{inr(r.gap_monthly)}</span>
+            <span className="fc-verdict-unit">/ {t("result.month")}</span>
+          </p>
+          <p className="fc-year">{t("result.year", { amount: inr(r.gap_yearly) })}</p>
+        </div>
+      )}
+
+      <Meter r={r} t={t} />
 
       <div className="fc-min-block">
         <p className="fc-min-label">{minLabel}</p>
         <p className="fc-min-value">
-          <span className={cx("grad-text", "fc-min-num")} aria-hidden="true">
+          <span className="fc-min-num" aria-hidden="true">
             {r.is_estimate ? inr(Math.round(minimum * 2) / 2) : inrWhole(minimum)}
           </span>
           <span className="visually-hidden">{inr(r.minimum_monthly)}</span>
@@ -461,40 +576,36 @@ function Result({ r, t }: { r: CheckResult; t: CheckT }) {
             <span className="fc-estimate-why">{t("result.estimate.why")}</span>
           </div>
         ) : (
-          <StatusPill tone="success">
-            {t("result.notified")} · {r.category_label}
-          </StatusPill>
+          <span className="fc-notified">
+            <CheckIcon /> {t("result.notified")} · {r.category_label}
+          </span>
         )}
       </div>
 
       {!fair ? (
-        <>
-          <dl className="fc-rows">
-            <div>
-              <dt>{t("result.youpay")}</dt>
-              <dd>{inr(r.monthly_pay)}</dd>
-            </div>
-            <div>
-              <dt>{t("result.gap")}</dt>
-              <dd className="fc-gap">{inr(r.gap_monthly)}</dd>
-            </div>
-          </dl>
-          <div className="fc-per-day">
-            <span className="fc-per-day-pre">{t("result.perday.pre")}</span>
-            <span className="fc-per-day-num" aria-hidden="true">
-              {inrWhole(perDay)}
-            </span>
-            <span className="visually-hidden">{inrWhole(r.per_day_to_close)}</span>
-            <span className="fc-per-day-post">{t("result.perday.post")}</span>
-          </div>
-          <p className="fc-year">{t("result.year", { amount: inr(r.gap_yearly) })}</p>
-        </>
+        <div className="fc-per-day">
+          <span className="fc-per-day-pre">{t("result.perday.pre")}</span>
+          <span className="fc-per-day-num" aria-hidden="true">
+            {inrWhole(perDay)}
+          </span>
+          <span className="visually-hidden">{inrWhole(r.per_day_to_close)}</span>
+          <span className="fc-per-day-post">{t("result.perday.post")}</span>
+        </div>
       ) : null}
+
+      <div className="fc-source">
+        <span className="fc-source-label">{t("result.source")}</span>
+        <span className="fc-source-name">G.O.Ms.No.6 · 30.05.2026</span>
+        <a className="fc-source-link" href={r.source_url} target="_blank" rel="noopener noreferrer">
+          {t("result.source.open")} <span aria-hidden="true">↗</span>
+        </a>
+      </div>
 
       <details className="fc-details">
         <summary>{t("result.how")}</summary>
         <p>{r.how}</p>
         <p className="fc-small">{r.order_line}</p>
+        <p className="fc-small">{r.source}</p>
       </details>
       {r.notes.length ? (
         <details className="fc-details">
@@ -506,13 +617,6 @@ function Result({ r, t }: { r: CheckResult; t: CheckT }) {
           </ul>
         </details>
       ) : null}
-      <details className="fc-details">
-        <summary>{t("result.source")}: G.O.Ms.No.6 (30.05.2026)</summary>
-        <p className="fc-small">{r.source}</p>
-        <a className="fc-link" href={r.source_url} target="_blank" rel="noopener noreferrer">
-          {t("result.source.open")}
-        </a>
-      </details>
       <p className="fc-disclaimer">{t("result.disclaimer")}</p>
     </article>
   );

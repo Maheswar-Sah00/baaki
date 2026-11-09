@@ -82,7 +82,7 @@ export function DuesDetailScreen({ id, asOf }: { id: number; asOf?: string | nul
   const a = v?.account;
 
   return (
-    <Screen title={a ? a.party_display[dl] || a.party_name : S.title} back={`/dues${asOf ? `?as_of=${asOf}` : ""}`} t={t}>
+    <Screen title={a ? a.party_display[dl] || a.party_name : S.title} back={`/dues${asOf ? `?as_of=${asOf}` : ""}`} t={t} className="fx">
       {loading && !v ? (
         <div role="status" aria-label={t("common.loading")} className="stack">
           <SkeletonCard />
@@ -93,9 +93,9 @@ export function DuesDetailScreen({ id, asOf }: { id: number; asOf?: string | nul
 
       {v && a ? (
         <>
-          <Card tone="glow" className={`${css.hero} ${css.rise}`}>
+          <section className={`${css.hero} ${css.rise}`}>
             <div className={css.heroTop}>
-              <span className={css.avatar} aria-hidden="true">
+              <span className={css.avatar} data-kind={a.kind} aria-hidden="true">
                 {initial(a.party_name)}
               </span>
               <div style={{ minWidth: 0, flex: 1 }}>
@@ -108,8 +108,23 @@ export function DuesDetailScreen({ id, asOf }: { id: number; asOf?: string | nul
             <p className={css.big} aria-live="polite">
               <CountUp value={v.balance} />
             </p>
+            {v.total_due > 0 ? (
+              <div className={css.progress} aria-hidden="true">
+                <div className={css.progressTrack}>
+                  <span className={css.progressFill} style={{ width: `${Math.min(100, (v.total_paid / v.total_due) * 100)}%` }} />
+                </div>
+                <div className={css.progressMeta}>
+                  <span>
+                    {S.received} <b>{inr(v.total_paid)}</b>
+                  </span>
+                  <span>
+                    <b>{inr(v.total_due)}</b>
+                  </span>
+                </div>
+              </div>
+            ) : null}
             <PromiseCounter counter={v.counter} promises={v.promises} S={S} lang={lang} />
-          </Card>
+          </section>
 
           <section className={css.section} aria-label={S.whatOwed}>
             <h2 className="section-title">{S.whatOwed}</h2>
@@ -125,10 +140,10 @@ export function DuesDetailScreen({ id, asOf }: { id: number; asOf?: string | nul
               ))}
             </ul>
             <div className={css.actions}>
-              <button type="button" className="btn" onClick={() => setSheet("promise")}>
+              <button type="button" className="fx-pill-btn" onClick={() => setSheet("promise")}>
                 {S.theyPromised}
               </button>
-              <button type="button" className="btn" onClick={() => setSheet("paid")} disabled={v.balance <= 0}>
+              <button type="button" className="fx-pill-btn" onClick={() => setSheet("paid")} disabled={v.balance <= 0}>
                 <RupeeIcon /> {S.gotPaid}
               </button>
             </div>
@@ -209,10 +224,10 @@ function StatusButtons({ id, S, asOf, onDone }: { id: number; S: DuesStrings; as
   }
   return (
     <>
-      <button type="button" className="btn btn-small" disabled={busy} onClick={() => void mark("kept")}>
+      <button type="button" className="fx-pill-btn" disabled={busy} onClick={() => void mark("kept")}>
         <CheckIcon /> {S.markKept}
       </button>
-      <button type="button" className="btn btn-small btn-ghost" disabled={busy} onClick={() => void mark("broken")}>
+      <button type="button" className="fx-pill-btn" disabled={busy} onClick={() => void mark("broken")}>
         {S.markBroken}
       </button>
     </>
@@ -258,12 +273,17 @@ function ReminderPanel({ v, S, asOf }: { v: DuesView; S: DuesStrings; asOf?: str
   }
 
   return (
-    <Card className={css.rise} aria-live="polite">
+    <section className={`${css.panel} ${css.rise}`} aria-live="polite">
       <div className="stack">
-        <p className={css.tileTitle} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <BellIcon /> {S.remindTitle}
-        </p>
-        <p className="hint">{S.remindHint(S.langs[a.party_lang])}</p>
+        <div className={css.panelHead}>
+          <span className={css.panelIcon} aria-hidden="true">
+            <BellIcon />
+          </span>
+          <div>
+            <p className={css.tileTitle}>{S.remindTitle}</p>
+            <p className={css.tileHint}>{S.remindHint(S.langs[a.party_lang])}</p>
+          </div>
+        </div>
         {!rem ? (
           <>
             <label className="toggle">
@@ -278,7 +298,7 @@ function ReminderPanel({ v, S, asOf }: { v: DuesView; S: DuesStrings; asOf?: str
           </>
         ) : (
           <>
-            <div className={`${css.block} ${css.pop}`}>
+            <div className={`${css.bubble} ${css.pop}`}>
               <p className={css.message} lang={HTML_LANG[rem.language]}>
                 {rem.text}
               </p>
@@ -312,10 +332,10 @@ function ReminderPanel({ v, S, asOf }: { v: DuesView; S: DuesStrings; asOf?: str
               </p>
             ) : null}
             <div className={css.actions}>
-              <button type="button" className="btn btn-primary" onClick={() => void share()}>
+              <button type="button" className="fx-pill-btn" data-ink onClick={() => void share()}>
                 <ShareIcon /> {S.share}
               </button>
-              <a className="btn" href={rem.whatsapp_url} target="_blank" rel="noreferrer">
+              <a className="fx-pill-btn" href={rem.whatsapp_url} target="_blank" rel="noreferrer">
                 {S.whatsapp}
               </a>
             </div>
@@ -325,7 +345,7 @@ function ReminderPanel({ v, S, asOf }: { v: DuesView; S: DuesStrings; asOf?: str
         )}
         <ErrorNote message={err} />
       </div>
-    </Card>
+    </section>
   );
 }
 

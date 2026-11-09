@@ -2,6 +2,31 @@
 
 The foundation for the worker app (`/app`, `/speak`, `/case/*`, `/diary`, `/voice`, `/safety`), the employer page (`/e/[token]`) and the website (`/`). Read this before you restyle a screen.
 
+## Current look (10 Nov 2026 redesign): read this first
+
+The default palette is now **`pale`** (`web/app/theme-pale.css`, `DEFAULT_PALETTE = "pale"`); `gnani` and `warm`
+remain as options (`?palette=gnani|warm`). Sections below that describe gradients and glows refer to those older
+palettes. In `pale`, `--grad*` are solid ink (light) / white (dark) and `--glow*` / `--haze-*` are transparent.
+
+- **Light:** paper white `#fbfaf7`, pale washes `--pale-sky|lilac|peach|butter|sage|rose` with readable
+  `--pale-*-ink`, ink pill buttons, hairlines, no glow, no gradient text. **Dark:** pure black `#000`, near-black
+  surfaces, greys, white pills.
+- **Type (usevyra.com's stack):** Cabinet Grotesk headlines (`--font-display`, self-hosted in `web/app/fonts/`),
+  Inter UI (`--font-sans`), Instrument Serif italic for 1-3 accent words (`--font-accent`, class `.accent`).
+- **Card scale:** `--card-r-hero` 28, `--card-r` 24, `--tile-r` 18, `--card-pad` 20; pills 48 px; tap targets 44 px.
+  Put hover styles inside `@media (hover: hover)` (sticky hover on touch made pills look disabled).
+- **Illustrations:** flat Google-style art (faceless, pastel) in `web/public/assets/*.webp`, transparent. Use
+  `<Illustration name="speak|celebrate|handshake">` (renders the supplied art, SVG fallback) and
+  `<AssetSlot name fit="contain" anchor="center|bottom|right" fallback>` (never shows text; art cut on an edge sits
+  flush on that edge). One illustration per screen. Prompts and the list: `docs/ASSET_PROMPTS.md`; cleaning script:
+  `B:/Projects/gnani-challenge/baaki-illustrations/process.py`.
+- **Kit additions:** `avatarTone(name)` (one colour per person everywhere), `MoneyFigure`, `Screen lang` / `left`,
+  Card tones `sky|lilac|peach|butter|sage|rose|ink`, `.eyebrow` micro label (`.section-title` is now a heading).
+- **Website:** `web/components/site/*` (Workspace, CanDo, SiteMenu, Motif, assets.ts), styles in `web/app/site.css`.
+- Brief and decisions: `docs/REDESIGN_BRIEF.md`. QA screenshots: `web/scripts/shots.cjs` (supports `API_URL`).
+
+## Earlier look (Gnani palette)
+
 **Look in one line:** Gnani.ai's glow (orange #FE914B to violet #9F73F4 gradient, soft sky and lavender haze, off-white #FCF7F2, a serif display face), with mobile patterns from Uber and Agoda (clean cards, a bottom nav, one big primary action, bottom sheets, a map-like hero and status pills).
 
 ## 1. Files

@@ -1,11 +1,11 @@
-// Inline icons (stroke = currentColor). Replace freely; screens only use these names.
+// Inline icons (stroke = currentColor, 1.8 hairline-ish weight). Replace freely; screens only use these names.
 
 type P = { className?: string };
 const base = {
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 2,
+  strokeWidth: 1.8,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
   "aria-hidden": true,
@@ -139,5 +139,54 @@ export const BellIcon = ({ className }: P) => (
   <svg {...base} className={className}>
     <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" />
     <path d="M10 21h4" />
+  </svg>
+);
+export const InboxIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M4 13.5 6.2 5.6A2 2 0 0 1 8.1 4h7.8a2 2 0 0 1 1.9 1.6L20 13.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+    <path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20" />
+  </svg>
+);
+export const TrendUpIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M3 17l6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </svg>
+);
+export const DoorIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M14 3H6a1 1 0 0 0-1 1v17h9" />
+    <path d="M14 3l5 2v16l-5 0z" />
+    <path d="M11.5 12.5h.01" />
+  </svg>
+);
+export const ClockIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </svg>
+);
+export const ChevronRightIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+);
+export const PenIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" />
+    <path d="M13.5 6.5l4 4" />
+  </svg>
+);
+export const WalletIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M4 7a2 2 0 0 1 2-2h11v4" />
+    <rect x="4" y="7" width="16" height="12" rx="2.5" />
+    <path d="M16 13h.01" />
+  </svg>
+);
+export const KeyboardIcon = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+    <path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10" />
   </svg>
 );

@@ -3,8 +3,8 @@
  *
  * Two switches on <html>, both set before first paint by the inline script in app/layout.tsx:
  *   data-theme   = "light" | "dark"      (saved choice, else prefers-color-scheme)
- *   data-palette = "gnani" | "warm"      (DEFAULT_PALETTE in lib/theme-config.ts = "gnani";
- *                                         preview the other with ?palette=warm)
+ *   data-palette = "pale" | "gnani" | "warm"  (DEFAULT_PALETTE in lib/theme-config.ts = "pale",
+ *                                         defined in theme-pale.css; preview others with ?palette=)
  *
  *   gnani (DEFAULT): Gnani.ai's orange #fe914b -> violet #9f73f4 gradient, sky-blue haze,
  *                    off-white #fcf7f2; dark = deep ink #0c111d/#101828 with orange/violet glow.
@@ -60,7 +60,9 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* type */
-  --font-display: var(--font-serif), var(--font-noto-telugu), var(--font-noto-devanagari), Georgia, serif;
+  /* Vyra's exact type stack: Cabinet Grotesk headlines, Inter UI, Instrument Serif italic accents */
+  --font-display: var(--font-cabinet), var(--font-inter), var(--font-noto-telugu), var(--font-noto-devanagari), system-ui, sans-serif;
+  --font-accent: var(--font-serif), var(--font-noto-telugu), var(--font-noto-devanagari), Georgia, serif;
   --font-sans: var(--font-inter), var(--font-noto-telugu), var(--font-noto-devanagari), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 

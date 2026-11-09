@@ -1,514 +1,562 @@
-// Baaki marketing website ("/"). Server components; the interactive bits (theme toggle, install
-// button, phone demo, count-up) are small client islands. Styles: app/site.css. Copy rules: no
-// legal outcomes, no recovery rates, every number credited, estimates labelled, demo marked synthetic.
-// Positioning: a wage advocate in her pocket (money and outcomes first; language is the delivery).
+// Baaki marketing website ("/"), Vyra-style: floating pill nav, painted-sky hero, a live Baaki
+// workspace window, 01/02/03 cards, "what Baaki can do", every side of the conversation, proof,
+// safety, FAQ. Server components with small client islands. Styles: app/site.css (.s-* / .ws-* /
+// .cd-*). Copy rules: no legal outcomes, no recovery rates, every number from the code or a cited
+// source, estimates labelled, demo names fictional.
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Illustration, type IllustrationName } from "@/components/ui/Illustration";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { InstallButton } from "@/components/ui/InstallButton";
-import { CountUp, StatusPill } from "@/components/ui/kit";
-import { Logo } from "@/components/ui/Logo";
+import { Logo, LogoMark } from "@/components/ui/Logo";
 import {
   ArrowRightIcon,
-  BellIcon,
   BotIcon,
   CheckIcon,
-  DiaryIcon,
+  CrossIcon,
   FileIcon,
-  HomeIcon,
-  LanguageIcon,
   LockIcon,
   MicIcon,
-  PhoneIcon,
-  RupeeIcon,
+  PlayIcon,
   ShieldIcon,
-  SparkIcon,
-  WaveIcon,
 } from "@/components/ui/icons";
-import { PhoneDemo } from "./PhoneDemo";
-import { Lakh, Percent } from "./Percent";
+import { CanDo } from "./CanDo";
+import { HeaderShell } from "./HeaderShell";
+import { InstallCta } from "./InstallCta";
+import { SiteMenu } from "./SiteMenu";
+import { TypeLoop } from "./TypeLoop";
+import { Workspace } from "./Workspace";
 
-/** Where the "Am I paying my house help fairly?" teaser points. Change when the employer check ships. */
+/** Where the "Am I paying my house help fairly?" teaser points. */
 export const FAIR_CHECK_HREF = "/check";
 
 const SIASAT_SURVEY = "https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044";
-const SIASAT_COUNT = "https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/";
 
 /** The positioning line, used across the site, the app and the submission. */
 export const POSITIONING = "A wage advocate in her pocket. It knows the law, does the maths, asks for her, and keeps the proof.";
 
+/** A supplied flat illustration (transparent WebP in /public/assets), shown only when its file exists
+ *  (`art`, checked on the server by app/page.tsx). Decorative: the copy beside it says the same. */
+function Art({ name, art, w, h, className }: { name: string; art?: string[]; w: number; h: number; className: string }) {
+  if (!art?.includes(name)) return null;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={`s-art ${className}`} src={`/assets/${name}.webp`} width={w} height={h} alt="" loading="lazy" decoding="async" />;
+}
+
 // ------------------------------------------------------------------ header
+const NAV = [
+  { href: "#how", label: "How it works" },
+  { href: "#features", label: "Features" },
+  { href: "#interfaces", label: "Employers" },
+  { href: "#proof", label: "Proof" },
+  { href: "#trust", label: "Safety" },
+];
+
 export function SiteHeader() {
   return (
-    <header className="s-header">
-      <div className="s-wrap s-header-row">
+    <HeaderShell>
+      <div className="s-header-row s-header-wide">
         <Link href="/" className="s-logo-link" aria-label="Baaki home">
-          <Logo size={34} />
+          <Logo size={32} />
         </Link>
         <nav className="s-nav" aria-label="Sections">
-          <a href="#outcomes">Outcomes</a>
-          <a href="#problem">Problem</a>
-          <a href="#how">How it works</a>
-          <a href="#features">Features</a>
-          <a href="#trust">Safety</a>
+          {NAV.map((l) => (
+            <a key={l.href} href={l.href}>
+              {l.label}
+            </a>
+          ))}
         </nav>
         <div className="s-header-actions">
           <ThemeToggle />
-          <Link href="/app" className="btn btn-primary s-header-cta">
-            Open app
+          <InstallCta label="Install app" variant="link" className="s-header-install" />
+          <Link href="/app" className="s-pill s-pill-ink s-header-cta">
+            Open Baaki
           </Link>
+          <SiteMenu links={NAV} />
         </div>
       </div>
-    </header>
+    </HeaderShell>
   );
 }
 
-// ------------------------------------------------------------------ hero
+// ------------------------------------------------------------------ hero + workspace
 export function Hero() {
   return (
-    <>
-      <section className="s-hero" aria-labelledby="hero-title">
-        <div className="s-hero-bg" aria-hidden="true">
-          <span className="s-orb s-orb-1" />
-          <span className="s-orb s-orb-2" />
-          <span className="s-orb s-orb-3" />
-          <span className="s-grid" />
+    <section className="s-top" aria-labelledby="hero-title">
+      <div className="s-sky" aria-hidden="true" />
+      <div className="s-hero">
+        <h1 id="hero-title" className="s-hero-title">
+          <span className="s-hero-l1">Say what’s owed.</span>
+          <span className="s-hero-l2">Baaki asks for it.</span>
+        </h1>
+        <p className="s-hero-sub">
+          Speak in Telugu or Hinglish. Baaki works out every rupee owed under Telangana’s minimum wage, then asks the employer
+          politely, in their own language.
+        </p>
+        <div className="s-hero-ctas">
+          <Link href="/app" className="s-pill s-pill-soft s-pill-lg">
+            <MicIcon />
+            <span>Open Baaki</span>
+          </Link>
+          <InstallCta label="Install on your phone" className="s-pill-lg" />
         </div>
-        <div className="s-wrap s-hero-grid">
-          <div className="s-hero-copy">
-            <StatusPill tone="accent" className="s-eyebrow">
-              A wage advocate for Hyderabad’s house helps, cooks and cleaners
-            </StatusPill>
-            <h1 id="hero-title" className="s-display s-hero-title">
-              ₹18,000 a year, missing from her pay.
-              <br />
-              <em className="grad-text">Baaki asks for it.</em>
-            </h1>
-            <p className="s-hero-fine">
-              <StatusPill tone="estimate" dot={false}>
-                estimate
-              </StatusPill>
-              <span>
-                One part-time job: ₹2,500 a month for 2 hours a day, against about ₹4,000 under Telangana’s minimum wage
-                (G.O.Ms.No.6, 2026).
-              </span>
-            </p>
-            <p className="s-lede">
-              <b>Baaki is a wage advocate in her pocket.</b> It knows the law, does the maths, asks for her, and keeps the proof.
-              She just speaks, in Telugu or Hinglish, and the employer hears it in <em>theirs</em>.
-            </p>
-            <div className="s-cta-row">
-              <Link href="/app" className="btn btn-primary btn-big s-cta">
-                <MicIcon />
-                <span>Open the app</span>
-              </Link>
-              <a href="#how" className="btn btn-big s-cta s-cta-ghost">
-                <span>See how it works</span>
-                <ArrowRightIcon />
-              </a>
-            </div>
-            <ul className="s-ticks" aria-label="Promises">
-              <li>
-                <CheckIcon /> Every rupee checked against the law
-              </li>
-              <li>
-                <CheckIcon /> Nothing is sent without her OK
-              </li>
-              <li>
-                <CheckIcon /> Free, no reading needed
-              </li>
-            </ul>
-            <InstallButton label="Install Baaki" className="s-install" />
-          </div>
-          <div className="s-hero-visual">
-            <span className="s-float s-float-1" aria-hidden="true">
-              <b className="grad-text">₹12,692</b>
-              <small>owed by law · not ₹13,000</small>
-            </span>
-            <span className="s-float s-float-2" aria-hidden="true">
-              <CheckIcon /> Baaki knows: only ₹308 cut allowed
-            </span>
-            <span className="s-float s-float-3" aria-hidden="true">
-              <WaveIcon /> Asked for her, in Hinglish
-            </span>
-            <PhoneDemo />
-          </div>
-        </div>
-      </section>
-      <Outcomes />
-    </>
-  );
-}
-
-// ------------------------------------------------------------------ outcomes strip
-function Outcomes() {
-  return (
-    <section id="outcomes" className="s-outcomes s-section" aria-labelledby="outcomes-title">
-      <div className="s-wrap">
-        <header className="s-outcomes-head">
-          <h2 id="outcomes-title" className="s-kicker">
-            What Baaki gets done
-          </h2>
-          <p className="s-outcomes-note">Demo names and amounts are fictional. Estimates are labelled.</p>
-        </header>
-        <ul className="s-outcome-list">
-          <li className="s-outcome">
-            <p className="s-outcome-value">
-              <CountUp value={12692} durationMs={1400} />
-            </p>
-            <p className="s-outcome-label">Sharma ji’s baaki, asked for and paid</p>
-            <p className="s-outcome-sub">She said ₹13,000. Baaki knew the law allows a ₹308 sick-day cut, not ₹1,000.</p>
-            <StatusPill tone="neutral" dot={false}>
-              synthetic demo
-            </StatusPill>
-          </li>
-          <li className="s-outcome">
-            <p className="s-outcome-value">
-              <CountUp value={18000} durationMs={1400} />
-              <small>/yr</small>
-            </p>
-            <p className="s-outcome-label">The raise one part-time job is short of</p>
-            <p className="s-outcome-sub">₹2,500 → about ₹4,000 a month. Haq Raise asks for it, with a step-up plan.</p>
-            <StatusPill tone="estimate" dot={false}>
-              estimate
-            </StatusPill>
-          </li>
-          <li className="s-outcome">
-            <p className="s-outcome-value">
-              2 <small>working days</small>
-            </p>
-            <p className="s-outcome-label">Final dues, if she’s let go</p>
-            <p className="s-outcome-sub">The Exit Kit shows the exact date and her part-month pay (Code on Wages s.17(2)).</p>
-            <StatusPill tone="neutral" dot={false}>
-              the law
-            </StatusPill>
-          </li>
-          <li className="s-outcome">
-            <p className="s-outcome-value">
-              34<small>/34</small>
-            </p>
-            <p className="s-outcome-label">Rupee amounts heard exactly, in kitchen noise</p>
-            <p className="s-outcome-sub">24 noisy clips: stock voices, a synthetic kitchen, run once.</p>
-            <StatusPill tone="neutral" dot={false}>
-              small test
-            </StatusPill>
-          </li>
-        </ul>
+        <p className="s-hero-proof">
+          <Link href="/proof">
+            <b>34 of 34</b> rupee amounts heard exactly in kitchen noise
+          </Link>
+          <span className="s-sep" aria-hidden="true">
+            ·
+          </span>
+          <span>Built on Gnani Prisma + Timbre</span>
+        </p>
+      </div>
+      <div className="s-ws-wrap" id="demo">
+        <Workspace />
+        <p className="s-ws-note">Synthetic demo: Lakshmi, her three homes and every amount are fictional, taken from the app’s demo data.</p>
       </div>
     </section>
   );
 }
 
-// ------------------------------------------------------------------ problem
+// ------------------------------------------------------------------ problem statement
 export function Problem() {
   return (
     <section id="problem" className="s-section s-problem" aria-labelledby="problem-title">
-      <div className="s-wrap">
-        <div className="s-problem-card">
-          <span className="haze" aria-hidden="true" />
-          <div className="s-problem-main">
-            <p className="s-kicker">The problem</p>
-            <p className="s-stat">
-              <Percent value={81} />
-            </p>
-            <h2 id="problem-title" className="s-display s-problem-title">
-              of Hyderabad’s domestic workers earn <em>below the minimum wage.</em>
-            </h2>
-            <p className="s-credit">
-              2023 Montfort Social Institute survey, via{" "}
-              <a href={SIASAT_SURVEY} target="_blank" rel="noreferrer">
-                Siasat
-              </a>
-              .
-            </p>
-          </div>
-          <div className="s-problem-side">
-            <p className="s-problem-pitch">
-              She can speak. <em>She just can’t safely ask.</em>
-            </p>
-            <p className="s-problem-quote">
-              No contract. No payslip. Cash in hand, a month “adjusted” here and there. Asking means risking the job, often in a
-              language the employer doesn’t speak. So the money stays unasked for, and nothing is in writing.
-            </p>
-            <dl className="s-mini-stats">
-              <div>
-                <dt>
-                  <Percent value={68} />
-                </dt>
-                <dd>have never had a raise</dd>
-              </div>
-              <div>
-                <dt>
-                  <Percent value={96} />
-                </dt>
-                <dd>get no weekly day off</dd>
-              </div>
-              <div>
-                <dt>
-                  <Lakh value={6} />
-                </dt>
-                <dd>
-                  domestic workers in Hyderabad (
-                  <a href={SIASAT_COUNT} target="_blank" rel="noreferrer">
-                    union estimate
-                  </a>
-                  )
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ------------------------------------------------------------------ how it works
-const STEPS: { ill: IllustrationName; title: string; body: ReactNode; tag: string }[] = [
-  {
-    ill: "speak",
-    tag: "Speak",
-    title: "Say it, in your language",
-    body: (
-      <>
-        Tap the mic and talk: <em lang="te">“మూడు నెలలు జీతం ఇవ్వలేదు…”</em> Telugu, Hindi or a mix. It works over a pressure-cooker whistle.
-      </>
-    ),
-  },
-  {
-    ill: "coins",
-    tag: "Know",
-    title: "Baaki does the maths, by the law",
-    body: "Every month, cut and advance adds up, then gets checked: a ₹1,000 cut for 2 sick days becomes ₹308 allowed, ₹692 back. She hears it read back and confirms.",
-  },
-  {
-    ill: "send",
-    tag: "Ask",
-    title: "Baaki asks, so she doesn’t have to",
-    body: "A polite voice note in the employer’s language, with an itemised card and the source for every number. She presses Send.",
-  },
-  {
-    ill: "celebrate",
-    tag: "Paid",
-    title: "“Paisa aa gaya!”",
-    body: "The employer pays by UPI in one tap, or in parts. Baaki tells her when it’s marked paid, and keeps the proof.",
-  },
-];
-
-export function HowItWorks() {
-  return (
-    <section id="how" className="s-section" aria-labelledby="how-title">
-      <div className="s-wrap">
-        <header className="s-section-head">
-          <p className="s-kicker">How Baaki works</p>
-          <h2 id="how-title" className="s-display s-h2">
-            From a voice note to <em className="grad-text">money in hand</em>, in four steps.
-          </h2>
-        </header>
-        <ol className="s-steps">
-          {STEPS.map((s, i) => (
-            <li key={s.tag} className="s-step" style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="s-step-art">
-                <Illustration name={s.ill} animated />
-              </div>
-              <span className="s-step-num">
-                {i + 1} · {s.tag}
-              </span>
-              <h3>{s.title}</h3>
-              <p>{s.body}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-// ------------------------------------------------------------------ showcase phones
-export function Showcase() {
-  return (
-    <section className="s-section s-showcase" aria-labelledby="showcase-title">
-      <div className="s-wrap">
-        <header className="s-section-head s-center">
-          <p className="s-kicker">Baaki knows</p>
-          <h2 id="showcase-title" className="s-display s-h2">
-            She says ₹13,000. <em className="grad-text">The law says ₹12,692.</em>
-          </h2>
-          <p className="s-section-sub">Baaki never asks for more than the law supports, so her claim is hard to wave away.</p>
-        </header>
-        <div className="s-phones">
-          <figure>
-            <PhoneDemo scene="speak" />
-            <figcaption>She says what she remembers</figcaption>
-          </figure>
-          <figure className="s-phones-mid">
-            <PhoneDemo scene="knows" />
-            <figcaption>Baaki checks every rupee against the law</figcaption>
-          </figure>
-          <figure>
-            <PhoneDemo scene="send" />
-            <figcaption>The employer gets the exact amount, and a pay button</figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ------------------------------------------------------------------ features
-const FEATURES: { icon: ReactNode; title: string; body: string }[] = [
-  { icon: <RupeeIcon />, title: "Haq Check", body: "Compares her pay with Telangana’s minimum wage (G.O.Ms.No.6, 2026) and shows the source. Part-time figures are marked as estimates." },
-  { icon: <SparkIcon />, title: "Haq Raise", body: "Asks for a raise to the legal minimum, with a step-up plan the employer can live with. The employer taps Accept on their page." },
-  { icon: <HomeIcon />, title: "Exit Kit", body: "Told “don’t come from tomorrow”? Baaki shows the date her final dues fall due (2 working days) and her part-month pay." },
-  { icon: <BellIcon />, title: "Asks for her", body: "Polite, then firm, then a bilingual letter that points to free legal aid, in the employer’s language. She chooses every step." },
-  { icon: <PhoneIcon />, title: "Pay in one tap", body: "The employer page plays the note, lists every item and opens UPI with the amount filled in. Paying in parts is fine too." },
-  { icon: <DiaryIcon />, title: "Keeps the proof", body: "A 5-second daily voice diary, and every promise the employer makes, saved with the date and his own words." },
-];
-
-export function Features() {
-  return (
-    <section id="features" className="s-section" aria-labelledby="features-title">
-      <div className="s-wrap">
-        <header className="s-section-head">
-          <p className="s-kicker">What her advocate does</p>
-          <h2 id="features-title" className="s-display s-h2">
-            Knows the law. Does the maths. <em className="grad-text">Asks for her. Keeps the proof.</em>
-          </h2>
-        </header>
-        <ul className="s-features">
-          {FEATURES.map((f) => (
-            <li key={f.title} className="s-feature">
-              <span className="s-feature-icon">{f.icon}</span>
-              <h3>{f.title}</h3>
-              <p>{f.body}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-// ------------------------------------------------------------------ employer teaser
-export function FairTeaser() {
-  return (
-    <section className="s-section" aria-labelledby="fair-title">
-      <div className="s-wrap">
-        <div className="s-fair">
-          <div className="s-fair-copy">
-            <p className="s-kicker">For employers</p>
-            <h2 id="fair-title" className="s-display s-h2">
-              Am I paying my house help <em className="grad-text">fairly?</em>
-            </h2>
-            <p>
-              Hyderabad’s minimum for a full-time house help is <b>₹16,000 a month</b> (G.O.Ms.No.6, from 1 June 2026). For part-time
-              work that is about <b>₹77 an hour</b>{" "}
-              <StatusPill tone="estimate" dot={false}>
-                our estimate
-              </StatusPill>
-              .
-            </p>
-            <Link href={FAIR_CHECK_HREF} className="btn btn-primary btn-big s-fair-cta">
-              <span>Check in 30 seconds</span>
-              <ArrowRightIcon />
-            </Link>
-          </div>
-          <div className="s-fair-art">
-            <Illustration name="handshake" animated />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ------------------------------------------------------------------ Gnani tech
-const TECH: { name: string; what: string; how: string; icon: ReactNode }[] = [
-  {
-    icon: <MicIcon />,
-    name: "Prisma speech-to-text",
-    what: "Hears Telugu, Hindi and code-mixed speech",
-    how: "Language is detected automatically, and it holds up in a noisy kitchen. Long voice notes are split into short clips.",
-  },
-  {
-    icon: <WaveIcon />,
-    name: "Timbre text-to-speech",
-    what: "Reads numbers back slowly, with pauses",
-    how: "The read-back, the employer’s voice note and the “Paisa aa gaya!” moment are all spoken in the listener’s language.",
-  },
-  {
-    icon: <LanguageIcon />,
-    name: "Voice cloning, with consent",
-    what: "Her voice, their language",
-    how: "Ten seconds of her voice, recorded once with clear consent. Without it, a standard Timbre voice is used.",
-  },
-];
-
-export function GnaniTech() {
-  return (
-    <section className="s-section s-tech" aria-labelledby="tech-title">
-      <div className="s-wrap">
-        <header className="s-section-head s-center">
-          <p className="s-kicker">Powered by Gnani.ai</p>
-          <h2 id="tech-title" className="s-display s-h2">
-            Indian voice AI, doing <em className="grad-text">only what it does reliably.</em>
-          </h2>
-          <p className="s-section-sub">
-            Language is how Baaki reaches her; money is what it’s for. Transcribe, read back, speak: every money figure is
-            worked out by plain rules, never guessed by an AI.
-          </p>
-        </header>
-        <ul className="s-tech-grid">
-          {TECH.map((t) => (
-            <li key={t.name} className="s-tech-card">
-              <span className="s-tech-icon">{t.icon}</span>
-              <p className="s-tech-name">{t.name}</p>
-              <h3>{t.what}</h3>
-              <p>{t.how}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="s-center s-proof-link">
-          <Link href="/proof" className="btn">
-            Tested in a noisy kitchen: 34 of 34 rupee amounts heard exactly. See every clip →
-          </Link>
+      <div className="s-wrap s-problem-inner">
+        <h2 id="problem-title" className="s-statement">
+          <span className="s-statement-num">81%</span>{" "}
+          of Hyderabad’s domestic workers earn below the minimum wage. <em>She can speak. She just can’t safely ask.</em>
+        </h2>
+        <p className="s-credit">
+          2023 Montfort Social Institute survey, via{" "}
+          <a href={SIASAT_SURVEY} target="_blank" rel="noreferrer">
+            Siasat
+          </a>
+          . No contract, no payslip, cash in hand, and the employer often speaks another language.
         </p>
       </div>
     </section>
   );
 }
 
+// ------------------------------------------------------------------ 01 / 02 / 03
+export function HowItWorks() {
+  return (
+    <section id="how" className="s-section" aria-labelledby="how-title">
+      <div className="s-wrap">
+        <header className="s-head">
+          <h2 id="how-title" className="s-h2">
+            Three steps. <em>No reading needed.</em>
+          </h2>
+          <p className="s-sub">From a voice note to a polite, exact ask, in the employer’s language.</p>
+        </header>
+        <ol className="s-steps">
+          <li className="s-step">
+            <div className="s-step-head">
+              <span className="s-step-num">01</span>
+              <span className="s-step-word">Speak</span>
+            </div>
+            <div className="s-step-art" aria-hidden="true">
+              <div className="st-speak">
+                <span className="st-pill">
+                  <i className="st-live" /> Listening · తెలుగు
+                </span>
+                <p className="st-transcript">
+                  <TypeLoop text="శర్మ గారు మూడు నెలలు జీతం ఇవ్వలేదు…" lang="te" />
+                </p>
+                <p className="st-gloss">“Sharma garu hasn’t paid for three months…”</p>
+                <span className="st-mic">
+                  <span className="st-ring" />
+                  <span className="st-mic-btn">
+                    <MicIcon />
+                  </span>
+                </span>
+              </div>
+            </div>
+            <h3>Say it, in your language</h3>
+            <p>Telugu, Hindi or a mix. Tap the mic and talk; it holds up over a pressure-cooker whistle.</p>
+          </li>
+          <li className="s-step">
+            <div className="s-step-head">
+              <span className="s-step-num">02</span>
+              <span className="s-step-word">Check</span>
+            </div>
+            <div className="s-step-art" aria-hidden="true">
+              <div className="st-card st-readback">
+                <span className="st-kicker">Baaki reads it back</span>
+                <dl>
+                  <div>
+                    <dt>Aug – Oct wages</dt>
+                    <dd>₹12,000</dd>
+                  </div>
+                  <div>
+                    <dt>Sick-day cut</dt>
+                    <dd>
+                      <s>₹1,000</s> ₹308 allowed
+                    </dd>
+                  </div>
+                  <div className="st-total">
+                    <dt>Baaki’s calculation</dt>
+                    <dd>₹12,692</dd>
+                  </div>
+                </dl>
+                <p className="st-q" lang="te">
+                  సరేనా? <span>Correct?</span>
+                </p>
+                <div className="st-yn">
+                  <span className="st-yes">
+                    <CheckIcon /> అవును
+                  </span>
+                  <span className="st-no">
+                    <CrossIcon /> Fix
+                  </span>
+                </div>
+              </div>
+            </div>
+            <h3>Baaki does the maths, with the source</h3>
+            <p>Every month and every cut, checked against G.O.Ms.No.6 and the Code on Wages, then read back for her OK.</p>
+          </li>
+          <li className="s-step">
+            <div className="s-step-head">
+              <span className="s-step-num">03</span>
+              <span className="s-step-word">Send</span>
+            </div>
+            <div className="s-step-art" aria-hidden="true">
+              <div className="st-send">
+                <span className="st-doc">
+                  <FileIcon />
+                  <span>
+                    <b>Letter to Sharma ji</b>
+                    <small>Hindi + English · PDF</small>
+                  </span>
+                </span>
+                <span className="st-note">
+                  <span className="st-play">
+                    <PlayIcon />
+                  </span>
+                  <span className="st-bars">
+                    {Array.from({ length: 16 }, (_, i) => (
+                      <i key={i} style={{ height: `${42 + ((i * 43) % 58)}%`, animationDelay: `${(i % 5) * 110}ms` }} />
+                    ))}
+                  </span>
+                  <small>0:21</small>
+                </span>
+                <span className="st-wa">
+                  <CheckIcon /> Ready for WhatsApp · she presses Send
+                </span>
+              </div>
+            </div>
+            <h3>She presses Send</h3>
+            <p>A polite voice note in Hinglish and a letter with the source for every number. Nothing goes without her.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ what Baaki can do
+/** `photos`: which "can do" photo slots exist (checked on the server by app/page.tsx). */
+export function Features({ photos = [] }: { photos?: string[] }) {
+  return (
+    <section id="features" className="s-section" aria-labelledby="features-title">
+      <div className="s-wrap">
+        <header className="s-head">
+          <h2 id="features-title" className="s-h2">
+            What Baaki <em>can do</em>
+          </h2>
+          <p className="s-sub">If she can say it, Baaki can work it out and ask for it.</p>
+        </header>
+        <CanDo photos={photos} />
+      </div>
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ every side of the conversation
+function WinDots() {
+  return (
+    <span className="iw-dots" aria-hidden="true">
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+
+export function Interfaces({ art }: { art?: string[] }) {
+  const cast = art?.includes("cast-trio");
+  return (
+    <section id="interfaces" className="s-section" aria-labelledby="interfaces-title">
+      <div className="s-wrap">
+        <header className={cast ? "s-head s-head-split" : "s-head"}>
+          <div className="s-head-text">
+            <h2 id="interfaces-title" className="s-h2">
+              One Baaki, <em className="s-em-block">every side of the conversation</em>
+            </h2>
+            <p className="s-sub">
+              Lakshmi talks to Baaki in Telugu. Sharma ji hears it in Hinglish. The letter travels on WhatsApp, from her own phone.
+            </p>
+          </div>
+          {cast ? (
+            <div className="s-cast">
+              <Art name="cast-trio" art={art} w={1120} h={900} className="s-cast-art" />
+              <span className="s-cast-names" aria-hidden="true">
+                <span>Lakshmi</span>
+                <span>Sharma ji</span>
+                <span>Mehta madam</span>
+              </span>
+            </div>
+          ) : null}
+        </header>
+        <ul className="iw-grid">
+          {/* worker app */}
+          <li className="iw">
+            <div className="iw-win" aria-hidden="true">
+              <div className="iw-bar">
+                <WinDots />
+                <span className="iw-url">Baaki · తెలుగు</span>
+              </div>
+              <div className="iw-body iw-app">
+                <p className="iw-app-k" lang="te">
+                  రావాల్సిన బాకీ
+                </p>
+                <p className="iw-app-v">₹12,692</p>
+                <ul className="iw-homes">
+                  <li>
+                    <span className="iw-home">
+                      <span lang="te">శర్మ గారు</span>
+                      <em className="iw-st iw-st-ready" lang="te">
+                        పంపడానికి సిద్ధం
+                      </em>
+                    </span>
+                    <b>₹12,692</b>
+                  </li>
+                  <li>
+                    <span className="iw-home">
+                      <span lang="te">రెడ్డి గారు</span>
+                      <em className="iw-st iw-st-paid">Fair employer</em>
+                    </span>
+                    <b>Paid</b>
+                  </li>
+                  <li>
+                    <span className="iw-home">
+                      <span lang="te">మెహతా మేడమ్</span>
+                      <em className="iw-st iw-st-est">estimate</em>
+                    </span>
+                    <b>~₹1,500/mo</b>
+                  </li>
+                </ul>
+                <span className="iw-btn" lang="te">
+                  పంపండి
+                </span>
+              </div>
+            </div>
+            <div className="iw-foot">
+              <h3>Lakshmi’s app</h3>
+              <p>Telugu, voice first. She confirms every fact.</p>
+            </div>
+          </li>
+          {/* employer page */}
+          <li className="iw">
+            <div className="iw-win" aria-hidden="true">
+              <div className="iw-bar">
+                <WinDots />
+                <span className="iw-url iw-url-box">/e/ · Sharma ji’s link</span>
+              </div>
+              <div className="iw-body iw-emp">
+                <p className="iw-emp-t" lang="hi">
+                  लक्ष्मी का बाकी पैसा
+                </p>
+                <span className="iw-note">
+                  <span className="iw-play">
+                    <PlayIcon />
+                  </span>
+                  <span lang="hi">Voice note सुनिए</span>
+                  <small>0:21</small>
+                </span>
+                <p className="iw-ai" lang="hi">
+                  यह voice note Baaki ऐप ने काम करने वाली की अनुमति से बनाया है।
+                </p>
+                <dl className="iw-items">
+                  <div>
+                    <dt>Aug – Oct wages</dt>
+                    <dd>₹12,000</dd>
+                  </div>
+                  <div>
+                    <dt>Cut over the allowed ₹308</dt>
+                    <dd>₹692</dd>
+                  </div>
+                  <div className="iw-items-total">
+                    <dt lang="hi">कुल</dt>
+                    <dd>₹12,692</dd>
+                  </div>
+                </dl>
+                <span className="iw-btn" lang="hi">
+                  अभी pay करें (UPI)
+                </span>
+              </div>
+            </div>
+            <div className="iw-foot">
+              <h3>Sharma ji’s page</h3>
+              <p>Hinglish. Plays the note, lists every item, opens UPI.</p>
+            </div>
+          </li>
+          {/* WhatsApp share */}
+          <li className="iw">
+            <div className="iw-win" aria-hidden="true">
+              <div className="iw-bar">
+                <WinDots />
+                <span className="iw-url">Chat · Sharma ji</span>
+              </div>
+              <div className="iw-body iw-chat">
+                <span className="iw-day">Today</span>
+                <span className="iw-msg iw-msg-doc">
+                  <FileIcon />
+                  <span>
+                    <b>Baaki letter · Lakshmi</b>
+                    <small>Hindi + English · PDF</small>
+                  </span>
+                </span>
+                <span className="iw-msg iw-msg-voice">
+                  <span className="iw-play">
+                    <PlayIcon />
+                  </span>
+                  <span className="iw-bars">
+                    {Array.from({ length: 18 }, (_, i) => (
+                      <i key={i} style={{ height: `${42 + ((i * 29) % 58)}%` }} />
+                    ))}
+                  </span>
+                  <small>0:21</small>
+                </span>
+                <span className="iw-msg iw-msg-text">
+                  Details and UPI: <u>/e/ link</u>
+                  <small className="iw-ticks">
+                    <CheckIcon />
+                  </small>
+                </span>
+                <span className="iw-shared">Shared from Lakshmi’s own number</span>
+              </div>
+            </div>
+            <div className="iw-foot">
+              <h3>WhatsApp</h3>
+              <p>She forwards it herself. Baaki never calls anyone.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ proof band + fair pay teaser
+export function ProofBand({ art }: { art?: string[] }) {
+  return (
+    <section id="proof" className="s-section" aria-labelledby="proof-title">
+      <div className="s-wrap s-proof">
+        <div id="outcomes" className="s-proof-main">
+          <p className="s-micro">Noise proof · Gnani Prisma</p>
+          <h2 id="proof-title" className="s-proof-num">
+            34<span>/34</span>
+          </h2>
+          <p className="s-proof-lead">
+            rupee amounts heard <em>exactly</em>, in 24 noisy clips of Telugu and Hinglish.
+          </p>
+          <p className="s-proof-sub">17 of 17 with kitchen noise, a phone line and WhatsApp compression all at once. A small test, run once, with every clip playable.</p>
+          <Link href="/proof" className="s-pill s-pill-ink">
+            <span>Hear every clip</span>
+            <ArrowRightIcon />
+          </Link>
+          <div className="s-proof-strip">
+            <ul className="s-proof-bars" aria-hidden="true">
+              {Array.from({ length: 34 }, (_, i) => (
+                <li key={i} style={{ animationDelay: `${i * 30}ms` }} />
+              ))}
+            </ul>
+            <span className="s-proof-cap">One bar per rupee amount. All 34 heard exactly.</span>
+          </div>
+        </div>
+        <div className="s-fair">
+          <p className="s-micro">For employers</p>
+          <h2 className="s-fair-title">
+            Am I paying my house help <em>fairly?</em>
+          </h2>
+          <p>
+            Hyderabad’s minimum for a full-time house help is <b>₹16,000 a month</b> (G.O.Ms.No.6, from 1 June 2026). Part-time, that is
+            about <b>₹77 an hour</b> <span className="s-est">our estimate</span>.
+          </p>
+          <dl className="s-fair-table">
+            <div>
+              <dt>Full-time house help</dt>
+              <dd>₹16,000 / month</dd>
+            </div>
+            <div>
+              <dt>2 hours a day</dt>
+              <dd>
+                about ₹4,000 / month <span className="s-est">estimate</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Paying ₹2,500 for 2 hours?</dt>
+              <dd>~₹1,500 short every month</dd>
+            </div>
+          </dl>
+          <div className="s-fair-foot">
+            <div className="s-fair-actions">
+              <Link href={FAIR_CHECK_HREF} className="s-pill s-pill-white">
+                <span>Check in 30 seconds</span>
+                <ArrowRightIcon />
+              </Link>
+              <p className="s-fair-links">
+                <Link href="/try/employer" className="s-more">
+                  Try being Sharma{" "}ji{" "}<span aria-hidden="true">→</span>
+                </Link>
+                <Link href="/quiz" className="s-more">
+                  Fair or Not? Take the 40-second{" "}quiz{" "}<span aria-hidden="true">→</span>
+                </Link>
+              </p>
+            </div>
+            <Art name="check-payday-envelope" art={art} w={1300} h={991} className="s-fair-art" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ------------------------------------------------------------------ trust
-const TRUST: { icon: ReactNode; title: string; body: ReactNode }[] = [
+const TRUST: { icon: ReactNode; tone: string; title: string; body: ReactNode }[] = [
+  {
+    icon: <CheckIcon />,
+    tone: "sage",
+    title: "Read back, then she presses Send",
+    body: "Every fact is read back and confirmed, and she presses Send herself, every time. Baaki never calls anyone.",
+  },
   {
     icon: <BotIcon />,
+    tone: "lilac",
     title: "Every AI voice says it is AI",
     body: "Each voice note opens with a disclosure that Baaki made it, in her voice, with her permission.",
   },
   {
-    icon: <CheckIcon />,
-    title: "Nothing goes out without her",
-    body: "Every fact is read back and confirmed, and she presses Send herself, every time. Baaki never calls anyone.",
-  },
-  {
     icon: <ShieldIcon />,
+    tone: "rose",
     title: "Safety comes first",
     body: (
       <>
-        If she mentions being locked in, hurt, her ID being taken or a child working, Baaki stops and shows <a href="tel:181">181</a>,{" "}
-        <a href="tel:112">112</a> and <a href="tel:1098">1098</a>. A quick-exit button switches to a plain recipe page.
+        Locked in, hurt, ID taken, a child working: Baaki stops and shows <a href="tel:181">181</a>, <a href="tel:112">112</a> and{" "}
+        <a href="tel:1098">1098</a>. Quick exit switches to a plain recipe page.
       </>
     ),
   },
   {
     icon: <FileIcon />,
+    tone: "butter",
     title: "Not a lawyer",
-    body: "Baaki shows the calculation and where each number comes from, then hands over to legal aid or the labour office. It is not legal advice.",
+    body: "Baaki shows the calculation and where each number comes from, then hands over to legal aid or the labour office. Not legal advice.",
   },
   {
     icon: <LockIcon />,
+    tone: "sky",
     title: "Private by design",
     body: "Quick exit also clears this phone’s session. The demo uses only fictional names and amounts.",
   },
@@ -517,80 +565,69 @@ const TRUST: { icon: ReactNode; title: string; body: ReactNode }[] = [
 export function Trust() {
   return (
     <section id="trust" className="s-section" aria-labelledby="trust-title">
-      <div className="s-wrap s-trust">
-        <div className="s-trust-head">
-          <p className="s-kicker">Safety, privacy and AI</p>
-          <h2 id="trust-title" className="s-display s-h2">
-            Built for the person <em className="grad-text">with the least power</em> in the room.
+      <div className="s-wrap">
+        <header className="s-head">
+          <h2 id="trust-title" className="s-h2">
+            Built for the person <em>with the least power</em> in the room
           </h2>
-          <Illustration name="shield" animated className="s-trust-art" />
-        </div>
-        <ul className="s-trust-list">
+        </header>
+        <ul className="s-trust">
           {TRUST.map((t) => (
-            <li key={t.title}>
-              <span className="s-trust-icon">{t.icon}</span>
-              <div>
-                <h3>{t.title}</h3>
-                <p>{t.body}</p>
-              </div>
+            <li key={t.title} className="s-trust-card">
+              <span className="s-trust-icon" data-tone={t.tone}>
+                {t.icon}
+              </span>
+              <h3>{t.title}</h3>
+              <p>{t.body}</p>
             </li>
           ))}
+          <li className="s-trust-card s-trust-exit">
+            <span className="s-trust-icon" data-tone="peach">
+              <ArrowRightIcon />
+            </span>
+            <h3>In danger right now?</h3>
+            <p>
+              <a href="tel:112">112</a> · <a href="tel:181">181 Women</a> · <a href="tel:1098">1098 Child</a>
+            </p>
+            <Link href="/safety" className="s-textlink">
+              Get help →
+            </Link>
+          </li>
         </ul>
       </div>
     </section>
   );
 }
 
-// ------------------------------------------------------------------ beyond house help
-function BeyondHouseHelp() {
+// ------------------------------------------------------------------ FAQ
+const FAQ: { q: string; a: ReactNode }[] = [
+  { q: "Does Baaki contact the employer by itself?", a: "No. Baaki prepares the voice note and the letter. She hears it, checks it and presses Send herself, from her own phone." },
+  {
+    q: "Where do the amounts come from?",
+    a: "From plain rules, never guessed by an AI: Telangana’s minimum wage (G.O.Ms.No.6, 2026) and the Code on Wages, 2019. Every figure shows its source; part-time figures are marked as estimates.",
+  },
+  { q: "Which languages?", a: "She can speak Telugu, Hindi or a mix. The employer hears the note in their own language: Telugu, Hindi or Hinglish." },
+  { q: "Is it free? Does it need an app store?", a: "Free. It runs in the phone’s browser and can be added to the home screen like an app." },
+  { q: "Is this legal advice?", a: "No. Baaki shows the calculation and its source, then points to free legal aid or the labour department for the next step." },
+];
+
+export function Faq() {
   return (
-    <section className="s-section" aria-labelledby="beyond-title">
-      <div className="s-wrap">
-        <div className="s-beyond">
-          <div className="s-beyond-copy">
-            <p className="s-kicker">Beyond house help</p>
-            <h2 id="beyond-title" className="s-display s-h2">
-              Every rupee someone <em className="grad-text">promised her.</em>
-            </h2>
-            <p>
-              The same Baaki keeps track of the milkman’s unpaid bill, the chit money that’s “coming this week”, and the loan a
-              relative swore to return. Each promise is saved with the date and their words, and a polite reminder is ready when
-              it slips.
-            </p>
-            <Link href="/dues" className="btn btn-big s-beyond-cta">
-              <span>See who owes her</span>
-              <ArrowRightIcon />
-            </Link>
-          </div>
-          <ul className="s-beyond-list">
-            <li>
-              <span className="s-beyond-icon">
-                <RupeeIcon />
-              </span>
-              <span>
-                <b>Daily services</b>
-                <span>Milk, newspaper, tiffin: the bill she delivered for but wasn’t paid.</span>
-              </span>
-            </li>
-            <li>
-              <span className="s-beyond-icon">
-                <BellIcon />
-              </span>
-              <span>
-                <b>Chit and promised money</b>
-                <span>“Next week, pakka.” Baaki counts how many times that was said.</span>
-              </span>
-            </li>
-            <li>
-              <span className="s-beyond-icon">
-                <FileIcon />
-              </span>
-              <span>
-                <b>A record pack</b>
-                <span>Every promise and reminder in one file, for a union, legal aid or a family elder.</span>
-              </span>
-            </li>
-          </ul>
+    <section className="s-section" aria-labelledby="faq-title">
+      <div className="s-wrap s-faq">
+        <h2 id="faq-title" className="s-h2 s-faq-title">
+          Questions, <em>answered</em>
+        </h2>
+        <div className="s-faq-list">
+          {FAQ.map((f) => (
+            <details key={f.q} className="s-faq-item">
+              <summary>
+                <span>{f.q}</span>
+                <span className="s-faq-plus" aria-hidden="true" />
+              </summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -598,35 +635,30 @@ function BeyondHouseHelp() {
 }
 
 // ------------------------------------------------------------------ final CTA + footer
-export function FinalCta() {
+export function FinalCta({ art }: { art?: string[] }) {
   return (
-    <>
-      <BeyondHouseHelp />
-      <section className="s-section" aria-labelledby="cta-title">
-        <div className="s-wrap">
-          <div className="s-final">
-            <span className="haze" aria-hidden="true" />
-            <Illustration name="wave" animated className="s-final-art" />
-            <h2 id="cta-title" className="s-display s-h2">
-              Bolo. <em className="grad-text">Baaki sambhal lega.</em>
-            </h2>
-            <p className="s-final-en">Just speak. Baaki asks.</p>
-            <p className="s-vision">
-              Today, Lakshmi’s salary. Tomorrow, the milkman’s bill and the chit money that’s “coming this week” for two years.{" "}
-              <em>Same promise. Same Baaki.</em>
-            </p>
-            <div className="s-cta-row s-center-row">
-              <Link href="/app" className="btn btn-primary btn-big s-cta">
-                <MicIcon />
-                <span>Open the app</span>
-              </Link>
-              <InstallButton label="Install Baaki" variant="pill" />
-            </div>
-            <p>Free, and runs in the phone’s browser. Add it to the home screen like an app.</p>
+    <section className="s-section s-final-sec" aria-labelledby="cta-title">
+      <div className="s-wrap">
+        <div className="s-final">
+          {/* she speaks (left), she is paid (right): both rise from the card's bottom edge */}
+          <Art name="ill-speak" art={art} w={900} h={887} className="s-final-art s-final-art-l" />
+          <Art name="ill-celebrate" art={art} w={900} h={850} className="s-final-art s-final-art-r" />
+          <LogoMark size={56} />
+          <h2 id="cta-title" className="s-final-title">
+            Bolo. <em>Baaki sambhal lega.</em>
+          </h2>
+          <p className="s-final-en">Just speak. Baaki asks.</p>
+          <div className="s-hero-ctas">
+            <Link href="/app" className="s-pill s-pill-ink s-pill-lg">
+              <MicIcon />
+              <span>Open Baaki</span>
+            </Link>
+            <InstallCta label="Install on your phone" className="s-pill-lg" />
           </div>
+          <p className="s-final-fine">Free, and runs in the phone’s browser. Add it to the home screen like an app.</p>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
 
@@ -642,12 +674,19 @@ export function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer">
+          <p className="s-footer-h">Baaki</p>
           <Link href="/app">Open the app</Link>
-          <a href="#how">How it works</a>
+          <Link href="/#how">How it works</Link>
+          <Link href="/proof">Noise proof</Link>
+        </nav>
+        <nav aria-label="More">
+          <p className="s-footer-h">More</p>
+          <Link href={FAIR_CHECK_HREF}>Fair Pay Check</Link>
+          <Link href="/dues">Who owes her</Link>
           <Link href="/safety">Get help</Link>
         </nav>
         <div className="s-footer-help">
-          <p>In danger right now?</p>
+          <p className="s-footer-h">In danger right now?</p>
           <p>
             <a href="tel:112">112</a> · <a href="tel:181">181 Women</a> · <a href="tel:1098">1098 Child</a>
           </p>
@@ -656,6 +695,9 @@ export function SiteFooter() {
       <div className="s-wrap s-footer-base">
         <p>Made for the Gnani.ai Great Indian AI Internship Challenge, 2026. Baaki is not a lawyer and this is not legal advice.</p>
       </div>
+      <p className="s-footer-word" aria-hidden="true">
+        Baaki
+      </p>
     </footer>
   );
 }

@@ -29,7 +29,8 @@ function readTheme(): Theme {
 
 function readPalette(): Palette {
   if (typeof document === "undefined") return DEFAULT_PALETTE;
-  return document.documentElement.dataset.palette === "gnani" ? "gnani" : "warm";
+  const p = document.documentElement.dataset.palette;
+  return p === "gnani" || p === "warm" || p === "pale" ? p : DEFAULT_PALETTE;
 }
 
 function syncMetaColor() {

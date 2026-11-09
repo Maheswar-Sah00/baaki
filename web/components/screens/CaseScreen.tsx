@@ -1,17 +1,19 @@
 "use client";
 
-// Case (/case/[id]): balance, the Polite → Firm → Formal ladder (make, listen, PDF, share), payment
-// status and plan, employer replies, the legal-aid pack, and "Paisa aa gaya!" when a payment lands
-// (the case is polled every ~3 s). A case that is still a draft shows the Confirm flow instead.
+// Case (/case/[id]): balance, the case as a timeline (spoke → checked → letter → voice note → sent →
+// reply / paid), the Polite → Firm → Formal ladder (make, letter preview, voice note, PDF, send),
+// payment status and plan, employer replies, the legal-aid pack, and "Paisa aa gaya!" when a payment
+// lands (the case is polled every ~3 s). A case that is still a draft shows the Confirm flow instead.
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAudioPlayer, useCase, useMessages, useT, type StepView } from "@/hooks";
 import { copyText } from "@/lib/share";
 import { inr, itemLabel, shortDate } from "@/lib/format";
 import { mediaKeyUrl } from "@/lib/api";
-import type { StringKey } from "@/lib/i18n";
+import type { StringKey, UiLang } from "@/lib/i18n";
 import type { CaseStatus, LadderStep } from "@/lib/types";
-import { ArrowRightIcon, CheckIcon, FileIcon, ShareIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, CheckIcon, FileIcon, PlayIcon, ShareIcon } from "@/components/ui/icons";
 import {
   Confetti,
   ErrorNote,
@@ -20,15 +22,90 @@ import {
   Illustration,
   Loading,
   Money,
+  MoneyFigure,
   PlayButton,
   Screen,
   StatusPill,
+  avatarTone,
   type PillTone,
 } from "@/components/ui/primitives";
 import { ConfirmFlow } from "./ConfirmScreen";
 import { VerifyBadge } from "@/components/features/verify/VerifyBadge";
 import { ExitLink } from "@/components/features/exit/ExitLink";
 import { InboxEntryButton } from "@/components/features/inbox/InboxEntryButton";
+import { HisaabCaseCard } from "@/components/features/hisaab/HisaabWorker";
+
+// Case-screen labels (kept local so the shared i18n table stays untouched).
+type CaseLabels = {
+  title: string;
+  spoke: string;
+  confirmed: string;
+  letter: string;
+  voice: string;
+  sent: string;
+  reply: string;
+  claim: (employer: string, amount: string) => string;
+  claimCta: string;
+  copied: string;
+  sentYes: string;
+  replay: string;
+  replayHint: string;
+  notYetDue: string;
+  plan: Record<string, string>;
+};
+const JOURNEY: Record<UiLang, CaseLabels> = {
+  en: {
+    title: "Your case",
+    spoke: "You told Baaki",
+    confirmed: "You checked it",
+    letter: "Letter made",
+    voice: "Voice note ready",
+    sent: "Sent to employer",
+    reply: "Reply or payment",
+    claim: (e, a) => `${e} says ${a} was paid. Did it arrive?`,
+    claimCta: "Check it",
+    copied: "Copied. Did you send it on WhatsApp?",
+    sentYes: "Yes, I sent it",
+    replay: "Replay this case",
+    replayHint: "Every step with its date, and the voice notes",
+    notYetDue: "Not yet due",
+    plan: { paid: "Paid", settled: "Paid", planned: "Planned", cancelled: "Not needed" },
+  },
+  "hi-en": {
+    title: "Aapka case",
+    spoke: "Aapne Baaki ko bataya",
+    confirmed: "Aapne check kiya",
+    letter: "Chitthi bani",
+    voice: "Voice note taiyaar",
+    sent: "Malik ko bheja",
+    reply: "Jawab ya paisa",
+    claim: (e, a) => `${e} कहते हैं ${a} दे दिए। पैसे मिले?`,
+    claimCta: "देखिए",
+    copied: "Copy हो गया। WhatsApp पर भेजा?",
+    sentYes: "हाँ, भेज दिया",
+    replay: "Case दोबारा देखिए",
+    replayHint: "हर कदम, तारीख और voice notes के साथ",
+    notYetDue: "अभी due नहीं",
+    plan: { paid: "दे दिया", settled: "दे दिया", planned: "तय", cancelled: "ज़रूरत नहीं" },
+  },
+  te: {
+    title: "మీ కేసు",
+    spoke: "మీరు బాకీకి చెప్పారు",
+    confirmed: "మీరు సరిచూశారు",
+    letter: "ఉత్తరం తయారైంది",
+    voice: "వాయిస్ నోట్ సిద్ధం",
+    sent: "యజమానికి పంపారు",
+    reply: "జవాబు లేదా డబ్బు",
+    claim: (e, a) => `${a} ఇచ్చామని ${e} చెప్పారు. డబ్బులు అందాయా?`,
+    claimCta: "చూడండి",
+    copied: "కాపీ అయింది. WhatsAppలో పంపారా?",
+    sentYes: "అవును, పంపాను",
+    replay: "ఈ కేసును మళ్ళీ చూడండి",
+    replayHint: "ప్రతి అడుగు, తేదీ, వాయిస్ నోట్లతో",
+    notYetDue: "ఇంకా గడువు రాలేదు",
+    plan: { paid: "చెల్లించారు", settled: "చెల్లించారు", planned: "ప్లాన్", cancelled: "అవసరం లేదు" },
+  },
+};
 
 const STATUS_TONE: Partial<Record<CaseStatus, PillTone>> = {
   draft: "accent",
@@ -84,12 +161,25 @@ export function CaseScreen({ caseId }: { caseId: number }) {
   const statusTone = STATUS_TONE[status];
   const paidShare = c.total_due > 0 ? Math.min(1, Math.max(0, c.amount_paid / c.total_due)) : 0;
 
+  // The case as a timeline: what has happened so far, and what is next.
+  const J = JOURNEY[lang];
+  const views = msgs.steps.map((s) => msgs.views[s]).filter((v): v is StepView => !!v);
+  const sentView = views.find((v) => msgs.isSent(v)) ?? null;
+  const journey = [
+    { k: "spoke", label: J.spoke, done: true, when: shortDate(c.created_at, lang) },
+    { k: "confirmed", label: J.confirmed, done: true, when: shortDate(c.confirmed_at, lang) },
+    { k: "letter", label: J.letter, done: views.length > 0, when: views[0] ? shortDate(views[0].createdAt, lang) : "" },
+    { k: "voice", label: J.voice, done: views.some((v) => !!v.audioUrl), when: "" },
+    { k: "sent", label: J.sent, done: !!sentView, when: sentView ? shortDate(sentView.sentAt, lang) : "" },
+    { k: "reply", label: kase.isPaid ? t("state.paid") : J.reply, done: kase.isPaid || kase.replies.length > 0, when: "" },
+  ];
+  const nextIdx = journey.findIndex((j) => !j.done);
+
   return (
     <Screen title={name} back="/app" t={t} className="case-screen">
       <section className="case-hero total-box" data-paid={kase.isPaid} aria-label={t("case.balance")}>
-        <span className="haze" aria-hidden="true" />
         <div className="case-hero-top">
-          <span className="case-avatar" aria-hidden="true">
+          <span className="case-avatar" data-tone={avatarTone(name)} aria-hidden="true">
             {name.slice(0, 1).toUpperCase()}
           </span>
           <div className="case-hero-who">
@@ -100,7 +190,9 @@ export function CaseScreen({ caseId }: { caseId: number }) {
         </div>
         <div className="case-hero-amount">
           <p className="total-label">{t("case.balance")}</p>
-          <p className="total-value">{inr(c.balance)}</p>
+          <p className="total-value">
+            <MoneyFigure value={c.balance} size="xl" />
+          </p>
         </div>
         {c.amount_paid > 0 ? (
           <div className="case-progress">
@@ -113,6 +205,39 @@ export function CaseScreen({ caseId }: { caseId: number }) {
           </div>
         ) : null}
         {c.employer?.fair_employer ? <span className="badge badge-fair">{t("home.fair")}</span> : null}
+      </section>
+
+      {/* The employer tapped "I've paid": a claim until she says the money arrived (Hisaab flow). */}
+      {(c.pending_claims?.count ?? 0) > 0 ? (
+        <Link href={`/hisaab/${c.id}`} className="claim-card" aria-live="polite">
+          <span className="claim-card-icon" aria-hidden="true">
+            <span className="claim-card-dot" />
+          </span>
+          <span className="claim-card-text">{J.claim(name, inr(c.pending_claims?.amount ?? 0))}</span>
+          <span className="claim-card-cta">
+            {J.claimCta} <ArrowRightIcon />
+          </span>
+        </Link>
+      ) : null}
+
+      <section className="card journey" aria-label={J.title}>
+        <div className="journey-head">
+          <h2 className="card-title">{J.title}</h2>
+          <span className="journey-count">
+            {journey.filter((j) => j.done).length}/{journey.length}
+          </span>
+        </div>
+        <ol className="journey-list">
+          {journey.map((j, i) => (
+            <li key={j.k} className="journey-step" data-done={j.done} aria-current={i === nextIdx ? "step" : undefined}>
+              <span className="journey-node" aria-hidden="true">
+                {j.done ? <CheckIcon /> : null}
+              </span>
+              <span className="journey-label">{j.label}</span>
+              {j.when ? <span className="journey-when">{j.when}</span> : null}
+            </li>
+          ))}
+        </ol>
       </section>
 
       {!due && !kase.isPaid ? <p className="muted">{t("case.nothing_due")}</p> : null}
@@ -135,6 +260,8 @@ export function CaseScreen({ caseId }: { caseId: number }) {
                 player={player}
                 onMake={(regenerate) => void msgs.generate(step, { regenerate })}
                 onShare={() => void msgs.share(step)}
+                onConfirmSent={() => void msgs.confirmSent(step)}
+                labels={J}
               />
             ))}
           </ol>
@@ -142,6 +269,9 @@ export function CaseScreen({ caseId }: { caseId: number }) {
       ) : null}
 
       <InboxEntryButton caseId={c.id} />
+
+      {/* Hisaab proposals (renders nothing until one exists); a pending payment claim has its own card above */}
+      {(c.pending_claims?.count ?? 0) > 0 ? null : <HisaabCaseCard caseId={c.id} />}
 
       {kase.plan.length ? (
         <section className="card case-plan" aria-label={t("case.plan")}>
@@ -158,7 +288,7 @@ export function CaseScreen({ caseId }: { caseId: number }) {
                   </span>
                   <span className="meta">{shortDate(p.due_date, lang)}</span>
                 </span>
-                <StatusPill tone={p.status === "paid" ? "success" : "neutral"}>{p.status}</StatusPill>
+                <StatusPill tone={p.status === "paid" || p.status === "settled" ? "success" : "neutral"}>{J.plan[p.status] ?? p.status}</StatusPill>
               </li>
             ))}
           </ol>
@@ -202,6 +332,7 @@ export function CaseScreen({ caseId }: { caseId: number }) {
               <div className="item-row">
                 <span className="item-label" title={it.label}>
                   {itemLabel(t, it, lang)} {it.is_estimate ? <EstimateTag t={t} /> : null}
+                  {it.kind === "not_yet_due" ? <span className="tag">{J.notYetDue}</span> : null}
                 </span>
                 <Money value={it.amount} />
               </div>
@@ -241,6 +372,17 @@ export function CaseScreen({ caseId }: { caseId: number }) {
         </a>
       ) : null}
 
+      <Link href={`/story/${c.id}`} className="card legal-pack case-replay">
+        <span className="legal-pack-icon" aria-hidden="true">
+          <PlayIcon />
+        </span>
+        <span className="legal-pack-text">
+          <strong>{J.replay}</strong>
+          <span className="hint">{J.replayHint}</span>
+        </span>
+        <ArrowRightIcon className="legal-pack-arrow" />
+      </Link>
+
       <ExitLink employerId={c.employer?.id} caseId={c.id} />
 
       <p className="footnote">{t("common.not_legal_advice")}</p>
@@ -250,7 +392,9 @@ export function CaseScreen({ caseId }: { caseId: number }) {
           <span className="celebrate-rays" aria-hidden="true" />
           <Confetti />
           <div className="celebrate-card">
-            <Illustration name="celebrate" animated />
+            <span className="celebrate-art" data-bleed="bottom">
+              <Illustration name="celebrate" />
+            </span>
             <p id="paisa-title" className="celebrate-title">
               {t("paisa.title")}
             </p>
@@ -285,11 +429,13 @@ function StepCard({
   player,
   onMake,
   onShare,
+  onConfirmSent,
+  labels,
 }: {
   index: number;
   step: LadderStep;
   view: StepView | null;
-  state: { generating: boolean; error: string | null; sharing: boolean; shareResult: string | null };
+  state: { generating: boolean; error: string | null; sharing: boolean; shareResult: string | null; awaitingSentConfirm?: boolean };
   recommended: boolean;
   sent: boolean;
   t: ReturnType<typeof useT>["t"];
@@ -297,6 +443,8 @@ function StepCard({
   player: ReturnType<typeof useAudioPlayer>;
   onMake: (regenerate: boolean) => void;
   onShare: () => void;
+  onConfirmSent: () => void;
+  labels: CaseLabels;
 }) {
   const status = sent ? "sent" : view ? "ready" : recommended ? "next" : "later";
   return (
@@ -322,7 +470,7 @@ function StepCard({
 
         {view && !state.generating ? (
           <div className="stack step-content">
-            <div className="message-text">
+            <div className="message-text letter-preview">
               <p className="field-label">{t("case.employer_text")}</p>
               <p lang={view.language}>{view.text}</p>
             </div>
@@ -360,7 +508,16 @@ function StepCard({
                 {t("case.share")}
               </GradientButton>
             )}
-            {state.shareResult === "copied" ? <p className="meta">{t("common.copied")}</p> : null}
+            {state.awaitingSentConfirm ? (
+              <div className="sent-confirm" role="status">
+                <p>{labels.copied}</p>
+                <button type="button" className="btn btn-small" onClick={onConfirmSent}>
+                  <CheckIcon /> {labels.sentYes}
+                </button>
+              </div>
+            ) : state.shareResult === "copied" ? (
+              <p className="meta">{t("common.copied")}</p>
+            ) : null}
             <button type="button" className="btn btn-small btn-ghost step-remake" onClick={() => onMake(true)}>
               {t("case.remake")}
             </button>
@@ -368,7 +525,7 @@ function StepCard({
         ) : null}
 
         {!view && !state.generating ? (
-          <button type="button" className={`btn btn-big ${recommended ? "btn-primary" : ""}`} onClick={() => onMake(false)}>
+          <button type="button" className={`btn btn-big step-make ${recommended ? "btn-primary" : ""}`} onClick={() => onMake(false)}>
             {t("case.make")}
           </button>
         ) : null}

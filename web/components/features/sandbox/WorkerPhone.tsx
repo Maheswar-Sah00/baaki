@@ -1,20 +1,24 @@
 "use client";
 
-// "Lakshmi's phone": polls the sandbox; when Sharma ji pays it shows "Paisa aa gaya!" and plays the
-// cached clip (if the browser blocks autoplay, the player stays visible to tap).
+// "Lakshmi's phone": polls the sandbox. While waiting it shows what is still due and whether Sharma ji has played
+// the voice note; when he pays it shows "Paisa aa gaya!" and plays the cached clip (a blocked autoplay leaves the
+// play button ready to tap).
 
 import { useEffect, useRef, useState } from "react";
-
 import { SandboxError, getWorkerPanel, type SandboxWorker } from "@/lib/features/sandbox";
-
-import { Banner, box } from "./Banner";
+import { useAudioPlayer } from "@/hooks";
+import { Confetti, PlayButton } from "@/components/ui/primitives";
+import { CheckIcon, ClockIcon } from "@/components/ui/icons";
+import { Banner } from "./Banner";
+import css from "./sandbox.module.css";
 
 const POLL_MS = 2500;
 
 export function WorkerPhone({ sid }: { sid: string }) {
   const [data, setData] = useState<SandboxWorker | null>(null);
   const [gone, setGone] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const player = useAudioPlayer();
+  const play = player.play;
   const playedFor = useRef<string | null>(null);
 
   useEffect(() => {
@@ -43,47 +47,82 @@ export function WorkerPhone({ sid }: { sid: string }) {
 
   const clip = data?.alert?.audio_url ?? null;
   useEffect(() => {
-    if (!clip || playedFor.current === clip || !audioRef.current) return;
+    if (!clip || playedFor.current === clip) return;
     playedFor.current = clip;
-    audioRef.current.play().catch(() => undefined);
-  }, [clip]);
+    void play(clip);
+  }, [clip, play]);
 
+  const employer = data?.employer.name ?? "Sharma ji";
   return (
-    <section style={box} aria-label="Lakshmi's phone" aria-live="polite">
-      <h2 style={{ fontSize: 18, margin: "0 0 8px" }}>Lakshmi&apos;s phone</h2>
-      <Banner />
-      {gone && <p role="alert">{gone}</p>}
-      {!gone && !data && <p>Connecting…</p>}
-      {data && !data.alert && (
+    <div className={css.app} aria-label="Lakshmi's phone" aria-live="polite">
+      <div className={css.appHead}>
+        <span className={css.appTitle}>
+          <span className={css.live} aria-hidden="true" /> Baaki · బాకీ
+        </span>
+        <Banner compact />
+      </div>
+
+      {gone ? (
+        <p role="alert" className={css.error}>
+          {gone}
+        </p>
+      ) : null}
+      {!gone && !data ? <p className={css.small}>Connecting…</p> : null}
+
+      {data && !data.alert ? (
         <>
-          <p style={{ fontSize: 15 }}>
-            Waiting for {data.employer.name}… Baaki still due: <strong>{data.balance_display}</strong>
-          </p>
-          <p style={{ fontSize: 13, color: "var(--muted)" }}>
-            {data.played ? `${data.employer.name} played your voice note.` : "Voice note sent. Not played yet."}
-          </p>
+          <section className={css.due}>
+            <p className={css.dueLabel}>Baaki still due</p>
+            <p className={css.dueValue}>{data.balance_display}</p>
+            <p className={css.small}>Waiting for {employer}…</p>
+          </section>
+          <ol className={css.steps}>
+            <li data-done="true">
+              <span aria-hidden="true">
+                <CheckIcon />
+              </span>
+              Voice note sent
+            </li>
+            <li data-done={data.played}>
+              <span aria-hidden="true">{data.played ? <CheckIcon /> : <ClockIcon />}</span>
+              {data.played ? `${employer} played your voice note.` : "Not played yet."}
+            </li>
+            <li data-done="false">
+              <span aria-hidden="true">
+                <ClockIcon />
+              </span>
+              Payment
+            </li>
+          </ol>
         </>
-      )}
-      {data?.alert && (
-        <div style={{ background: "var(--success-soft)", borderRadius: "var(--r-md, 12px)", padding: 16, marginTop: 8 }}>
-          <p style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "var(--success-ink)" }}>{data.alert.headline}</p>
-          <p style={{ margin: "4px 0 8px", color: "var(--text-2)" }}>{data.alert.headline_en}</p>
-          <p lang="te" style={{ fontSize: 17, margin: "0 0 8px" }}>
+      ) : null}
+
+      {data?.alert ? (
+        <section className={css.win} data-wash="sage">
+          <Confetti pieces={18} />
+          <span className={css.winCheck} aria-hidden="true">
+            <CheckIcon />
+          </span>
+          <p className={css.winTitle}>{data.alert.headline}</p>
+          <p className={css.winSub}>{data.alert.headline_en}</p>
+          <p className={css.winText} lang="te">
             {data.alert.text}
           </p>
           {data.alert.audio_url ? (
-            <>
-              <audio ref={audioRef} controls preload="auto" src={data.alert.audio_url} style={{ width: "100%" }} />
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{data.alert.audio_label}</p>
-            </>
-          ) : (
-            <p style={{ fontSize: 13, color: "var(--muted)" }}>{data.alert.audio_label}</p>
-          )}
-          <p style={{ fontSize: 15, margin: "8px 0 0" }}>
-            Baaki still due: <strong>{data.balance_display}</strong>
+            <PlayButton
+              state={player.state}
+              active={player.isCurrent(data.alert.audio_url)}
+              progress={player.progress}
+              onClick={() => void player.toggle(data.alert!.audio_url)}
+              label={player.state === "blocked" ? "Tap to play" : "Listen"}
+            />
+          ) : null}
+          <p className={css.small}>{data.alert.audio_label}</p>
+          <p className={css.winDue}>
+            Baaki still due: <b>{data.balance_display}</b>
           </p>
-        </div>
-      )}
-    </section>
+        </section>
+      ) : null}
+    </div>
   );
 }

@@ -1,0 +1,131 @@
+/* Offline page (app/offline/page.tsx). Pale paper in light, pure black in dark; tokens only. */
+
+.ofl {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px var(--space, 16px);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+.ofl-card {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: ofl-rise var(--dur-4, 560ms) var(--ease-out) both;
+}
+.ofl-mark {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  margin-bottom: 28px;
+}
+/* three bars, the last one faded: "no signal", quietly */
+.ofl-signal {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 7px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.ofl-signal i {
+  display: block;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--text);
+}
+.ofl-signal i:nth-child(1) { height: 6px; }
+.ofl-signal i:nth-child(2) { height: 10px; opacity: 0.35; }
+.ofl-signal i:nth-child(3) { height: 14px; opacity: 0.15; }
+
+.ofl-kicker {
+  margin: 0 0 12px;
+  font: 600 0.75rem/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ofl-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 10vw, 3.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+.ofl-title em {
+  display: block;
+  font-family: var(--font-serif), var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  font-size: 1.08em;
+}
+.ofl-sub {
+  margin: 18px 0 0;
+  max-width: 34ch;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.ofl-langs {
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.ofl-btn {
+  margin-top: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap, 56px);
+  min-width: 200px;
+  padding: 0 32px;
+  border-radius: var(--r-pill, 999px);
+  background: var(--ink-pill);
+  color: var(--on-ink-pill);
+  font-weight: 600;
+  font-size: 1.02rem;
+  text-decoration: none;
+  transition: transform var(--dur-1, 120ms) var(--ease-std), opacity var(--dur-2, 200ms) var(--ease-std);
+}
+.ofl-btn:hover { opacity: 0.88; }
+.ofl-btn:active { transform: scale(0.97); }
+.ofl-help {
+  margin: 22px 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.ofl-help a {
+  color: var(--text);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+@keyframes ofl-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ofl-card { animation: none; }
+}

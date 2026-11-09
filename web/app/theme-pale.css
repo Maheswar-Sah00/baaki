@@ -1,0 +1,232 @@
+/*
+ * PALE palette: the DEFAULT since 10 Nov 2026 (data-palette="pale").
+ *
+ * Look: Vyra / Wispr Flow. Warm paper white, pale sky / lilac / peach / butter / sage washes,
+ * ink-black pill buttons, hairline borders, NO glow. Dark = pure black (#000), near-black
+ * surfaces, white pill buttons, greys only.
+ * Type: Cabinet Grotesk display (--font-display) + Inter body (--font-sans) + Instrument Serif
+ * italic accents (--font-accent).
+ *
+ * --grad / --grad-diag / --grad-text are SOLID (ink in light, white in dark), so every legacy
+ * "gradient" button or number becomes a flat premium pill / ink figure. --glow / --glow-2 /
+ * --haze-* are transparent so legacy glows vanish.
+ *
+ * Loaded after theme.css in app/layout.tsx. Every token here must exist in both blocks.
+ */
+
+:root[data-palette="pale"] {
+  color-scheme: light;
+  --bg: #fbfaf7;
+  --bg-2: #f4f2ed;
+  --surface: #ffffff;
+  --surface-2: #f6f4ef;
+  --raised: var(--surface-2);
+  --glass: rgb(251 250 247 / 0.78);
+  --line: #ebe8e1;
+  --line-2: #dcd8cf;
+  --text: #0e0e0c;
+  --text-2: #3f3d39;
+  --muted: #6b6862;
+  --faint: #a8a49b;
+
+  /* pale washes: feature tiles, chips, status, illustrations. Each has a readable ink. */
+  --pale-sky: #e3ecf8;
+  --pale-lilac: #ece6f8;
+  --pale-peach: #fbeadf;
+  --pale-butter: #f8f0d6;
+  --pale-sage: #e3ede0;
+  --pale-rose: #f8e4e8;
+  --pale-sky-ink: #2f4f86;
+  --pale-lilac-ink: #4f3f8c;
+  --pale-peach-ink: #8a4b22;
+  --pale-butter-ink: #6f5a12;
+  --pale-sage-ink: #2f5a33;
+  --pale-rose-ink: #8a3346;
+
+  --accent: #5b7fd6;
+  --accent-text: #3d5fb5;
+  --accent-2: #8f80dc;
+  --accent-3: #e9a27a;
+  --accent-ink: #0e0e0c;
+  --accent-soft: rgb(91 127 214 / 0.1);
+  --accent-line: rgb(91 127 214 / 0.32);
+
+  --grad: linear-gradient(#0e0e0c, #0e0e0c);
+  --grad-diag: linear-gradient(#0e0e0c, #0e0e0c);
+  --grad-text: linear-gradient(#0e0e0c, #0e0e0c);
+  --grad-soft: linear-gradient(135deg, #e8eff9 0%, #efeaf9 55%, #fbede4 100%);
+  --on-grad: #ffffff;
+  --cta-soft: #6f93dc; /* soft cornflower secondary CTA (like Vyra's "Get started on web") */
+  --on-cta-soft: #ffffff;
+  --ink-pill: #0e0e0c;
+  --on-ink-pill: #ffffff;
+
+  --haze-1: transparent;
+  --haze-2: transparent;
+  --haze-3: transparent;
+  --hero-bg: url("/sky.webp") center top / cover no-repeat, linear-gradient(#bcd1ec, #dfe6f1 55%, #fbfaf7);
+  --glow: transparent;
+  --glow-2: transparent;
+
+  --success: #2e7a46;
+  --success-ink: #ffffff;
+  --success-soft: #e3ede0;
+  --warn: #8a5a00;
+  --warn-soft: #f8f0d6;
+  --error: #b73a2e;
+  --error-soft: #f8e4e0;
+  --recording: #d9452f;
+  --estimate: #8a5a22;
+  --overlay: rgb(14 14 12 / 0.38);
+
+  --shadow-1: 0 1px 2px rgb(20 20 16 / 0.04), 0 1px 1px rgb(20 20 16 / 0.03);
+  --shadow-2: 0 2px 6px rgb(20 20 16 / 0.04), 0 12px 32px -10px rgb(20 20 16 / 0.12);
+  --shadow-3: 0 10px 24px rgb(20 20 16 / 0.08), 0 40px 80px -20px rgb(20 20 16 / 0.22);
+  --ring: 0 0 0 3px rgb(91 127 214 / 0.28);
+
+  --ill-blob: #e8eff9;
+  --ill-blob-2: #fbede4;
+  --ill-skin: #b8724a;
+  --ill-skin-2: #94552f;
+  --ill-hair: #1a1714;
+  --ill-cloth: #8f80dc;
+  --ill-cloth-2: #e9a27a;
+  --ill-line: #1a1714;
+  --ill-paper: #ffffff;
+  --ill-paper-2: #f6f4ef;
+  --ill-coin: #e9c15a;
+  --ill-coin-2: #b8902a;
+  --ill-leaf: #6f9a62;
+  --ill-roof: #e9a27a;
+  --ill-window: #e3ecf8;
+  --ill-phone: #0e0e0c;
+  --ill-screen: #f6f4ef;
+  --ill-shadow: rgb(20 20 16 / 0.08);
+
+  --phone-body: #0e0e0c;
+  --phone-edge: #2a2926;
+  --map-bg: #f4f2ed;
+  --map-road: #e7e3da;
+  --map-dot: rgb(20 20 16 / 0.12);
+
+  --confetti-1: #a9c3ea;
+  --confetti-2: #c9bdf0;
+  --confetti-3: #f3c4a6;
+  --confetti-4: #b9d6b0;
+  --meta-bg: #fbfaf7;
+}
+
+:root[data-palette="pale"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg-2: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #121212;
+  --raised: var(--surface-2);
+  --glass: rgb(0 0 0 / 0.74);
+  --line: #1c1c1c;
+  --line-2: #2a2a2a;
+  --text: #f5f5f3;
+  --text-2: #cfcfca;
+  --muted: #9a9993;
+  --faint: #5d5c58;
+
+  --pale-sky: #0e1116;
+  --pale-lilac: #110f16;
+  --pale-peach: #15100d;
+  --pale-butter: #14120b;
+  --pale-sage: #0e130e;
+  --pale-rose: #150f11;
+  --pale-sky-ink: #b9cdf0;
+  --pale-lilac-ink: #cfc5f2;
+  --pale-peach-ink: #f0c6a8;
+  --pale-butter-ink: #ead9a0;
+  --pale-sage-ink: #bcd9b6;
+  --pale-rose-ink: #f0bcc6;
+
+  --accent: #9fb6ee;
+  --accent-text: #b4c6f2;
+  --accent-2: #bdb2ef;
+  --accent-3: #f0b896;
+  --accent-ink: #000000;
+  --accent-soft: rgb(159 182 238 / 0.1);
+  --accent-line: rgb(159 182 238 / 0.3);
+
+  --grad: linear-gradient(#f5f5f3, #f5f5f3);
+  --grad-diag: linear-gradient(#f5f5f3, #f5f5f3);
+  --grad-text: linear-gradient(#f5f5f3, #f5f5f3);
+  --grad-soft: linear-gradient(135deg, #0c0e11 0%, #0f0d12 55%, #120e0c 100%);
+  --on-grad: #000000;
+  --cta-soft: #f5f5f3;
+  --on-cta-soft: #000000;
+  --ink-pill: #f5f5f3;
+  --on-ink-pill: #000000;
+
+  --haze-1: transparent;
+  --haze-2: transparent;
+  --haze-3: transparent;
+  --hero-bg: #000000;
+  --glow: transparent;
+  --glow-2: transparent;
+
+  --success: #8fd19e;
+  --success-ink: #04120a;
+  --success-soft: #0e130e;
+  --warn: #e9c46a;
+  --warn-soft: #14120b;
+  --error: #ff8a7a;
+  --error-soft: #1a0f0d;
+  --recording: #ff6a4d;
+  --estimate: #e6b47e;
+  --overlay: rgb(0 0 0 / 0.72);
+
+  --shadow-1: 0 0 0 1px rgb(255 255 255 / 0.02);
+  --shadow-2: 0 0 0 1px rgb(255 255 255 / 0.03), 0 16px 40px rgb(0 0 0 / 0.6);
+  --shadow-3: 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 100px rgb(0 0 0 / 0.8);
+  --ring: 0 0 0 3px rgb(159 182 238 / 0.32);
+
+  --ill-blob: #111111;
+  --ill-blob-2: #151210;
+  --ill-skin: #c98458;
+  --ill-skin-2: #a86638;
+  --ill-hair: #050505;
+  --ill-cloth: #bdb2ef;
+  --ill-cloth-2: #f0b896;
+  --ill-line: #000000;
+  --ill-paper: #1c1c1c;
+  --ill-paper-2: #141414;
+  --ill-coin: #e9c15a;
+  --ill-coin-2: #b8902a;
+  --ill-leaf: #8fbf80;
+  --ill-roof: #f0b896;
+  --ill-window: #9fb6ee;
+  --ill-phone: #000000;
+  --ill-screen: #121212;
+  --ill-shadow: rgb(0 0 0 / 0.5);
+
+  --phone-body: #000000;
+  --phone-edge: #2a2a2a;
+  --map-bg: #0a0a0a;
+  --map-road: #161616;
+  --map-dot: rgb(255 255 255 / 0.08);
+
+  --confetti-1: #9fb6ee;
+  --confetti-2: #bdb2ef;
+  --confetti-3: #f0b896;
+  --confetti-4: #8fd19e;
+  --meta-bg: #000000;
+}
+
+/* ------------------------------------------------------------------ AssetSlot (components/ui/AssetSlot.tsx) */
+.asset-slot { position: relative; overflow: hidden; width: 100%; background: var(--surface-2); }
+.asset-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.asset-slot-dark { display: none !important; }
+:root[data-theme="dark"] .asset-slot-light { display: none !important; }
+:root[data-theme="dark"] .asset-slot-dark { display: block !important; }
+.asset-slot-ph { position: absolute; inset: 0; display: grid; place-items: end start; padding: 14px; background: var(--pale-sky); }
+.asset-slot[data-tone="lilac"] .asset-slot-ph { background: var(--pale-lilac); }
+.asset-slot[data-tone="peach"] .asset-slot-ph { background: var(--pale-peach); }
+.asset-slot[data-tone="butter"] .asset-slot-ph { background: var(--pale-butter); }
+.asset-slot[data-tone="sage"] .asset-slot-ph { background: var(--pale-sage); }
+.asset-slot[data-tone="rose"] .asset-slot-ph { background: var(--pale-rose); }
+.asset-slot-ph span { font: 500 11px/1.2 var(--font-mono); letter-spacing: 0.02em; color: var(--muted); opacity: 0.7; }

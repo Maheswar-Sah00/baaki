@@ -1,8 +1,15 @@
-// Generates the PWA icons in public/icons from the Baaki mark (below) with sharp.
+// Generates the PWA icons in public/icons from the Baaki mark with sharp.
 //   node scripts/make-icons.mjs
-// The mark: a speech bubble holding the బాకీ wordmark, on the brand gradient, with a rupee coin
-// and three voice bars. Telugu text is shaped by librsvg with "Nirmala UI" (Windows) or
-// "Noto Sans Telugu"; the PNGs are committed, so other machines never need to run this.
+// The mark (10 Nov 2026): a speech bubble drawn as a "b" (round stem and bowl, tail at the bottom
+// right, a coin-round counter). Flat and single colour, the same path as components/ui/Logo.tsx.
+// Colours are the `pale` palette (app/theme-pale.css): ink #0e0e0c, paper #fbfaf7.
+//
+//   icon-192/512.png        paper mark on an ink squircle (reads on any launcher or wallpaper)
+//   maskable-192/512.png    full-bleed ink square, mark well inside the 80% safe circle
+//   apple-touch-icon.png    full-bleed ink square (iOS rounds the corners itself)
+//   favicon.svg             the bare mark, ink in light / white in dark (prefers-color-scheme)
+//   logo.svg                the ink app tile as a vector (press kits, decks)
+//   mark.svg                the bare ink mark on transparent
 import sharp from "sharp";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -11,53 +18,53 @@ import { fileURLToPath } from "node:url";
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public", "icons");
 mkdirSync(OUT, { recursive: true });
 
-const PALETTES = {
-  warm: { a: "#f7a531", b: "#f47a3a", c: "#e2457a", ink: "#2a1206", paper: "#fffaf5", coin: "#2a1206", coinInk: "#ffc04d" },
-  gnani: { a: "#fe914b", b: "#cf82a6", c: "#9f73f4", ink: "#101828", paper: "#ffffff", coin: "#101828", coinInk: "#fea76f" },
-};
-const P = PALETTES[process.env.PALETTE === "warm" ? "warm" : "gnani"]; // default: gnani (DEFAULT_PALETTE)
+const INK = "#0e0e0c";
+const PAPER = "#fbfaf7";
+const WHITE = "#f5f5f3"; // dark-theme --text
 
-/** Content drawn on a 512 canvas; `scale` shrinks it about the centre (maskable safe zone). */
-function mark({ scale = 1, rounded = true, text = true } = {}) {
-  const t = `translate(256 256) scale(${scale}) translate(-256 -256)`;
+// Keep in sync with MARK_PATH / MARK_VIEWBOX in components/ui/Logo.tsx.
+const MARK_PATH =
+  "M80 120a64 64 0 0 1 128 0V170a160 160 0 0 1 248 134V480L400 432H144a64 64 0 0 1-64-64Z M296 246a58 58 0 1 0 0.01 0Z";
+const MARK_BOX = { x: 56, y: 56, size: 424 }; // tight square around the mark
+
+/** The mark scaled so its box is `frac` of a 512 canvas, centred. */
+function placed(frac, fill) {
+  const s = (512 * frac) / MARK_BOX.size;
+  const off = (512 - MARK_BOX.size * s) / 2;
+  const tx = off - MARK_BOX.x * s;
+  const ty = off - MARK_BOX.y * s;
+  return `<path fill="${fill}" transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})" d="${MARK_PATH}"/>`;
+}
+
+function tile({ rounded, frac }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${P.a}"/><stop offset="0.5" stop-color="${P.b}"/><stop offset="1" stop-color="${P.c}"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.25" cy="0.15" r="0.75">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="512" height="512" ${rounded ? 'rx="116"' : ""} fill="url(#g)"/>
-  <rect width="512" height="512" ${rounded ? 'rx="116"' : ""} fill="url(#glow)"/>
-  <g transform="${t}">
-    <path fill="${P.paper}" d="M150 112h212a76 76 0 0 1 76 76v108a76 76 0 0 1-76 76H218l-76 58 14-58h-6a76 76 0 0 1-76-76V188a76 76 0 0 1 76-76z"/>
-    ${
-      text
-        ? `<text x="258" y="292" font-family="Nirmala UI, Noto Sans Telugu, sans-serif" font-weight="700" font-size="128" text-anchor="middle" fill="${P.ink}" letter-spacing="-4">బాకీ</text>`
-        : `<g fill="url(#g)"><rect x="168" y="214" width="26" height="72" rx="13"/><rect x="214" y="180" width="26" height="140" rx="13"/><rect x="260" y="200" width="26" height="100" rx="13"/><rect x="306" y="226" width="26" height="48" rx="13"/></g>`
-    }
-    <circle cx="398" cy="128" r="62" fill="${P.coin}"/>
-    <circle cx="398" cy="128" r="62" fill="none" stroke="${P.paper}" stroke-width="10"/>
-    <path fill="none" stroke="${P.coinInk}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" d="M374 102h48M374 122h48M384 102c26 0 26 40 0 40h-10l34 30"/>
-    ${text ? `<g fill="${P.c}" opacity="0.9"><rect x="196" y="322" width="14" height="22" rx="7"/><rect x="220" y="316" width="14" height="34" rx="7"/><rect x="244" y="324" width="14" height="18" rx="7"/></g>` : ""}
-  </g>
+  <rect width="512" height="512" ${rounded ? 'rx="114"' : ""} fill="${INK}"/>
+  ${placed(frac, PAPER)}
 </svg>`;
 }
 
 const jobs = [
-  ["icon-192.png", 192, mark()],
-  ["icon-512.png", 512, mark()],
-  ["apple-touch-icon.png", 180, mark({ rounded: false })],
-  ["maskable-192.png", 192, mark({ scale: 0.78, rounded: false })],
-  ["maskable-512.png", 512, mark({ scale: 0.78, rounded: false })],
+  ["icon-192.png", 192, tile({ rounded: true, frac: 0.56 })],
+  ["icon-512.png", 512, tile({ rounded: true, frac: 0.56 })],
+  ["apple-touch-icon.png", 180, tile({ rounded: false, frac: 0.56 })],
+  // maskable: launchers crop to (at least) a centred circle of 80% diameter; a 50% mark box sits inside it
+  ["maskable-192.png", 192, tile({ rounded: false, frac: 0.5 })],
+  ["maskable-512.png", 512, tile({ rounded: false, frac: 0.5 })],
 ];
 for (const [name, size, svg] of jobs) {
-  await sharp(Buffer.from(svg)).resize(size, size).png().toFile(path.join(OUT, name));
+  await sharp(Buffer.from(svg)).resize(size, size).png({ compressionLevel: 9 }).toFile(path.join(OUT, name));
   console.log("wrote", name);
 }
-// Source SVGs: logo.svg (with the wordmark) and favicon.svg (text-free, so it renders anywhere).
-writeFileSync(path.join(OUT, "logo.svg"), mark());
-writeFileSync(path.join(OUT, "favicon.svg"), mark({ text: false }));
-console.log("wrote logo.svg, favicon.svg");
+
+const box = `${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.size} ${MARK_BOX.size}`;
+const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box}">
+  <style>path{fill:${INK}}@media (prefers-color-scheme:dark){path{fill:${WHITE}}}</style>
+  <path d="${MARK_PATH}"/>
+</svg>
+`;
+const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box}"><path fill="${INK}" d="${MARK_PATH}"/></svg>
+`;
+writeFileSync(path.join(OUT, "favicon.svg"), favicon);
+writeFileSync(path.join(OUT, "mark.svg"), markSvg);
+writeFileSync(path.join(OUT, "logo.svg"), tile({ rounded: true, frac: 0.56 }) + "\n");
+console.log("wrote favicon.svg, mark.svg, logo.svg");

@@ -1,41 +1,34 @@
 "use client";
 
-// Karaoke-style consent sentence: words turn green (heard) or grey (missed) after the check.
-// `cursor` underlines the word being read (from the prompt's playback position or the recording timer).
+// The consent sentence, word by word. While Baaki reads it (or while she records) a crisp ink marker follows the
+// word being read: words before it are ink, words after it are grey. After the check the words she said light up
+// one after another (ink, with an ink underline); missed words stay grey with a dotted underline. No glow.
 
 import type { CSSProperties } from "react";
 import type { ConsentWord } from "@/lib/features/consent";
-
-const wrap: CSSProperties = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "0.35em 0.45em",
-  fontSize: "1.35rem",
-  lineHeight: 1.6,
-  color: "var(--text)",
-};
-
-function wordStyle(w: ConsentWord, active: boolean): CSSProperties {
-  const base: CSSProperties = {
-    padding: "0 0.15em",
-    borderRadius: "var(--r-xs, 4px)",
-    transition: "color 200ms, background-color 200ms",
-    borderBottom: active ? "3px solid var(--accent)" : "3px solid transparent",
-  };
-  if (w.matched === true) return { ...base, color: "var(--success-ink, var(--success))", background: "var(--success-soft)" };
-  if (w.matched === false) return { ...base, color: "var(--faint, var(--muted))", textDecoration: "line-through dotted" };
-  if (w.kind === "filler") return { ...base, color: "var(--text-2, var(--text))" };
-  return { ...base, fontWeight: w.kind === "name" ? 800 : 600 };
-}
+import css from "./consent.module.css";
 
 export function ConsentWords({ words, cursor = null }: { words: ConsentWord[]; cursor?: number | null }) {
+  const checked = words.some((w) => w.matched !== null);
   return (
-    <p style={wrap} aria-label="Consent sentence">
-      {words.map((w) => (
-        <span key={w.i} style={wordStyle(w, cursor === w.i)} title={w.heard ? `heard: ${w.heard}` : undefined}>
-          {w.text}
-        </span>
-      ))}
+    <p className={css.words} aria-label="Consent sentence" data-mode={checked ? "result" : cursor !== null ? "karaoke" : "idle"}>
+      {words.map((w, n) => {
+        const pos = cursor === null ? undefined : w.i < cursor ? "before" : w.i === cursor ? "at" : "after";
+        const heard = w.matched === true ? "yes" : w.matched === false ? "no" : undefined;
+        return (
+          <span
+            key={w.i}
+            className={css.word}
+            data-kind={w.kind}
+            data-pos={checked ? undefined : pos}
+            data-heard={heard}
+            style={{ "--n": n } as CSSProperties}
+            title={w.heard ? `heard: ${w.heard}` : undefined}
+          >
+            {w.text}
+          </span>
+        );
+      })}
     </p>
   );
 }

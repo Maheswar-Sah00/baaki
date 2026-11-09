@@ -1,15 +1,27 @@
 "use client";
 
-// Speak (/speak): tap or hold the mic, see the transcript and the Baaki Meter count up, fix or remove
-// amount chips, then continue to Confirm. "Type instead" works with no voice service at all.
+// Speak (/speak): a full-focus recording screen. Tap or hold the calm ink mic, watch the transcript
+// arrive line by line and the Baaki Meter count up, fix or remove amount chips, then continue to
+// Confirm. Clear states: idle / listening (recording) / processing / done. "Type instead" works with
+// no voice service at all.
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useListen, useLiveMeter, usePressToTalk, useSafety, useSettings, useT } from "@/hooks";
 import { draftStore } from "@/lib/store";
 import type { ListenLang } from "@/lib/types";
-import { BottomSheet, Card, ChipView, ErrorNote, GradientButton, MeterValue, MicButton, Screen } from "@/components/ui/primitives";
-import { CheckIcon, MicIcon, WaveIcon } from "@/components/ui/icons";
+import { formatTimer } from "@/lib/recorder";
+import { BottomSheet, Card, ChipView, ErrorNote, GradientButton, MeterValue, MicButton, Screen, StatusPill, type PillTone } from "@/components/ui/primitives";
+import { CheckIcon, KeyboardIcon, MicIcon, WaveIcon } from "@/components/ui/icons";
+import { FlowSteps } from "./ConfirmScreen";
+
+/** Transcript as lines (sentences), so it can appear line by line like a live caption. */
+function toLines(text: string): string[] {
+  return text
+    .split(/(?<=[.!?।|])\s+|[\r\n]+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
 
 /**
  * Live chunks while recording, so the meter moves while she talks. Each chunk is one Gnani STT call.
@@ -95,8 +107,22 @@ export function SpeakScreen() {
 
   const editing = live.chips.find((c) => c.id === editingChip) ?? null;
 
+  // One clear status line: idle → recording (timer) → processing → done.
+  const status: { tone: PillTone; text: string } =
+    listen.status === "recording"
+      ? { tone: "live", text: formatTimer(listen.elapsedMs) }
+      : listen.status === "starting"
+        ? { tone: "neutral", text: t("speak.starting") }
+        : listen.status === "listening"
+          ? { tone: "accent", text: t("speak.listening") }
+          : hasSomething
+            ? { tone: "success", text: t("speak.meter") }
+            : { tone: "neutral", text: t("speak.meter") };
+  const lines = toLines(listen.transcript);
+
   return (
     <Screen title={t("speak.title")} back="/app" t={t} className="speak-screen">
+      <FlowSteps current={0} />
       <div className="segmented speak-langs" role="group" aria-label={t("lang.change")}>
         {LISTEN_LANGS.map((l) => (
           <button
@@ -117,9 +143,12 @@ export function SpeakScreen() {
         data-state={listen.status}
         data-typing={typing}
         data-interim={listen.interimCount}
+        data-empty={!hasSomething && live.display === 0}
         aria-label={t("speak.meter")}
       >
-        <span className="speak-stage-glow" aria-hidden="true" />
+        <StatusPill tone={status.tone} className="speak-status">
+          {status.text}
+        </StatusPill>
         <MeterValue value={live.display} tick={live.tick} animating={live.animating} label={t("speak.meter")} />
         {live.formula ? <p className="meter-formula">{live.formula}</p> : null}
 
@@ -208,7 +237,13 @@ export function SpeakScreen() {
           <h2 className="card-title">
             <WaveIcon /> {t("speak.transcript")}
           </h2>
-          <p className="transcript">{listen.transcript}</p>
+          <ol className="transcript transcript-lines">
+            {lines.map((l, i) => (
+              <li key={`${i}-${l.slice(0, 12)}`} data-latest={i === lines.length - 1}>
+                {l}
+              </li>
+            ))}
+          </ol>
         </Card>
       ) : null}
 
@@ -239,14 +274,5 @@ export function SpeakScreen() {
         </div>
       </div>
     </Screen>
-  );
-}
-
-function KeyboardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
-      <path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10" />
-    </svg>
   );
 }

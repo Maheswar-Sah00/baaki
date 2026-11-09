@@ -10,7 +10,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { useListen, usePressToTalk, useSettings, useT } from "@/hooks";
+import { useDashboard, useListen, usePressToTalk, useSettings, useT } from "@/hooks";
+import { CheckIcon, ArrowRightIcon } from "@/components/ui/icons";
+import { AssetSlot } from "@/components/ui/AssetSlot";
+import type { UiLang } from "@/lib/i18n";
 import { errorMessage, isAbort } from "@/lib/api";
 import { inr, itemLabel, monthLabel, shortDate } from "@/lib/format";
 import { computeExit, exitLangOf, speakChecklist, startPolite, type ChecklistItem, type ExitItem, type ExitResult } from "@/lib/features/exit";
@@ -28,30 +31,19 @@ import {
   Skeleton,
   Sources,
   StatusPill,
+  avatarTone,
 } from "@/components/ui/primitives";
+
+// Screen-only headline (everything else comes from ./strings).
+const XK: Record<UiLang, { h1: string; em: string; which: string }> = {
+  en: { h1: "Asked to leave?", em: "Take what is yours.", which: "Which home?" },
+  te: { h1: "పని మానేయమన్నారా?", em: "మీది తీసుకుని వెళ్ళండి.", which: "ఏ ఇల్లు?" },
+  "hi-en": { h1: "Kaam chhodne ko kaha?", em: "Apna haq lekar jaiye.", which: "Kaunsa ghar?" },
+};
 import { exitStrings, type ExitT } from "./strings";
 
 const css = {
-  dueDate: {
-    fontFamily: "var(--font-display)",
-    fontWeight: 400,
-    fontSize: "clamp(2rem, 9vw, 2.6rem)",
-    lineHeight: 1.1,
-    margin: "var(--s-1) 0 var(--s-2)",
-    color: "var(--text)",
-  } as CSSProperties,
-  total: {
-    fontSize: "2.2rem",
-    fontWeight: 800,
-    fontVariantNumeric: "tabular-nums",
-    backgroundImage: "var(--grad-text)",
-    WebkitBackgroundClip: "text",
-    backgroundClip: "text",
-    color: "transparent",
-  } as CSSProperties,
-  check: { display: "flex", gap: "var(--s-3)", alignItems: "flex-start" } as CSSProperties,
-  box: { width: 24, height: 24, minWidth: 24, marginTop: 2, accentColor: "var(--accent)" } as CSSProperties,
-  listRow: { display: "flex", flexDirection: "column", gap: "var(--s-2)", flex: 1 } as CSSProperties,
+  listRow: { display: "flex", flexDirection: "column", gap: "var(--s-2)", flex: 1, minWidth: 0 } as CSSProperties,
   grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--s-3)" } as CSSProperties,
 };
 
@@ -116,16 +108,16 @@ function ItemRow({ it, x, t, lang }: { it: ExitItem; x: ExitT; t: ReturnType<typ
   else if (it.kind === "advance_recovery") label = x("advance");
   else label = itemLabel(t, it, lang);
   return (
-    <li className="item" data-kind={it.kind} data-included={it.included_in_total}>
-      <div className="item-row">
-        <span className="item-label" title={it.label}>
+    <li className="ex-line" data-kind={it.kind} data-included={it.included_in_total}>
+      <div className="ex-line-row">
+        <span className="ex-line-label" title={it.label}>
           {label} {it.is_estimate ? <EstimateTag t={t} /> : null}
         </span>
-        <Money value={it.amount} />
+        <Money value={it.amount} className="ex-line-amt" />
       </div>
-      {it.kind === "final_settlement" && it.basis ? <p className="meta">{it.basis}</p> : null}
-      {it.kind === "min_wage_shortfall" && !it.included_in_total ? <p className="meta">{x("shortfall_note")}</p> : null}
-      {it.from_case && it.kind !== "min_wage_shortfall" ? <p className="meta">{x("from_case")}</p> : null}
+      {it.kind === "final_settlement" && it.basis ? <p className="fx-muted" style={{ marginTop: 4 }}>{it.basis}</p> : null}
+      {it.kind === "min_wage_shortfall" && !it.included_in_total ? <p className="fx-muted" style={{ marginTop: 4 }}>{x("shortfall_note")}</p> : null}
+      {it.from_case && it.kind !== "min_wage_shortfall" ? <p className="fx-muted" style={{ marginTop: 4 }}>{x("from_case")}</p> : null}
     </li>
   );
 }
@@ -138,6 +130,8 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
   const router = useRouter();
   const workerId = settings.hydrated ? settings.workerId : null;
   const clLang = exitLangOf(lang);
+  const H = XK[lang] ?? XK.en;
+  const dash = useDashboard(employerId == null && caseId == null ? workerId : null);
 
   const [res, setRes] = useState<ExitResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -259,15 +253,44 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
   // ---------------------------------------------------------------- render
   if (settings.hydrated && workerId == null) {
     return (
-      <Screen title={x("title")} back="/app" t={t}>
+      <Screen title={x("title")} back="/app" t={t} className="fx">
         <ErrorNote message={x("no_worker")} />
       </Screen>
     );
   }
   if (employerId == null && caseId == null) {
+    // No home in the link: let her pick one right here instead of sending her back.
+    // One row per home (employer), even when a home has more than one case.
+    const homes = dash.cards.filter((c, i, all) => c.employer && all.findIndex((o) => o.employer?.id === c.employer!.id) === i);
     return (
-      <Screen title={x("title")} back="/app" t={t}>
-        <ErrorNote message={x("no_home")} />
+      <Screen title={x("title")} back="/app" t={t} className="fx">
+        <header className="dx-head">
+          <h2 className="fx-h" lang={lang === "te" ? "te" : undefined}>
+            {H.h1} <em>{H.em}</em>
+          </h2>
+          <p className="fx-sub">{x("intro")}</p>
+        </header>
+        {settings.hydrated ? (
+          <AssetSlot name="exit-kit-gate" alt="" ratio="16/10" tone="butter" rounded="var(--card-r)" fit="contain" anchor="bottom" className="slot-bleed" />
+        ) : null}
+        <section className="fx-panel" aria-label={H.which}>
+          <p className="fx-eyebrow">{H.which}</p>
+          {dash.loading && !homes.length ? <Skeleton height={60} radius={18} /> : null}
+          <ul className="xk-homes">
+            {homes.map((c) => (
+              <li key={c.case_id}>
+                <Link href={`/exit?employer=${c.employer!.id}&case=${c.case_id}`} className="xk-home">
+                  <span className="fx-avatar" data-wash={avatarTone(c.employer!.name)} aria-hidden="true">
+                    {c.employer!.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span className="xk-home-name">{c.employer!.name}</span>
+                  <ArrowRightIcon />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {!dash.loading && !homes.length ? <ErrorNote message={x("no_home")} /> : null}
+        </section>
       </Screen>
     );
   }
@@ -278,8 +301,13 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
   const saidNum = Number(amountSaid);
 
   return (
-    <Screen title={res?.employer?.name ? `${x("title")} · ${res.employer.name}` : x("title")} back="/app" t={t} className="exit-screen">
-      <p className="hint">{x("intro")}</p>
+    <Screen title={res?.employer?.name ? `${x("title")} · ${res.employer.name}` : x("title")} back="/app" t={t} className="exit-screen fx">
+      <header className="dx-head">
+        <h2 className="fx-h" lang={lang === "te" ? "te" : undefined}>
+          {H.h1} <em>{H.em}</em>
+        </h2>
+        <p className="fx-sub">{x("intro")}</p>
+      </header>
 
       {res?.safety && (res.safety as { flagged?: boolean }).flagged ? (
         <Card tone="warn" href="/safety">
@@ -288,12 +316,12 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
       ) : null}
 
       {/* 1. the date (never a ticking clock) */}
-      <Card tone="glow" aria-live="polite">
-        <p className="field-label">{x("due_label")}</p>
-        {res ? <p style={css.dueDate}>{weekdayDate(res.due_by, lang)}</p> : <Skeleton width="70%" height={44} />}
-        <p className="meta">{x("due_rule")}</p>
-        <p className="meta">{x("due_caveat")}</p>
-        {res?.last_day_how === "from_tomorrow" ? <p className="meta">{x("last_day_from_tomorrow")}</p> : null}
+      <section className="fx-panel xk-due" data-wash="butter" aria-live="polite">
+        <p className="fx-eyebrow fx-wash-ink">{x("due_label")}</p>
+        {res ? <p className="xk-date">{weekdayDate(res.due_by, lang)}</p> : <Skeleton width="70%" height={44} />}
+        <p className="fx-muted fx-wash-ink">{x("due_rule")}</p>
+        <p className="fx-muted">{x("due_caveat")}</p>
+        {res?.last_day_how === "from_tomorrow" ? <p className="fx-muted">{x("last_day_from_tomorrow")}</p> : null}
         <div style={css.grid2}>
           <label className="field">
             <span className="field-label">{x("last_day")}</span>
@@ -320,7 +348,7 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
           </label>
         </div>
         {res ? (
-          <p className="meta">
+          <p className="fx-muted">
             {res.basis.days_how === "diary check-ins"
               ? x("days_how_diary")
               : res.basis.days_how === "calendar count"
@@ -328,8 +356,8 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
                 : x("days_how_said")}
           </p>
         ) : null}
-        <p className="meta">{x("our_reading")}</p>
-      </Card>
+        <p className="fx-muted">{x("our_reading")}</p>
+      </section>
 
       <section className="stack" aria-label={x("say_it")}>
         <MicButton
@@ -350,16 +378,16 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
       </section>
 
       {/* 2. what is owed */}
-      <Card>
-        <h2 className="card-title">{x("owed_title")}</h2>
+      <section className="fx-panel">
+        <p className="fx-eyebrow">{x("owed_title")}</p>
         {(loading || !error) && !res ? <Loading label={t("common.loading")} /> : null}
         {res ? (
           <>
-            <p style={css.total}>
+            <p className="fx-money">
               <CountUp value={res.total} />
             </p>
             {res.is_estimate_flags.days_worked ? <StatusPill tone="estimate">{t("common.estimate")}</StatusPill> : null}
-            <ul className="items">
+            <ul className="xk-ledger">
               {included.map((it, i) => (
                 <ItemRow key={`${it.kind}-${it.month}-${i}`} it={it} x={x} t={t} lang={lang} />
               ))}
@@ -367,28 +395,37 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
                 <ItemRow key={`sf-${it.month}-${i}`} it={it} x={x} t={t} lang={lang} />
               ))}
             </ul>
-            {res.notes.length ? <p className="meta">{x("already_counted")}</p> : null}
-            <p className="meta">{x("not_claimed")}</p>
+            {res.notes.length ? <p className="fx-muted">{x("already_counted")}</p> : null}
+            <p className="fx-muted">{x("not_claimed")}</p>
           </>
         ) : null}
-      </Card>
+      </section>
 
       {/* 3. the gate checklist, read aloud */}
-      <Card tone="soft">
-        <h2 className="card-title">{x("checklist_title")}</h2>
-        <p className="hint">{x("checklist_hint")}</p>
-        <ol className="items" style={{ listStyle: "none" }}>
+      <section className="fx-panel">
+        <div className="fx-row-between">
+          <div>
+            <h2 className="fx-h2">{x("checklist_title")}</h2>
+            <p className="fx-muted" style={{ marginTop: 4 }}>{x("checklist_hint")}</p>
+          </div>
+          <span className="xk-count" aria-hidden="true">
+            {Object.values(done).filter(Boolean).length}/{checklist.length}
+          </span>
+        </div>
+        <ol className="xk-check">
           {checklist.map((c, i) => (
-            <li key={c.id} className="item" style={css.check}>
-              <input
-                type="checkbox"
-                style={css.box}
-                checked={!!done[c.id]}
-                onChange={(e) => setDone((d) => ({ ...d, [c.id]: e.target.checked }))}
-                aria-label={`${x("done")} ${i + 1}`}
-              />
+            <li key={c.id} className="xk-item" data-done={!!done[c.id]}>
+              <label className="xk-tick">
+                <input
+                  type="checkbox"
+                  checked={!!done[c.id]}
+                  onChange={(e) => setDone((d) => ({ ...d, [c.id]: e.target.checked }))}
+                  aria-label={`${x("done")} ${i + 1}`}
+                />
+                <span aria-hidden="true">{done[c.id] ? <CheckIcon /> : i + 1}</span>
+              </label>
               <div style={css.listRow}>
-                <p style={{ margin: 0, fontWeight: 600 }}>{c.text}</p>
+                <p className="xk-text">{c.text}</p>
                 {c.id === "amount" ? (
                   <>
                     <input
@@ -401,12 +438,12 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
                       onChange={(e) => setAmountSaid(e.target.value)}
                     />
                     {amountSaid && res && Number.isFinite(saidNum) ? (
-                      <p className="meta">{x("amount_compare", { amount: inr(res.total) })}</p>
+                      <p className="fx-muted">{x("amount_compare", { amount: inr(res.total) })}</p>
                     ) : null}
                   </>
                 ) : null}
-                {c.id === "last_day" && res ? <p className="meta">{shortDate(res.last_day, lang)}</p> : null}
-                {c.id === "ledger_photo" ? <p className="meta">{x("photo_hint")}</p> : null}
+                {c.id === "last_day" && res ? <p className="fx-muted">{shortDate(res.last_day, lang)}</p> : null}
+                {c.id === "ledger_photo" ? <p className="fx-muted">{x("photo_hint")}</p> : null}
                 {c.id === "contact" ? (
                   <input
                     className="input"
@@ -430,12 +467,12 @@ export function ExitKitScreen({ employerId, caseId }: { employerId: number | nul
           ))}
         </ol>
         {checklist.length ? (
-          <button type="button" className="btn" onClick={() => void playAll()} disabled={audioBusy}>
+          <button type="button" className="fx-pill-btn" onClick={() => void playAll()} disabled={audioBusy}>
             {x("listen_all")}
           </button>
         ) : null}
-        {audioFailed ? <p className="meta">{x("audio_fallback")}</p> : null}
-      </Card>
+        {audioFailed ? <p className="fx-muted">{x("audio_fallback")}</p> : null}
+      </section>
 
       <ErrorNote message={error} onRetry={() => void run({ lastDay, days })} retryLabel={t("common.retry")} />
 

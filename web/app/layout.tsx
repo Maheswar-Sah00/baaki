@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari, Noto_Sans_Telugu } from "next/font/google";
+import localFont from "next/font/local";
 import { THEME_INIT_SCRIPT } from "@/lib/theme-config";
 import { OG_IMAGE, SITE_URL } from "@/lib/site";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import "./theme.css";
+import "./theme-pale.css";
 import "./globals.css";
+import "./screens.css";
 
 // Display serif in the spirit of Gnani's Gambarino (not on Google Fonts) + Inter for UI text,
 // with Noto Sans Telugu / Devanagari for Indic script. Tokens: --font-display, --font-sans.
+// Cabinet Grotesk (Fontshare, free for commercial use), self-hosted: the headline face (as on usevyra.com).
+const cabinet = localFont({ src: "./fonts/CabinetGrotesk-Variable.woff2", variable: "--font-cabinet", weight: "100 900", display: "swap" });
 const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin", "latin-ext"], weight: "400", style: ["normal", "italic"], display: "swap" });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin", "latin-ext"], display: "swap" });
 const notoTelugu = Noto_Sans_Telugu({ variable: "--font-noto-telugu", subsets: ["telugu"], display: "swap", preload: false });
@@ -44,7 +49,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   // Overwritten before paint by THEME_INIT_SCRIPT with the active theme's --meta-bg.
-  themeColor: "#fcf7f2",
+  themeColor: "#fbfaf7",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -55,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en-IN"
       suppressHydrationWarning
-      className={`${serif.variable} ${inter.variable} ${notoTelugu.variable} ${notoDevanagari.variable}`}
+      className={`${cabinet.variable} ${serif.variable} ${inter.variable} ${notoTelugu.variable} ${notoDevanagari.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

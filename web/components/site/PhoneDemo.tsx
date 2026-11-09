@@ -3,7 +3,7 @@
 // A live-looking Baaki phone for the website: a CSS phone frame whose screen plays the real flow on
 // a loop (speak -> read-back -> "Baaki knows" -> voice note to the employer -> "Paisa aa gaya!").
 // Pure presentation with fictional demo data that matches the app's seed: she says ₹13,000, the
-// law supports ₹12,692 (s.20(2) allows ₹308 of the ₹1,000 sick-day cut). No API calls.
+// calculation is ₹12,692 (s.20(2) allows ₹308 of the ₹1,000 sick-day cut). No API calls.
 // Reduced motion: no auto-advance, the dots switch scenes.
 
 import { useEffect, useState, type CSSProperties } from "react";
@@ -24,7 +24,7 @@ const SCENES: { key: DemoScene; label: string; ms: number }[] = [
   { key: "paid", label: "Paid", ms: 4000 },
 ];
 
-/** What she said, and what the law supports (the app's seed for Sharma ji). */
+/** What she said, and Baaki's calculation (the app's seed for Sharma ji). */
 const SAID = 13000;
 const LEGAL = 12692;
 
@@ -56,7 +56,7 @@ export function PhoneDemo({ scene: fixed, className, autoplay = true }: { scene?
 
   return (
     <div className={`phone-demo ${className ?? ""}`}>
-      <div className="phone" role="img" aria-label="The Baaki app: Lakshmi says she is owed ₹13,000. Baaki checks the law, finds ₹12,692 is what the law supports, asks her employer in Hinglish, and he pays.">
+      <div className="phone" role="img" aria-label="The Baaki app: Lakshmi says she is owed ₹13,000. Baaki checks the rules, its calculation comes to ₹12,692, it asks her employer in Hinglish, and he pays.">
         <span className="phone-btn phone-btn-1" aria-hidden="true" />
         <span className="phone-btn phone-btn-2" aria-hidden="true" />
         <div className="phone-screen" data-scene={scene}>
@@ -221,7 +221,7 @@ function ConfirmScene() {
 }
 
 function KnowsScene() {
-  // ₹13,000 (what she said) settles to ₹12,692 (what the law supports) once the s.20(2) line lands.
+  // ₹13,000 (what she said) settles to ₹12,692 (Baaki's calculation) once the s.20(2) line lands.
   const [value, setValue] = useState(SAID);
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -254,7 +254,7 @@ function KnowsScene() {
           <s>₹1,000</s>
         </p>
         <p className="mini-knows-row mini-knows-law">
-          <span>The law allows only</span>
+          <span>Allowed under s.20(2)</span>
           <b>₹308</b>
         </p>
         <p className="mini-knows-math">₹4,000 × 2 days ÷ 26</p>
@@ -264,7 +264,7 @@ function KnowsScene() {
         </p>
       </div>
       <div className="mini-meter mini-meter-law">
-        <span className="mini-meter-label">Owed by law</span>
+        <span className="mini-meter-label">Baaki’s calculation</span>
         <span className="mini-meter-value">{inrWhole(value)}</span>
         <span className="mini-said">She said ₹13,000</span>
       </div>
@@ -299,7 +299,7 @@ function SendScene() {
           <b>₹12,000</b>
         </p>
         <p>
-          <span>Sick-day cut over the legal ₹308</span>
+          <span>Sick-day cut over the allowed ₹308</span>
           <b>₹692</b>
         </p>
         <p className="mini-bill-total">

@@ -149,7 +149,7 @@ export function AddReplySheet({
 
         {busy ? <Loading label={S.working} /> : null}
         <ErrorNote message={err} />
-        <button type="button" className="btn btn-primary btn-big" disabled={!ready || busy} onClick={() => void submit()}>
+        <button type="button" className="fx-pill-btn" data-ink style={{ minHeight: 56 }} disabled={!ready || busy} onClick={() => void submit()}>
           {S.submit}
         </button>
         <p className="hint">{S.privacy}</p>

@@ -8,6 +8,7 @@ import { Card, CountUp, ErrorNote, GradientButton, Screen, SkeletonCard, StatusP
 import { useT } from "@/hooks";
 import { inr } from "@/lib/format";
 import { duesLang, listDues, loadDemo, type DuesKind, type DuesList, type DuesSummary } from "@/lib/features/dues";
+import { AssetSlot } from "@/components/ui/AssetSlot";
 import { DuesArt } from "./DuesArt";
 import { NotAdvice, initial } from "./parts";
 import { duesStrings, type DuesStrings } from "./strings";
@@ -60,7 +61,7 @@ export function DuesListScreen({ asOf }: { asOf?: string | null }) {
 
   const people = data?.accounts.length ?? 0;
   return (
-    <Screen title={S.title} back="/app" t={t}>
+    <Screen title={S.title} back="/app" t={t} className="fx">
       {loading && !data ? (
         <div role="status" aria-label={t("common.loading")} className="stack">
           <SkeletonCard />
@@ -71,7 +72,7 @@ export function DuesListScreen({ asOf }: { asOf?: string | null }) {
 
       {data ? (
         <>
-          <Card tone="glow" className={`${css.hero} ${css.rise}`}>
+          <section className={`${css.hero} ${css.rise}`}>
             <p className={css.eyebrow}>{S.heroLabel}</p>
             <p className={css.big} aria-live="polite">
               <CountUp value={data.total} />
@@ -84,20 +85,31 @@ export function DuesListScreen({ asOf }: { asOf?: string | null }) {
                 ))}
               </div>
             ) : null}
-          </Card>
+          </section>
 
           <GradientButton href="/dues/new">{S.add}</GradientButton>
 
           {people === 0 ? (
-            <div className="stack" style={{ justifyItems: "center", textAlign: "center" }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                {ORDER.map((k) => (
-                  <DuesArt key={k} kind={k} size={84} />
-                ))}
-              </div>
-              <p className="section-title">{S.empty}</p>
-              <p className="hint">{S.emptyHint}</p>
-              <button type="button" className="btn" onClick={() => void demo()} disabled={demoBusy}>
+            <div className={css.empty}>
+              {/* the promise keeper (ledger, ringed date, milk can, chit); the three tiles if the file is missing */}
+              <AssetSlot
+                name="can-do-promise-keeper"
+                alt=""
+                ratio="16/11"
+                tone="butter"
+                rounded="var(--card-r)"
+                fit="contain"
+                fallback={
+                  <span className={css.emptyArt}>
+                    {ORDER.map((k) => (
+                      <DuesArt key={k} kind={k} size={84} />
+                    ))}
+                  </span>
+                }
+              />
+              <p className="fx-h2">{S.empty}</p>
+              <p className="fx-muted">{S.emptyHint}</p>
+              <button type="button" className="fx-pill-btn" onClick={() => void demo()} disabled={demoBusy}>
                 {demoBusy ? S.demoLoading : S.demo}
               </button>
             </div>
@@ -124,7 +136,7 @@ export function DuesListScreen({ asOf }: { asOf?: string | null }) {
           })}
 
           {people > 0 ? (
-            <button type="button" className="btn btn-ghost" onClick={() => void demo()} disabled={demoBusy}>
+            <button type="button" className="fx-pill-btn" style={{ alignSelf: "center" }} onClick={() => void demo()} disabled={demoBusy}>
               {demoBusy ? S.demoLoading : S.demo}
             </button>
           ) : null}
@@ -141,7 +153,7 @@ function PersonRow({ a, S, lang, asOf }: { a: DuesSummary; S: DuesStrings; lang:
   const href = `/dues/${a.id}${asOf ? `?as_of=${asOf}` : ""}`;
   return (
     <Card href={href} className={css.row}>
-      <span className={`${css.avatar} ${css.avatarSm}`} aria-hidden="true">
+      <span className={`${css.avatar} ${css.avatarSm}`} data-kind={a.kind} aria-hidden="true">
         {initial(a.party_name)}
       </span>
       <span className={css.rowMain}>
@@ -153,6 +165,11 @@ function PersonRow({ a, S, lang, asOf }: { a: DuesSummary; S: DuesStrings; lang:
       </span>
       {a.promises_made ? (
         <span className={css.rowFoot}>
+          <span className={css.tally} aria-hidden="true">
+            {Array.from({ length: Math.min(a.promises_made, 12) }).map((_, i) => (
+              <i key={i} data-broken={i < a.promises_broken} />
+            ))}
+          </span>
           <StatusPill tone={a.promises_broken ? "error" : "accent"}>{S.promisedTimes(a.promises_made, a.promises_broken)}</StatusPill>
           <span className="hint">{S.since(a.months_ago)}</span>
           {a.pack_eligible ? <StatusPill tone="warn" dot={false}>{S.packReady}</StatusPill> : null}
