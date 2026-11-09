@@ -34,6 +34,13 @@ She says "Haan" (yes) or taps ✓. This read-back is the safety gate for everyth
 Baaki compares what she is paid with Telangana's legal minimum for her hours and homes:
 "You earn ₹4,000 for 2 hours a day. The legal minimum for that work is ₹X. **Hidden baaki: ₹Y/month.**"
 It shows the official notification and lets her decide whether to include it. It reports a fact, not a demand.
+- **Source:** G.O.Ms.No.6, dated 30 May 2026, in force from 1 Jun 2026. These are the Hyderabad (Zone-I) rates for domestic workers, basic pay per month:
+  - Maid or housekeeping (unskilled): ₹16,000. That is ₹615.50 a day (monthly ÷ 26).
+  - Cook (skilled): ₹18,500. That is ₹711.50 a day.
+- **Part-time and hourly figures** are our own working-out (monthly ÷ 26 days ÷ 8 hours, about ₹77 an hour). Always label them "estimate". The order doesn't list them.
+- **Before June 2026** the rate came from G.O.Ms.No.60 (2011 schedule). For Apr–Sep 2026 that was ₹1,348 a month for 1 hour a day, and ₹10,785 a month for 8 hours a day.
+- **Never add** a 10× multiplier, penalties, notice pay, bonus or gratuity. Never say cash pay is illegal. Compensation is always "the authority may award".
+- **Deadlines (Code on Wages s.17):** pay is due by the 7th of the next month, and within 2 working days if she is dismissed. Absence cuts must be in proportion to the days missed, and total deductions can't exceed 50%.
 
 ### 5. Her voice, their language ⭐ (the signature feature)
 With one-time consent, she records 10 seconds of her voice to create a voice profile (Gnani voice clone).
