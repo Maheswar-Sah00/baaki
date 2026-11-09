@@ -228,6 +228,18 @@ def _route(pdf: FPDF, lang: str) -> None:
         _para(pdf, ln, size=9.5, after=0.8)
 
 
+def diary_chain_check(entries: list) -> tuple[bool, Optional[int]]:
+    """(ok, 1-based position of the first bad entry). The annex shows only one employer's entries, but the chain runs
+    through her whole diary (other homes, consent, inbox evidence sit in between), so neighbours in this list are not
+    chain neighbours. Each entry's own hash is recomputed instead: it covers its fields and its stored link to the
+    previous entry, so any later edit still shows up."""
+    from .routes.cases import entry_hash  # local import avoids an import cycle through the routes package
+    for i, d in enumerate(entries, 1):
+        if d.hash and entry_hash(d.prev_hash or "", d) != d.hash:
+            return False, i
+    return True, None
+
+
 def _diary_annex(pdf: FPDF, inp: LetterInput, lang: str) -> None:
     ctx = inp.ctx
     _heading(pdf, f"Annex: {_bi(lang, 'diary')}", size=12)
@@ -235,14 +247,11 @@ def _diary_annex(pdf: FPDF, inp: LetterInput, lang: str) -> None:
     if not entries:
         _para(pdf, "No diary entries recorded for this employer.", size=9.5, color=MUTED)
         return
-    ok, broken_at = True, None
-    for i, d in enumerate(entries[1:], 1):
-        if d.prev_hash and entries[i - 1].hash and d.prev_hash != entries[i - 1].hash:
-            ok, broken_at = False, i + 1
-            break
+    ok, broken_at = diary_chain_check(entries)
     _para(pdf, f"{len(entries)} entries, each with a timestamp and a SHA-256 hash of the previous entry's hash and its "
                "own fields, so any later change breaks the chain. "
-               + ("Chain check: every entry links to the one before it." if ok else f"Chain check: link broken at entry {broken_at}."),
+               + ("Chain check: every entry's hash matches its own fields and its link to the previous entry in her diary."
+                  if ok else f"Chain check: entry {broken_at} does not match its hash."),
           size=9, color=MUTED, after=1)
     W = pdf.w - pdf.l_margin - pdf.r_margin
     cw = [8, 38, W - 8 - 38 - 46, 46]
