@@ -28,7 +28,7 @@ import { PhoneDemo } from "./PhoneDemo";
 import { Lakh, Percent } from "./Percent";
 
 /** Where the "Am I paying my house help fairly?" teaser points. Change when the employer check ships. */
-export const FAIR_CHECK_HREF = "/app";
+export const FAIR_CHECK_HREF = "/check";
 
 const SIASAT_SURVEY = "https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044";
 const SIASAT_COUNT = "https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/";
