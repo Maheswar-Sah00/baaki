@@ -1,5 +1,12 @@
 """Demo seed (synthetic): Lakshmi's three homes and Rafiq's reverse case. POST /api/demo/reset rebuilds it.
 
+Lifecycle (GAP_AUDIT R5):
+* `reset()` wipes EVERY registered table (db.wipe_all: core + inbox, dues, raise, hisaab, exit kit, sandbox and any
+  table another module registers), then writes the story and the dues demo (owned by Lakshmi).
+* `ensure_seeded()` runs at startup: seeds only when the database has no workers, and only when
+  BAAKI_SEED_ON_BOOT is on (default). It also prepares the Haq Raise demo (no audio, no Gnani credits).
+* "Today" comes from app.clock (IST; BAAKI_TODAY pins it for filming).
+
 Story (docs/BUILD_BRIEF.md), "today" = 9 Nov 2026:
 * Lakshmi (Telugu maid, Hyderabad), 3 homes:
   - Sharma ji (Hinglish): Rs 4,000 a month for 2 hours a day; Aug, Sep, Oct 2026 unpaid (Rs 12,000) and Rs 1,000
@@ -7,24 +14,30 @@ Story (docs/BUILD_BRIEF.md), "today" = 9 Nov 2026:
     (Rs 308), so Baaki claims back the excess Rs 692: contractual baaki Rs 12,692. The meter shows what she
     SAID (Rs 13,000); the case shows what the law supports. Set SHARMA_CUT_REASON = "employer_away" (the
     family was away, which is not her absence) and the full Rs 1,000 is reclaimable: Rs 13,000.
-  - Reddy garu (Telugu): pays Rs 5,000 for 2 hours a day in full, signed a Kaam Patta, Fair Employer.
+  - Reddy garu (Telugu): pays Rs 5,000 for 2 hours a day in full, signed a Kaam Patta, Fair Employer. His October
+    salary (paid on time, 5 Nov) is a diary entry, not a Payment row: Payment rows are money recovered through
+    Baaki, and nothing was owed, so amount_paid stays 0 and the rows agree with it.
   - Mehta madam (Hinglish): Rs 2,500 for 2 hours a day, paid, but below the estimated minimum (Rs 4,000):
-    hidden baaki Rs 1,500 a month, Rs 7,500 for Jun-Oct 2026 (estimate, G.O.Ms.No.6).
+    hidden baaki Rs 1,500 a month, Rs 7,500 for Jun-Oct 2026 (estimate, G.O.Ms.No.6). Confirmed (she told it
+    and heard it read back), so it shows on the dashboard; drafts never do.
 * Rafiq (Hinglish cook) with Rao garu (Telugu employer): Rs 7,000 a month for 3 hours a day, Sep and Oct unpaid:
   Rs 14,000 (minimum for 3 hours as a cook is Rs 6,937.50, so no shortfall).
 """
 from __future__ import annotations
 
 import datetime as dt
+import logging
+import os
 from typing import Any
 
-from sqlmodel import Session, SQLModel, delete
+from sqlmodel import Session, SQLModel, func, select
 
-from . import db
-from .models import ALL_TABLES, Case, Employer, Payment, Worker
+from . import clock, db
+from .models import Case, Employer, Worker
 from .routes.cases import add_diary_entry, apply_calc
 
-DEMO_TODAY = dt.date(2026, 11, 9)
+log = logging.getLogger("seed")
+DEMO_TODAY = dt.date(2026, 11, 9)  # the day the story was written for (scripts); seed() uses clock.today()
 SHARMA_CUT_REASON = "sick"  # brief: "Rs 1,000 cut for 2 sick days"
 
 TRANSCRIPTS = {
@@ -44,13 +57,14 @@ def _months(a: str, b: str) -> list[str]:
     return out
 
 
-def _wipe(s: Session) -> None:
-    for t in reversed(ALL_TABLES):  # children first
-        s.exec(delete(t))  # type: ignore[call-overload]
+def _wipe(s: Session) -> list[str]:
+    wiped = db.wipe_all(s)
     s.commit()
+    return wiped
 
 
-def seed(s: Session, today: dt.date = DEMO_TODAY) -> dict[str, Any]:
+def seed(s: Session, today: dt.date | None = None) -> dict[str, Any]:
+    today = today or clock.today()
     _wipe(s)
     lakshmi = Worker(name="Lakshmi", language="te-IN", phone="+91 90000 00001", category="unskilled",
                      work_type="housekeeping", upi_vpa="lakshmi.demo@upi")
@@ -90,14 +104,12 @@ def seed(s: Session, today: dt.date = DEMO_TODAY) -> dict[str, Any]:
     c_mehta = mk(lakshmi, mehta, "mehta", {
         "employer_name": "Mehta madam", "work_type": "housekeeping", "monthly_wage": 2500, "hours_per_day": 2,
         "days_per_week": 6, "months_unpaid": 0, "paid_months": {m: 2500 for m in _months("2026-06", "2026-10")},
-    }, include_shortfall=False, status="draft")
+    }, include_shortfall=False)
     c_rao = mk(rafiq, rao, "rao", {
         "employer_name": "Rao garu", "work_type": "cooking", "monthly_wage": 7000, "hours_per_day": 3,
         "days_per_week": 6, "months_unpaid": 2, "unpaid_months": ["2026-09", "2026-10"],
         "paid_months": {"2026-07": 7000, "2026-08": 7000},
     })
-    s.add(Payment(case_id=c_reddy.id, amount=5000, method="upi", status="paid", paid_at="2026-11-05T10:12:00Z",
-                  note="October salary"))
 
     # Kaam Diary: hash-chained check-ins (evidence annex for the formal letter)
     for day, text in [("2026-10-27", "Aaj Sharma ji ke ghar, do ghante"), ("2026-10-28", "Aaj Sharma ji ke ghar, do ghante"),
@@ -120,12 +132,62 @@ def seed(s: Session, today: dt.date = DEMO_TODAY) -> dict[str, Any]:
     }
 
 
-def reset() -> dict[str, Any]:
+def reset(today: dt.date | None = None) -> dict[str, Any]:
+    """Wipe every table, write the story, and the dues demo (Lakshmi's)."""
+    from .routes.dues import seed_demo as seed_dues_demo
+
     eng = db.get_engine()
     db.init_db(eng)
     SQLModel.metadata.create_all(eng)
     with db.session() as s:
-        return seed(s)
+        out = seed(s, today)
+        dues = seed_dues_demo(s, today or clock.today(), out["workers"]["lakshmi"])
+        out["dues"] = dues["accounts"]
+        return out
 
 
-__all__ = ["seed", "reset", "DEMO_TODAY"]
+def seed_on_boot_enabled() -> bool:
+    return os.environ.get("BAAKI_SEED_ON_BOOT", "1").strip().lower() not in ("0", "false", "no", "off")
+
+
+def has_workers() -> bool:
+    db.init_db(db.get_engine())
+    with db.session() as s:
+        return s.exec(select(func.count()).select_from(Worker)).one() > 0
+
+
+def _run_async(coro: Any) -> Any:
+    """Run a coroutine from sync code: directly in a worker thread, or on a helper thread if a loop is running."""
+    import asyncio
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=1) as ex:
+        return ex.submit(asyncio.run, coro).result()
+
+
+def ensure_seeded() -> dict[str, Any] | None:
+    """Startup hook (sync; main.py runs it in a threadpool): an empty database gets the demo story, the dues demo
+    (Lakshmi's) and the Haq Raise demo. A database with any worker is never touched; BAAKI_SEED_ON_BOOT=0 turns
+    it off. Returns the seed ids, or None when nothing was done."""
+    if not seed_on_boot_enabled():
+        return None
+    if has_workers():
+        return None
+    out = reset()
+    try:
+        from .routes.raise_ import DemoIn, demo as raise_demo
+
+        r = _run_async(raise_demo(DemoIn(audio=False)))  # no Timbre call on boot
+        out["raise_id"] = r.get("raise_id")
+    except Exception as e:  # the story is seeded; a raise demo failure must not stop the server
+        log.warning("seed on boot: raise demo skipped (%s)", type(e).__name__)
+    log.info("seed on boot: demo story written (workers %s)", out["workers"])
+    return out
+
+
+__all__ = ["seed", "reset", "ensure_seeded", "seed_on_boot_enabled", "DEMO_TODAY"]

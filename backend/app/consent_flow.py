@@ -8,8 +8,10 @@
   withdraw voice_profile.delete_profiles + DiaryEntry(kind="consent", "Voice consent withdrawn ...").
 
 The gate never blocks (judge condition): a failed match, or STT being down, returns the matched / missed
-words and lets her retry or confirm by tap; a tap is logged as method "tap". The old /api/voice-profile
-flow is untouched and keeps working.
+words and lets her retry or confirm by tap; a tap is logged as method "tap". A tap is accepted only for a
+recording (same sha256) that was first sent as a spoken attempt (status "spoken_first" otherwise), so a
+client flag alone can never make a clone. POST /api/voice-profile goes through attempt(method="spoken").
+On a public deploy (BAAKI_PUBLIC=1) cloning is off: CloningDisabled before any Gnani call.
 """
 from __future__ import annotations
 
@@ -147,6 +149,7 @@ async def attempt(s: Session, worker: Worker, data: bytes, filename: str, lang: 
     Raises GnaniError only when the clone itself (embeddings) fails; ValueError for a bad recording."""
     if method not in METHODS:
         raise ValueError("method must be spoken or tap")
+    vp.check_cloning_enabled()  # public deploy: raises CloningDisabled before any Gnani call
     if not data:
         raise ValueError("empty audio")
     lg = ct.lang_for_worker(worker.language, lang)
@@ -176,10 +179,13 @@ async def attempt(s: Session, worker: Worker, data: bytes, filename: str, lang: 
                     "can_retry": True, "can_confirm_by_tap": True,
                     "message": ("Could not check the words right now. Try again, or tap to confirm."
                                 if stt_error else "Some words were not heard. Try again, or tap to confirm.")}
-    else:                                          # tap: reuse the spoken check of this same recording, if any
+    else:                                          # tap: only after a spoken attempt of this same recording
         prev = _recall(worker.id, sha)
-        if prev:
-            transcript, m = prev["transcript"], prev["match"]
+        if prev is None:
+            return {**base, "status": "spoken_first", "can_retry": True, "can_confirm_by_tap": False,
+                    "words": ct.blank_words(worker.name, lg),
+                    "message": "Read the sentence aloud first. If some words are not heard, you can then confirm by tap."}
+        transcript, m = prev["transcript"], prev["match"]
 
     # Consent is established (heard, or confirmed by tap): only now is the embedding made.
     res = await vp.create_profile(s, worker.id, True, data, filename)

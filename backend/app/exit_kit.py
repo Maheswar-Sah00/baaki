@@ -51,7 +51,7 @@ NOT_CLAIMED = ("Baaki adds only wages for days worked and money already owed. It
                "bonus, compensation or interest.")
 NEVER_CLAIM_WORDS = ("notice pay", "gratuity", "bonus", "compensation", "interest", "penalty")
 ALLOWED_KINDS = {"final_settlement", "unpaid_wage", "illegal_deduction", "advance_recovery", "paid_back",
-                 "min_wage_shortfall"}
+                 "min_wage_shortfall", "paid_received"}
 
 # --------------------------------------------------------------------------- the gate checklist
 # Calm and practical, never confrontational. Display text per language; speech adds <slow> and spells UPI.
@@ -175,7 +175,10 @@ def clean_facts(facts: dict[str, Any]) -> dict[str, Any]:
     facts = json.loads(json.dumps(facts or {}))
     ek = facts.pop("exit_kit", None)
     if isinstance(ek, dict):
-        lump = ek.get("lump")
+        facts.pop("final_settlement", None)  # the typed part-month fact this kit wrote
+        if ek.get("frozen_parts"):
+            facts.pop("part_months", None)
+        lump = None if ek.get("typed") else ek.get("lump")  # older kits wrote the amount as an owed lump
         lumps = list(facts.get("owed_lumps") or [])
         if lump:
             for i, v in enumerate(lumps):
@@ -203,7 +206,8 @@ def clean_facts(facts: dict[str, Any]) -> dict[str, Any]:
 def build(*, last_day: dt.date, monthly_wage: float, days_per_week: float = 6, hours_per_day: float | None = None,
           category: str = "unskilled", days_given: float | None = None, checkin_dates: Iterable[str] = (),
           start_date: str | None = None, earlier: dict[str, Any] | None = None, amount_paid: float = 0,
-          case_facts: dict[str, Any] | None = None, frozen_unpaid: list[str] | None = None) -> dict[str, Any]:
+          case_facts: dict[str, Any] | None = None, frozen_unpaid: list[str] | None = None,
+          frozen_parts: dict[str, float] | None = None) -> dict[str, Any]:
     """The Exit Kit result (without checklist audio). `earlier` is the case engine's calculation for the case
     (its facts minus any earlier Exit Kit, with dismissed_on = last_day and its unpaid months frozen as
     `frozen_unpaid`), or None when there is no case."""
@@ -217,7 +221,8 @@ def build(*, last_day: dt.date, monthly_wage: float, days_per_week: float = 6, h
 
     facts = clean_facts(case_facts or {})
     earlier_items = list((earlier or {}).get("items") or [])
-    counted_unpaid = set(((earlier or {}).get("inputs") or {}).get("unpaid_months") or [])
+    counted_unpaid = set(((earlier or {}).get("months") or {}).get("counted")
+                         or ((earlier or {}).get("inputs") or {}).get("unpaid_months") or [])
     paid_months = {wages.month_key(wages.parse_month(k)): float(v) for k, v in (facts.get("paid_months") or {}).items()}
 
     # 1. this month's days (part-month)
@@ -279,17 +284,25 @@ def build(*, last_day: dt.date, monthly_wage: float, days_per_week: float = 6, h
     if frozen_unpaid is not None and not facts.get("unpaid_months"):
         # months_unpaid without a list would otherwise be re-anchored on the dismissal month
         patch["unpaid_months"] = list(frozen_unpaid)
-    lumps = list(facts.get("owed_lumps") or [])
-    if lump > 0:
-        lumps.append(lump)
-    patch["owed_lumps"] = lumps
+    if frozen_parts and not facts.get("part_months"):
+        patch["part_months"] = dict(frozen_parts)  # "dhai mahine" keeps its half month after the exit
+    # typed fact (not an owed lump): the case keeps the estimate label, the s.17(2) source and the due date
+    patch["final_settlement"] = ({"month": month, "amount": wages.money(lump), "days_worked": days,
+                                  "is_estimate": days_est, "due_date": due.isoformat(),
+                                  "label": f"Wages for {days:g} days worked in {wages.month_label(month)}",
+                                  "basis": part_basis if paid_this_month is None else
+                                  f"{part_basis} - {wages.fmt_inr(paid_this_month)} already paid for {wages.month_label(month)}",
+                                  "source": SRC_PART_MONTH.format(div=div)} if lump > 0 else {})
+    patch["owed_lumps"] = list(facts.get("owed_lumps") or [])
     if removed_paid:
         pm = dict(facts.get("paid_months") or {})
         pm.pop(removed_paid["month"], None)
         pm.pop(removed_paid["month"] + "-01", None)
         patch["paid_months"] = pm
-    patch["exit_kit"] = {"lump": lump, "month": month, "days_worked": days, "last_day": last_day.isoformat(),
-                         "removed_paid_month": removed_paid, "prev_dismissed_on": facts.get("dismissed_on")}
+    patch["exit_kit"] = {"lump": lump, "typed": True, "month": month, "days_worked": days,
+                         "last_day": last_day.isoformat(), "removed_paid_month": removed_paid,
+                         "prev_dismissed_on": facts.get("dismissed_on"),
+                         "frozen_parts": bool(frozen_parts and not facts.get("part_months"))}
 
     return {
         "last_day": last_day.isoformat(),

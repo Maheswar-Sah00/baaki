@@ -3,14 +3,28 @@
 // Confirm flow, one main action per phase:
 //   extracting → home (which home is this?) → review (facts + calculation + read-back, ✓ / ✗) → done
 //   1. POST /api/cases/extract           proposed facts (LLM structure, parser amounts) + preview
-//   2. POST /api/cases                   a DRAFT case with the chosen home (and her chip edits as facts)
+//   2. POST /api/cases                   a DRAFT case with the chosen home (and her chip edits as facts);
+//                                        a home with an open case gets THAT case recomputed (`updated: true`),
+//                                        so re-telling the story never makes a second Sharma ji card
 //   3. POST /api/cases/{id}/readback     read-back audio in her language (text works if audio fails)
 //   4. POST /api/cases/{id}/confirm      confirmed=false recalculates (Haq Check toggle); true confirms
 // Nothing goes to the employer from here; the case screen does that after she confirms.
+// Home picker: GET /api/workers/{id}/match-home matches a name in any script (శర్మ గారు = Sharma ji) with
+// the LLM off; the local guess is the fallback. No worker yet (empty database): phase "error", noWorker.
 
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-import { confirmCase, createCase, errorMessage, extract, getCase, mediaUrl, readback as postReadback } from "@/lib/api";
-import { draftStore, type Draft } from "@/lib/store";
+import {
+  ApiError,
+  confirmCase,
+  createCase,
+  errorMessage,
+  extract,
+  getCase,
+  getDashboard,
+  mediaUrl,
+  readback as postReadback,
+} from "@/lib/api";
+import { draftStore, settingsStore, type Draft } from "@/lib/store";
 import type { CaseDetail, Employer, ExtractResponse, Facts, LangCode, ReadbackAudio, Worker } from "@/lib/types";
 
 export type NewCasePhase = "extracting" | "home" | "creating" | "review" | "saving" | "done" | "rejected" | "error";
@@ -49,8 +63,42 @@ export function overridesFromDraft(d: Draft): Facts | null {
 function guessHome(name: string | null | undefined, employers: Employer[]): Employer | null {
   if (!name) return null;
   const n = name.toLowerCase().replace(/\s+(ji|garu|madam|sir|saab|sahab)$/i, "").trim();
+  if (!n) return null;
   return employers.find((e) => e.name.toLowerCase().includes(n) || n.includes(e.name.toLowerCase().split(" ")[0])) ?? null;
 }
+
+/** Backend home match (any script, no LLM). null when unsure or unreachable: the local guess stays. */
+async function matchHome(workerId: number, name: string, signal?: AbortSignal): Promise<Employer | null> {
+  try {
+    const res = await fetch(`/api/workers/${workerId}/match-home?name=${encodeURIComponent(name)}`, {
+      cache: "no-store",
+      signal,
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { match: Employer | null };
+    return body.match ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** "Nahi" after a re-telling: put the open case back as she had confirmed it. */
+async function undoRetell(caseId: number): Promise<void> {
+  try {
+    await fetch(`/api/cases/${caseId}/undo-retell`, { method: "POST", cache: "no-store" });
+  } catch {
+    /* the case keeps the new telling; she can tell it again */
+  }
+}
+
+/** The dashboard says this worker does not exist (empty database, or a stale remembered id). */
+export function isNoWorker(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 404 && (err.code === "no_worker" || /worker not found/i.test(err.message));
+}
+
+export const NO_WORKER_MESSAGE = "No worker profile on this server yet. Go back home and start fresh (or reset the demo).";
+
+type CaseWithUpdate = CaseDetail & { updated?: boolean; previous_total?: number };
 
 export function useNewCase(opts: {
   worker: Worker | null;
@@ -70,6 +118,10 @@ export function useNewCase(opts: {
   const [rb, setRb] = useState<ReadbackAudio | null>(null);
   const [rbLoading, setRbLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [noWorker, setNoWorker] = useState(false);
+  const [serverHome, setServerHome] = useState<Employer | null>(null);
+  /** This telling updated a home's open case (instead of making a second one). */
+  const [retold, setRetold] = useState<{ caseId: number; previousTotal: number | null } | null>(null);
   const started = useRef(false);
 
   const loadReadback = useCallback(async (id: number) => {
@@ -108,7 +160,8 @@ export function useNewCase(opts: {
       const existing = resumeCaseId ?? draft.caseId;
       if (existing) {
         const c = await getCase(existing);
-        if (c.status === "draft") {
+        // a draft, or an open case whose re-telling she has not confirmed yet: back to the review
+        if (c.status === "draft" || (!c.readback_confirmed && !resumeCaseId)) {
           await toReview(c);
           return;
         }
@@ -144,8 +197,47 @@ export function useNewCase(opts: {
     void Promise.resolve().then(() => begin());
   }, [worker, resumeCaseId]);
 
-  // Preselect the home once facts and the employer list are in.
-  const suggested = useMemo(() => guessHome(preview?.facts.employer_name, employers), [preview, employers]);
+  // No worker to wait for? Ask the dashboard ourselves, so an empty database shows an error, not a spinner.
+  const probeWorker = useEffectEvent(async (signal: AbortSignal) => {
+    try {
+      await getDashboard(settingsStore.get().workerId, signal);
+    } catch (err) {
+      if (signal.aborted) return;
+      if (isNoWorker(err)) {
+        setNoWorker(true);
+        setError(NO_WORKER_MESSAGE);
+      } else {
+        setError(errorMessage(err));
+      }
+      setPhase("error");
+    }
+  });
+  useEffect(() => {
+    if (resumeCaseId || worker) return;
+    const ctl = new AbortController();
+    const t = setTimeout(() => void probeWorker(ctl.signal), 1500); // the screen's own dashboard load usually wins
+    return () => {
+      clearTimeout(t);
+      ctl.abort();
+    };
+  }, [worker, resumeCaseId]);
+
+  // Backend home match (Telugu / Devanagari / Latin names, LLM off).
+  const spokenName = (preview?.facts.employer_name as string | null | undefined) ?? null;
+  useEffect(() => {
+    if (!worker || !spokenName) return;
+    const ctl = new AbortController();
+    void matchHome(worker.id, spokenName, ctl.signal).then((m) => {
+      if (!ctl.signal.aborted) setServerHome(m);
+    });
+    return () => ctl.abort();
+  }, [worker, spokenName]);
+
+  // Preselect the home once facts and the employer list are in (backend match first, local guess second).
+  const suggested = useMemo(() => {
+    if (serverHome) return employers.find((e) => e.id === serverHome.id) ?? serverHome;
+    return guessHome(spokenName, employers);
+  }, [serverHome, spokenName, employers]);
   const homeChoice: HomeChoice | null = useMemo(
     () =>
       home ??
@@ -175,7 +267,7 @@ export function useNewCase(opts: {
       try {
         const facts: Facts = { ...preview.facts, ...(overridesFromDraft(draft) ?? {}) };
         delete facts.extraction;
-        const c = await createCase({
+        const c: CaseWithUpdate = await createCase({
           worker_id: worker.id,
           employer_id: choice.kind === "existing" ? choice.employerId : null,
           employer: choice.kind === "new" ? { name: choice.name.trim(), language: choice.language } : null,
@@ -186,6 +278,7 @@ export function useNewCase(opts: {
           use_llm: false, // the preview already used the LLM; these facts override the parser
         });
         draftStore.set({ caseId: c.id });
+        setRetold(c.updated ? { caseId: c.id, previousTotal: c.previous_total ?? null } : null);
         await toReview(c);
         return c;
       } catch (err) {
@@ -230,11 +323,14 @@ export function useNewCase(opts: {
     }
   }, [caseData, includeShortfall]);
 
-  /** ✗ Nahi: go back and say it again (the draft case stays a draft and is not sent anywhere). */
+  /** ✗ Nahi: go back and say it again (the draft case stays a draft and is not sent anywhere; a re-telling of
+   *  an open case is undone, so the case keeps what she confirmed before). */
   const no = useCallback(() => {
     draftStore.set({ caseId: null });
+    if (retold) void undoRetell(retold.caseId);
+    setRetold(null);
     setPhase("rejected");
-  }, []);
+  }, [retold]);
 
   const calc = caseData?.calc ?? preview?.calc ?? null;
   const haq = calc?.haq_check ?? null;
@@ -266,5 +362,9 @@ export function useNewCase(opts: {
     yes,
     no,
     error,
+    /** Empty database / unknown worker: show "start fresh" instead of the spoken-story flow. */
+    noWorker,
+    /** This telling updated the home's open case: show "Updated your Sharma ji case (was ₹X)". */
+    retold,
   };
 }

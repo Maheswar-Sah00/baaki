@@ -81,7 +81,8 @@ def _by_token(s: Session, token: str) -> tuple[RaiseAsk, CaseCtx]:
 
 
 def _estimate(case: Case, today: dt.date) -> dict[str, Any]:
-    return raise_core.estimate(case.work_type, case.hours_per_day, case.days_per_week, case.monthly_wage, today)
+    # Hours come from what she said (calc_inputs.case_hours); the DB default of 8 h is never used as a guess.
+    return raise_core.estimate_for_case(case, today)
 
 
 def _next_month(today: dt.date) -> str:
@@ -217,7 +218,12 @@ async def summary(worker_id: int = Query(..., gt=0)) -> dict:
             e = s.get(Employer, c.employer_id)
             est = _estimate(c, today)
             ra = _latest(s, c)
-            status = ra.status if ra else ("fair" if est["gap_monthly"] <= 0 else "none")
+            if ra:
+                status = ra.status
+            elif est.get("needs_hours"):
+                status = "needs_hours"          # can't call it fair (or unfair) without her hours
+            else:
+                status = "fair" if est["gap_monthly"] <= 0 else "none"
             answered = ra is not None and ra.status in ANSWERED
             won_y = raise_core.yearly_gain(c.monthly_wage, _final_wage(ra) or 0) if answered else 0.0
             home = {"case_id": c.id, "employer": e.name if e else "", "employer_id": c.employer_id,
@@ -297,6 +303,9 @@ async def _personal_for(text: str, src: str, dst: str, worker: str, use_llm: boo
 
 async def _compose_into(s: Session, ra: RaiseAsk, ctx: CaseCtx, body: ComposeIn, today: dt.date) -> None:
     est = _estimate(ctx.case, today)
+    if est.get("needs_hours") and body.ask_amount is None:
+        raise HTTPException(409, {"error": "needs_hours", "message": "hours not said: estimate needs hours",
+                                  "how": est.get("how")})
     if est["gap_monthly"] <= 0 and body.ask_amount is None:
         raise HTTPException(409, {"error": "already_fair", "message": "this home already pays at least the estimate"})
     try:
@@ -650,22 +659,27 @@ async def demo(body: DemoIn = Body(default_factory=DemoIn)) -> dict:
     today = _today()
     with db.session() as s:
         case = _mehta_case(s)
+        empty = s.exec(select(Worker)).first() is None
     if case is None:
-        await run_in_threadpool(seed.reset)
+        if not empty:  # never wipe an existing story from here (POST /api/demo/reset does that, admin-only)
+            raise HTTPException(409, {"error": "demo_missing",
+                                      "message": "Mehta madam's home is not in this database; reset the demo first"})
+        await run_in_threadpool(seed.reset)  # empty database: nothing to wipe
     with db.session() as s:
         case = _mehta_case(s)
         if case is None:
             raise HTTPException(500, "demo seed has no Mehta madam home")
-        for old in list(s.exec(select(RaiseAsk).where(RaiseAsk.case_id == case.id))):
-            for ev in list(s.exec(select(RaiseEvent).where(RaiseEvent.raise_id == old.id))):
-                s.delete(ev)
-            s.delete(old)
-        s.flush()
         ctx = _ctx_or_404(s, case.id)
         ra = RaiseAsk(case_id=case.id, worker_id=ctx.worker.id, employer_id=ctx.employer.id,
                       case_token=case.employer_token, demo=True)
+        # _compose_into makes the voice note (TTS) before its first write; the old asks are removed after
+        # it, so no write transaction is held open across the Gnani call.
         await _compose_into(s, ra, ctx, ComposeIn(plan=body.plan, years_worked=DEMO_YEARS, use_llm=False,
                                                   audio=body.audio), today)
+        for old in list(s.exec(select(RaiseAsk).where(RaiseAsk.case_id == case.id, RaiseAsk.id != ra.id))):
+            for ev in list(s.exec(select(RaiseEvent).where(RaiseEvent.raise_id == old.id))):
+                s.delete(ev)
+            s.delete(old)
         s.commit()
         s.refresh(ra)
         return {"case_id": case.id, "worker_id": ctx.worker.id, "raise_id": ra.id, "token": ra.token,

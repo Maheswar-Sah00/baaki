@@ -2,6 +2,8 @@
 // Small sums people keep promising "next month, first week" / "by the end of this week": the milkman's customers,
 // a chit agent's payout. Amounts come from the backend's deterministic parsers; reminders are shared by the user.
 
+import { settingsStore } from "@/lib/store";
+
 export type DuesKind = "vendor" | "chit" | "other";
 export type DuesLang = "hi-en" | "te-IN" | "en";
 export type PromiseStatus = "pending" | "kept" | "broken";
@@ -195,6 +197,16 @@ async function ok<T>(res: Response): Promise<T> {
 
 const q = (asOf?: string | null) => (asOf ? `?as_of=${encodeURIComponent(asOf)}` : "");
 
+/** Dues accounts belong to a worker (backend DuesOwner): every list / create / demo call names her. */
+function currentWorkerId(): number {
+  return settingsStore.get().workerId;
+}
+const qw = (asOf?: string | null, workerId: number = currentWorkerId()) => {
+  const p = new URLSearchParams({ worker_id: String(workerId) });
+  if (asOf) p.set("as_of", asOf);
+  return `?${p.toString()}`;
+};
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   return ok(
     await fetch(url, {
@@ -206,8 +218,8 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   );
 }
 
-export async function listDues(asOf?: string | null, signal?: AbortSignal): Promise<DuesList> {
-  return ok(await fetch(`/api/dues${q(asOf)}`, { cache: "no-store", signal }));
+export async function listDues(asOf?: string | null, signal?: AbortSignal, workerId?: number): Promise<DuesList> {
+  return ok(await fetch(`/api/dues${qw(asOf, workerId)}`, { cache: "no-store", signal }));
 }
 
 export async function getDues(id: number, asOf?: string | null, signal?: AbortSignal): Promise<DuesView> {
@@ -233,6 +245,8 @@ export async function parseDues(input: {
 }
 
 export type NewDues = {
+  /** Defaults to the remembered worker (settings). */
+  worker_id?: number;
   kind: DuesKind;
   party_name: string;
   party_lang: DuesLang;
@@ -246,7 +260,7 @@ export type NewDues = {
 };
 
 export function createDues(body: NewDues): Promise<DuesView> {
-  return postJson("/api/dues", body);
+  return postJson("/api/dues", { ...body, worker_id: body.worker_id ?? currentWorkerId() });
 }
 
 export async function addPromise(
@@ -275,8 +289,8 @@ export function makeReminder(id: number, opts: { lang?: DuesLang | null; voice?:
   return postJson(`/api/dues/${id}/remind`, { lang: opts.lang ?? null, voice: !!opts.voice, as_of: opts.asOf ?? null });
 }
 
-export function loadDemo(): Promise<{ accounts: { milk: number; chit: number }; as_of: string }> {
-  return postJson("/api/dues/demo", {});
+export function loadDemo(workerId?: number): Promise<{ accounts: { milk: number; chit: number }; as_of: string }> {
+  return postJson(`/api/dues/demo${qw(null, workerId)}`, {});
 }
 
 export async function deleteDues(id: number): Promise<{ deleted: number }> {

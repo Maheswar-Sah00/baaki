@@ -33,6 +33,9 @@ def test_employer_page_shows_items_audio_and_upi(client, mock_gnani, short_ogg):
     mock_gnani.default["/api/v1/tts/inference"] = tts_ok(short_ogg)
     ids = make_case(shortfall_info=2500)
     sent = client.post(f"/api/cases/{ids['case_id']}/messages/polite", json={"use_llm": False}).json()
+    # F2 (GAP #10): a draft never plays on his page; she shares it first
+    assert client.get(f"/api/e/{ids['token']}").json()["audio_url"] is None
+    client.post(f"/api/messages/{sent['message_id']}/sent")
     r = client.get(f"/api/e/{ids['token']}")
     assert r.status_code == 200, r.text
     b = r.json()
@@ -49,14 +52,23 @@ def test_employer_page_shows_items_audio_and_upi(client, mock_gnani, short_ogg):
 
 
 # --------------------------------------------------------------------------- pay
+# F2 (GAP #5): "I've paid" is a claim; the alert and badge come only after she confirms (decide accept).
+def _confirm(client, claim_id):
+    r = client.post(f"/api/hisaab/{claim_id}/decide", json={"decision": "accept"})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
 def test_pay_in_full_triggers_excited_alert_and_badge(client, mock_gnani, short_ogg):
     seen = []
     mock_gnani.default["/api/v1/tts/inference"] = _tts_log(short_ogg, seen)
     ids = make_case()
     r = client.post(f"/api/e/{ids['token']}/pay", json={})
     assert r.status_code == 200, r.text
-    b = r.json()
-    assert b["fully_paid"] and b["balance"] == 0 and b["status"] == "paid" and b["fair_employer"]
+    c = r.json()
+    assert c["pending_confirmation"] and not c["fully_paid"] and c["badge"] is None and not seen
+    b = _confirm(client, c["claim"]["id"])
+    assert b["fully_paid"] and b["balance"] == 0 and b["case_status"] == "paid"
     assert b["badge"]["title"] == "Fair Employer" and "13,000" not in b["badge"]["text"]
     # Lakshmi hears it in Telugu, with the <excited> tag, on Timbre v3.0
     assert len(seen) == 1
@@ -74,7 +86,8 @@ def test_partial_pay_hinglish_worker(client, mock_gnani, short_ogg):
     seen = []
     mock_gnani.default["/api/v1/tts/inference"] = _tts_log(short_ogg, seen)
     ids = make_case(worker_name="Rafiq", worker_lang="hi-en", employer_name="Rao garu", employer_lang="te-IN")
-    b = client.post(f"/api/e/{ids['token']}/pay", json={"amount": 5000}).json()
+    c = client.post(f"/api/e/{ids['token']}/pay", json={"amount": 5000}).json()
+    b = _confirm(client, c["claim"]["id"])
     assert b["balance"] == 8000 and not b["fully_paid"] and b["badge"] is None
     assert seen[0]["text"].startswith("<excited> पैसा आ गया!") and "राव गारु" in seen[0]["text"]
     assert "आठ हज़ार रुपये बाकी" in seen[0]["text"] and seen[0]["language"] == "hi-en"
@@ -83,7 +96,8 @@ def test_partial_pay_hinglish_worker(client, mock_gnani, short_ogg):
 
 def test_pay_without_gnani_still_records(client):
     ids = make_case()
-    b = client.post(f"/api/e/{ids['token']}/pay", json={"method": "cash"}).json()
+    c = client.post(f"/api/e/{ids['token']}/pay", json={"method": "cash"}).json()
+    b = _confirm(client, c["claim"]["id"])
     assert b["fully_paid"] and b["alert"]["audio"] is None and b["alert"]["audio_error"]["code"] == "NOT_CONFIGURED"
 
 
@@ -116,7 +130,8 @@ def test_paying_first_instalment_settles_it(client):
     ids = make_case()
     plan = client.post(f"/api/e/{ids['token']}/plan", json={"instalments": 2}).json()
     first = plan["instalments"][0]["amount"]
-    client.post(f"/api/e/{ids['token']}/pay", json={"amount": first, "alert_audio": False})
+    c = client.post(f"/api/e/{ids['token']}/pay", json={"amount": first, "alert_audio": False}).json()
+    _confirm(client, c["claim"]["id"])
     page = client.get(f"/api/e/{ids['token']}").json()
     assert [p["status"] for p in page["plan"]] == ["settled", "planned"]
     assert page["balance"] == 13000 - first
@@ -247,6 +262,11 @@ def test_voice_profile_create_use_and_delete(client, mock_gnani, short_ogg):
         return httpx.Response(200, content=short_ogg, headers={"content-type": "audio/ogg"})
 
     mock_gnani.default["/api/v1/tts/inference"] = tts
+    # GAP_AUDIT #13 (intended change): the recording must carry the spoken consent sentence
+    from app import consent_text as ct
+    said = ct.consent_sentence("Lakshmi", ct.lang_for_worker("te-IN", None))
+    mock_gnani.default["/stt/v3"] = httpx.Response(200, json={"success": True, "transcript": said,
+                                                              "detected_language_code": "te-IN"})
     ids = make_case()
     media_before = set((config.media_dir()).rglob("*")) if config.media_dir().exists() else set()
     r = client.post("/api/voice-profile", data={"worker_id": str(ids["worker_id"]), "consent": "true"},

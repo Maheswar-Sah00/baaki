@@ -248,3 +248,22 @@ def test_checklist_audio_cached_once(client, mock_gnani, short_ogg):
     assert len(sent) == 4 and all(s["text"].startswith("<slow>") and s["language"] == "te-IN" for s in sent)
     assert "యూపీఐ" in sent[3]["text"]  # spelt out for Telugu speech
     assert client.get("/api/exit/audio/" + "0" * 64 + ".ogg").status_code == 404
+
+
+def test_applied_exit_amount_keeps_estimate_source_and_due_date(client, demo):
+    """GAP_AUDIT #18: once applied to the case, the part-month line is a typed final settlement, not an owed lump."""
+    w, cid = demo["workers"]["lakshmi"], demo["cases"]["sharma"]
+    r = client.post("/api/exit", json={"worker_id": w, "case_id": cid, "last_day": "2026-11-13"}).json()  # calendar count
+    assert r["is_estimate_flags"]["days_worked"] is True
+    case = client.post(f"/api/cases/{cid}/confirm", json=r["polite"]["confirm"]).json()
+    fs = [i for i in case["items"] if i["kind"] == "final_settlement"]
+    assert len(fs) == 1 and fs[0]["is_estimate"] is True
+    assert fs[0]["due_date"] == r["due_by"] and "s.17(2)" in fs[0]["source"]
+    assert not case["facts"].get("owed_lumps")
+    assert case["total_due"] == r["total"]
+    # a second run replaces it, never adds it twice
+    r2 = client.post("/api/exit", json={"worker_id": w, "case_id": cid, "last_day": "2026-11-13",
+                                        "days_worked_this_month": 5}).json()
+    case2 = client.post(f"/api/cases/{cid}/confirm", json=r2["polite"]["confirm"]).json()
+    assert len([i for i in case2["items"] if i["kind"] == "final_settlement"]) == 1
+    assert case2["total_due"] == r2["total"]

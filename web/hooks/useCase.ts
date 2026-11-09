@@ -3,6 +3,8 @@
 // One case: GET /api/cases/{id}, polled every ~3 s so the worker sees the payment land.
 // When a new "paid_alert" message (or a higher amount_paid) shows up after the first load, `celebration`
 // is set: show "Paisa aa gaya!" and play `celebration.audioUrl` (the <excited> alert in her language).
+// The last paid_alert she has seen is remembered per case in localStorage, so an alert that landed while the
+// screen was closed is celebrated the next time she opens the case (once), not only live changes.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { confirmCase, errorMessage, getCase, legalPackUrl, mediaKeyUrl, readback } from "@/lib/api";
@@ -21,6 +23,32 @@ export type Celebration = {
 function latestAlert(c: CaseDetail): MessageRow | null {
   const alerts = c.messages.filter((m) => m.step === "paid_alert" && m.direction === "to_worker");
   return alerts.length ? alerts[alerts.length - 1] : null;
+}
+
+const SEEN_KEY = (caseId: number) => `baaki.paidSeen.${caseId}`;
+/** An alert older than this is history, not news: opening an old paid case on a new phone stays quiet. */
+const MISSED_ALERT_MAX_AGE_MS = 14 * 24 * 3600 * 1000;
+
+function readSeen(caseId: number): number | null {
+  try {
+    const v = window.localStorage.getItem(SEEN_KEY(caseId));
+    return v === null ? null : Number(v) || 0;
+  } catch {
+    return null;
+  }
+}
+
+function writeSeen(caseId: number, alertId: number) {
+  try {
+    window.localStorage.setItem(SEEN_KEY(caseId), String(alertId));
+  } catch {
+    /* private mode: the live check still works */
+  }
+}
+
+function isRecent(iso: string | null | undefined): boolean {
+  const t = iso ? Date.parse(iso) : NaN;
+  return Number.isFinite(t) && Date.now() - t <= MISSED_ALERT_MAX_AGE_MS;
 }
 
 export function useCase(caseId: number | null, opts: { pollMs?: number | null; onPaid?: (c: Celebration) => void } = {}) {
@@ -42,8 +70,16 @@ export function useCase(caseId: number | null, opts: { pollMs?: number | null; o
     const alertId = alert?.id ?? 0;
     const prev = seen.current;
     seen.current = { caseId: data.id, alertId, paid: data.amount_paid };
-    if (!prev || prev.caseId !== data.id) return; // first load: nothing to celebrate
-    if (alertId > prev.alertId || data.amount_paid > prev.paid + 0.5) {
+    const stored = readSeen(data.id);
+    if (alertId > (stored ?? 0)) writeSeen(data.id, alertId);
+    let fire: boolean;
+    if (!prev || prev.caseId !== data.id) {
+      // first load: celebrate an alert she has not seen yet (it landed while the screen was closed)
+      fire = alert !== null && alertId > (stored ?? 0) && isRecent(alert.sent_at ?? alert.created_at);
+    } else {
+      fire = alertId > prev.alertId || data.amount_paid > prev.paid + 0.5;
+    }
+    if (fire) {
       const c: Celebration = {
         messageId: alert?.id ?? null,
         text: alert?.text ?? "",

@@ -5,9 +5,10 @@ Runs against a RUNNING backend (scripts/start-demo.ps1), so the clips land in th
   2. Sharma ji's Polite note (Hinglish voice note, Lakshmi -> Sharma ji): 5 sentences, one Timbre call each
   3. the read-back for the filming story (Telugu, "Ammagaru, three months at 4,000, 1,000 cut for two days
      of fever", home = Sharma ji), through POST /api/cases like the app does
-  4. "I've paid" on the employer page -> the Telugu "Paisa aa gaya" alert
+  4. "I've paid" on the employer page (a claim) -> Lakshmi confirms it -> the Telugu "Paisa aa gaya" alert
   5. (--rao) Rafiq -> Rao garu's Polite note in Telugu (the reverse demo)
-  6. POST /api/demo/reset again, so filming starts clean
+  6. (--live-consent) Rafiq's Hinglish voice-consent sentence (/voice/consent), 1 Timbre call the first time
+  7. POST /api/demo/reset again, so filming starts clean
 Every clip already in the cache costs nothing. DATE-DEPENDENT: the Polite note's last sentence says the
 reply-by date (today + 7 days), so it is new every day: run this on filming morning (1 Timbre call).
 --export copies the date-independent clips into backend/seed_cache/tts and writes
@@ -16,6 +17,7 @@ backend/seed_cache/demo_manifest.json, so a cold start spends no credits on them
 Takes backend/data/gnani_live.lock (one active Gnani request per account) for the whole run.
 
   backend\\.venv\\Scripts\\python backend\\scripts\\warm_demo.py [--base http://127.0.0.1:8020] [--export] [--rao]
+      [--live-consent]
 """
 from __future__ import annotations
 
@@ -75,9 +77,13 @@ def main() -> int:
     ap.add_argument("--base", default="http://127.0.0.1:8020", help="running backend")
     ap.add_argument("--export", action="store_true", help="copy date-independent clips to backend/seed_cache")
     ap.add_argument("--rao", action="store_true", help="also warm Rafiq -> Rao garu (Telugu Polite note)")
+    ap.add_argument("--live-consent", action="store_true",
+                    help="also warm Rafiq's Hinglish voice-consent prompt (a live Timbre call if not cached)")
     args = ap.parse_args()
     base = args.base.rstrip("/")
-    c = httpx.Client(base_url=base, timeout=300)
+    # In public mode (BAAKI_PUBLIC=1) the demo resets need the admin token; it is read from .env, never printed.
+    headers = {"X-Admin-Token": config.admin_token()} if getattr(config, "admin_token", None) and config.admin_token() else {}
+    c = httpx.Client(base_url=base, timeout=300, headers=headers)
     try:
         before = c.get("/health").json()["gnani_calls"]
     except httpx.HTTPError:
@@ -107,9 +113,15 @@ def main() -> int:
         clips.append(clip(rb["text"], rb["lang"], "read-back: filming story (Telugu, home Sharma ji)"))
         print(f"read-back: total {case.get('total_due')}, cached={rb.get('cached')}")
 
-        # "I've paid" -> Paisa aa gaya (Telugu, for Lakshmi)
+        # "I've paid" is a claim; her confirmation records it and makes "Paisa aa gaya" (Telugu, for Lakshmi)
         paid = c.post(f"/api/e/{seed['employer_tokens']['sharma']}/pay", json={}).raise_for_status().json()
-        alert = paid["alert"]
+        alert = paid.get("alert")
+        if alert is None and (paid.get("claim") or {}).get("id"):
+            dec = c.post(f"/api/hisaab/{paid['claim']['id']}/decide",
+                         json={"decision": "accept"}).raise_for_status().json()
+            alert = dec.get("alert")
+        if not alert:
+            raise SystemExit("no 'Paisa aa gaya' alert came back from I've paid -> confirm; check the backend log")
         if alert.get("audio_error"):
             problems.append(f"paid alert audio: {alert['audio_error']}")
         clips.append(clip(alert["speech"], tts_lang(alert["language"]), "paid alert: Sharma ji paid in full"))
@@ -122,6 +134,14 @@ def main() -> int:
                 problems.append(f"rao polite audio: {step['audio_error']}")
             clips += note_clips(step, "polite: Rafiq -> Rao garu")
             print(f"polite (Rao garu): {len(step.get('speech') or [])} sentences")
+
+        if args.live_consent:
+            # Rafiq speaks Hinglish, so no lang: the prompt uses his own language. Name-dependent, not date-dependent.
+            cp = c.post("/api/consent/prompt", json={"worker_id": seed["workers"]["rafiq"]}).raise_for_status().json()
+            if cp.get("tts_error"):
+                problems.append(f"consent prompt audio: {cp['tts_error']}")
+            clips.append(clip(cp["speech"], cp["tts_lang"], "consent prompt: Rafiq (Hinglish)"))
+            print(f"consent prompt (Rafiq, {cp.get('lang')}): cached={cp.get('cached')}")
 
         c.post("/api/demo/reset").raise_for_status()
     finally:

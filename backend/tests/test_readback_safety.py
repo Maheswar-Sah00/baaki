@@ -27,11 +27,24 @@ def test_telugu_readback():
     assert "మొత్తం పదమూడు వేల రూపాయలు" in rb["text"] and rb["text"].endswith("సరేనా?")
 
 
-def test_legal_total_said_when_different():
+def test_calculation_said_when_different_never_as_law():
+    # GAP_AUDIT #17: Baaki's calculation with its section, never "what the law lets you ask for"
     rb = build_readback(SHARMA, "hi-en", legal_total=12692)
-    assert "Kanoon ke hisaab se maang sakte hain baarah hazaar chhah sau baanave rupaye" in rb["text"] or \
-           "Kanoon ke hisaab se" in rb["text"]
-    assert build_readback(SHARMA, "hi-en", legal_total=13000)["text"].count("Kanoon") == 0
+    assert "Baaki ka hisaab, Code on Wages section bees:" in rb["text"]
+    assert "Kanoon" not in rb["text"]
+    assert build_readback(SHARMA, "hi-en", legal_total=13000)["text"].count("Baaki ka hisaab") == 0
+    te = build_readback(SHARMA, "te-IN", legal_total=12692)["text"]
+    assert "బాకీ లెక్క" in te and "చట్టం ప్రకారం" not in te
+    en = build_readback(SHARMA, "en-IN", legal_total=12692)["text"]
+    assert "Baaki's calculation, Code on Wages section twenty:" in en and "Under the law" not in en
+
+
+def test_calculation_line_dropped_when_zero_or_no_wage():
+    rb = build_readback({"stated_total": 5000}, "hi-en", legal_total=0)
+    assert "Baaki ka hisaab" not in rb["text"] and "zero" not in rb["text"].lower() and "shunya" not in rb["text"]
+    rb = build_readback({"paid_lumps": [2000]}, "hi-en", legal_total=0)
+    assert "Baaki ka hisaab" not in rb["text"] and "Kul" not in rb["text"]
+    assert "Do hazaar rupaye mil chuke hain" in rb["text"]
 
 
 def test_said_total():

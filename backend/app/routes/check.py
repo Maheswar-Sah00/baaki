@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
-from .. import audio
+from .. import audio, security
 from ..check_core import IST, WORK_TYPES, compute, parse_spoken
 from ..gnani import GnaniError
 from ..stt_service import transcribe_upload
@@ -95,15 +95,10 @@ GUARD = SpeakGuard()
 
 
 def client_ip(request: Request) -> str:
-    """Visitor IP: Cloudflare tunnel header, else the first X-Forwarded-For hop, else X-Real-IP, else the
-    socket peer. (The Next /api rewrite forwards these headers but adds none of its own, so locally every
-    visitor shares the 127.0.0.1 bucket; the global cap still bounds credits.)"""
-    for value in (request.headers.get("cf-connecting-ip", ""),
-                  request.headers.get("x-forwarded-for", "").split(",")[0],
-                  request.headers.get("x-real-ip", "")):
-        if value.strip():
-            return value.strip()
-    return request.client.host if request.client else "unknown"
+    """Visitor IP: one rule for the whole app (security.client_ip): proxy headers are trusted only with
+    TRUSTED_PROXY=1 (on localhost, unset, the old order: cf-connecting-ip, first X-Forwarded-For hop,
+    X-Real-IP, socket peer)."""
+    return security.client_ip(request)
 
 
 def _fallback(status: int, code: str, message: str, remaining: int = 0) -> JSONResponse:

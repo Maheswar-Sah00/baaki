@@ -23,7 +23,7 @@ import re
 import string
 from typing import Any, Optional
 
-from . import check_core, llm, wages
+from . import calc_inputs, check_core, llm, wages
 from .lang import number_to_words
 from .messages import (LLM_SCHEMA, disclosure, fmt_money, forbidden_terms, money_words, month_name, name_in,
                        norm_lang, verify_amounts, words_lang)
@@ -51,12 +51,22 @@ def check_work_type(case_work_type: str | None) -> str:
     return WORK_MAP.get((case_work_type or "").strip().lower(), "maid")
 
 
-def estimate(case_work_type: str | None, hours_per_day: float, days_per_week: float, current: float,
+def estimate(case_work_type: str | None, hours_per_day: float | None, days_per_week: float, current: float,
              today: dt.date | None = None) -> dict[str, Any]:
-    """The legal estimate for this home and the gap, per month and per year (same method as /check)."""
+    """The legal estimate for this home and the gap, per month and per year (same method as /check).
+    Hours not said (None) are never guessed as 8: the estimate says it needs hours (needs_hours=True) and
+    carries no legal figure, so nothing is asked for."""
     wt = check_work_type(case_work_type)
-    hours = float(hours_per_day or 8)
     days = float(days_per_week or 6)
+    if not hours_per_day:
+        cur = wages.money(current or 0)
+        chk = check_core.compute(wt, 8, days, float(current or 0), today=today)  # labels and month only
+        return {"work_type": wt, "work_label": chk["work_label"], "category": chk["category"], "hours_per_day": None,
+                "days_per_week": days, "working_days": float(chk["working_days_per_month"]), "current": cur,
+                "legal_estimate": None, "target": None, "is_estimate": True, "gap_monthly": 0.0, "gap_yearly": 0.0,
+                "per_day": 0, "needs_hours": True, "how": "Hours not said: estimate needs hours.",
+                "source": chk["source"], "source_url": chk["source_url"], "month": chk["month"]}
+    hours = float(hours_per_day)
     chk = check_core.compute(wt, hours, days, float(current or 0), today=today)
     legal = float(chk["minimum_monthly"])
     target = float(math.ceil(round(legal, 6)))          # ask in whole rupees, never below the estimate
@@ -81,7 +91,13 @@ def estimate(case_work_type: str | None, hours_per_day: float, days_per_week: fl
         "source": chk["source"],
         "source_url": chk["source_url"],
         "month": chk["month"],
+        "needs_hours": False,
     }
+
+
+def estimate_for_case(case: Any, today: dt.date | None = None) -> dict[str, Any]:
+    """estimate() for a case, reading hours through calc_inputs.case_hours (the DB column defaults to 8)."""
+    return estimate(case.work_type, calc_inputs.case_hours(case), case.days_per_week, case.monthly_wage, today)
 
 
 def per_day(monthly_extra: float, working_days: float) -> int:

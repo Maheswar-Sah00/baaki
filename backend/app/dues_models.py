@@ -6,6 +6,9 @@ DuesItem     one line of what is owed ("October milk ₹1,850") or a payment rec
 DuesPromise  one "next week / end of this week / 1st tareekh" the other party said, with the due date resolved
              relative to the day it was said (app.lang.dates). Stored status pending | kept | broken; a pending
              promise whose date has passed with money still owed reads as broken (derived, see dues_core).
+DuesOwner    which worker an account belongs to (account_id -> worker_id). A separate table because existing
+             tables get no new columns (create_all, no migrations). An account with no owner row is a legacy row
+             and is shown to no worker.
 DuesLog      the hash chain: every item, payment, promise and status change is appended here, per account.
              hash = sha256(prev_hash | canonical JSON of the entry). Never edited; corrections are new entries.
 """
@@ -77,4 +80,10 @@ class DuesLog(SQLModel, table=True):
     hash: str = Field(default="", index=True)
 
 
-DUES_TABLES = (DuesAccount, DuesItem, DuesPromise, DuesLog)
+class DuesOwner(SQLModel, table=True):
+    account_id: int = Field(foreign_key="duesaccount.id", primary_key=True)
+    worker_id: int = Field(foreign_key="worker.id", index=True)
+    created_at: str = Field(default_factory=now_iso)
+
+
+DUES_TABLES = (DuesAccount, DuesItem, DuesPromise, DuesLog, DuesOwner)

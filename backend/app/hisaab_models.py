@@ -25,7 +25,7 @@ class HisaabProposal(SQLModel, table=True):
     said_by: str = "employer"                # always the employer: Baaki verifies nothing (s.59)
     amount: float                            # rupees, from app.lang (spoken) or the employer's typed number
     amount_source: str = "spoken"            # spoken | typed
-    kind: str = "other"                      # cash | upi | advance | other
+    kind: str = "other"                      # cash | upi | advance | other | said_paid (F2: "I've paid" claim)
     month: Optional[str] = None              # "2026-10" when he named a month
     transcript: str = ""                     # his words (Prisma transcript or typed text)
     source: str = "text"                     # voice | text
@@ -41,4 +41,23 @@ class HisaabProposal(SQLModel, table=True):
     balance_before: Optional[float] = None   # balance when she decided
     balance_after: Optional[float] = None
     decided_at: Optional[str] = None
+    created_at: str = Field(default_factory=now_iso)
+
+
+class HisaabClaim(SQLModel, table=True):
+    """F2 trust fix: the employer's "I've paid" is a claim, stored as a HisaabProposal with kind "said_paid"
+    plus this row (how he says he paid). Only her confirmation (decide accept) records money; a reject leaves the
+    claim "disputed" and changes nothing. Its own table: no column is added to hisaab_proposal."""
+    __tablename__ = "hisaab_claim"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    proposal_id: int = Field(index=True, unique=True)
+    case_id: int = Field(index=True)
+    case_token: str = ""
+    method: str = "upi"                      # upi | cash | bank | other
+    note: Optional[str] = None
+    source: str = "employer_page"            # employer_page | sandbox
+    alert_audio: bool = True                 # make the "Paisa aa gaya" Timbre clip when she confirms
+    demo: bool = False                       # sandbox: confirmed automatically, labelled "Demo: Lakshmi confirmed"
+    alert_message_id: Optional[int] = None   # the paid_alert Message written on confirmation
     created_at: str = Field(default_factory=now_iso)

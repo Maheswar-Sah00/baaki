@@ -3,11 +3,15 @@
   POST /api/cases/listen              audio -> transcript, amount chips, running total, safety
   POST /api/cases/meter               text (or edited chips) -> chips and running total (no LLM, a few ms)
   POST /api/cases/extract             text -> proposed facts + calculation preview + read-back text
-  POST /api/cases                     create the case from the transcript and/or confirmed facts
+  POST /api/cases                     create the case from the transcript and/or confirmed facts; a home that
+                                      already has an open case gets that case updated instead (`updated: true`)
   GET  /api/cases/{id}                the case with items, calculation, employer, worker, payments, messages
+  DELETE /api/cases/{id}              delete a draft (409 for anything she has confirmed)
+  POST /api/cases/{id}/undo-retell    "Nahi" after a re-telling: put the open case back as it was
   POST /api/cases/{id}/readback       read-back text + audio (Timbre, cached)
   POST /api/cases/{id}/confirm        the worker confirms (optionally with edited facts)
-  GET  /api/workers/{id}/dashboard    one card per employer
+  GET  /api/workers/{id}/dashboard    one card per employer (drafts listed apart, never in the totals)
+  GET  /api/workers/{id}/match-home   ?name= -> which of her homes a spoken name means (no LLM; any script)
   POST /api/diary                     a voice / text check-in, timestamped and SHA-256 hash-chained
   GET  /api/diary                     the chain for a worker (and employer), with verification
 """
@@ -24,10 +28,10 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 from starlette.concurrency import run_in_threadpool
 
-from .. import audio, db, safety, storage, tts_cache, wages
+from .. import audio, calc_inputs, clock, db, safety, storage, tts_cache, wages
 from ..extract import extract_facts
 from ..gnani import GnaniError
-from ..lang import today_ist
+from ..home_match import match_home
 from ..messages import name_in
 from ..meter import meter, summarise
 from ..models import Case, CaseItem, DiaryEntry, Employer, Message, Payment, Worker
@@ -46,7 +50,7 @@ LANG_TO_STT = {"te-IN": "te", "te": "te", "hi-en": "hinglish", "hinglish": "hing
 
 # --------------------------------------------------------------------------- helpers
 def _today() -> dt.date:
-    return today_ist()
+    return clock.today()
 
 
 def _ext(upload: UploadFile) -> str:
@@ -85,45 +89,10 @@ def _lang_hint(lang: str | None) -> str | None:
 
 def calc_from_facts(facts: dict[str, Any], today: dt.date | None = None,
                     include_shortfall: bool = False) -> dict[str, Any]:
-    """Facts (as confirmed) -> app.wages.calculate."""
-    today = today or _today()
-    deductions = []
-    for d in facts.get("deductions") or []:
-        deductions.append({"amount": d.get("amount") or 0, "reason": d.get("reason") or "other",
-                           "days_absent": d.get("days_absent"), "month": d.get("month")})
-    unpaid = list(facts.get("unpaid_months") or [])
-    if not unpaid and facts.get("unpaid_month_numbers"):
-        this_month = today.month
-        for n in facts["unpaid_month_numbers"]:
-            y = today.year if int(n) < this_month else today.year - 1
-            unpaid.append(f"{y:04d}-{int(n):02d}")
-    paid_months = dict(facts.get("paid_months") or {})
-    calc = wages.calculate(
-        monthly_wage=float(facts.get("monthly_wage") or 0),
-        category=facts.get("category") or wages.category_for(facts.get("work_type")),
-        work_type=facts.get("work_type"),
-        hours_per_day=facts.get("hours_per_day"),
-        days_per_week=float(facts.get("days_per_week") or 6),
-        unpaid_months=unpaid or None,
-        months_unpaid=facts.get("months_unpaid"),
-        last_month=facts.get("last_unpaid_month"),
-        paid_months=paid_months or None,
-        deductions=deductions,
-        advance_outstanding=float(facts.get("advance_outstanding") or 0),
-        dismissed_on=facts.get("dismissed_on"),
-        include_shortfall=include_shortfall or bool(facts.get("include_shortfall")),
-        today=today,
-    )
-    lumps = [float(x) for x in facts.get("owed_lumps") or [] if x]
-    if lumps:
-        for v in lumps:
-            calc["items"].append({"kind": "unpaid_wage", "label": "Other amount owed (as she said)", "month": None,
-                                  "amount": v, "is_estimate": False, "included_in_total": True, "due_date": None,
-                                  "source": wages.SRC_S17_1})
-        calc["contractual_due"] = wages.money(calc["contractual_due"] + sum(lumps))
-        calc["total"] = wages.money(calc["total"] + sum(lumps))
-        calc["total_with_shortfall"] = wages.money(calc["total_with_shortfall"] + sum(lumps))
-    return calc
+    """Facts (as confirmed) -> the calculation. One conversion for the case, the meter and the read-back:
+    app.calc_inputs (paid-per-month and lumps received subtract, months resolve once, fractions kept)."""
+    return calc_inputs.calculate(facts, today or _today(),
+                                 include_shortfall=include_shortfall or bool(facts.get("include_shortfall")))
 
 
 def _write_items(s: Session, case: Case, calc: dict[str, Any]) -> None:
@@ -149,7 +118,10 @@ def apply_calc(s: Session, case: Case, facts: dict[str, Any], include_shortfall:
     if facts.get("hours_per_day"):
         case.hours_per_day = float(facts["hours_per_day"])
     case.days_per_week = float(facts.get("days_per_week") or 6)
-    case.months_unpaid = float(len(calc["inputs"]["unpaid_months"]))
+    # Months counted by the one calculation input (whole + fractional, including part-paid months), so a
+    # "dhai mahine" or paid-per-month case never shows 0 or 2 here.
+    months = calc.get("months") or {}
+    case.months_unpaid = float(months["count"]) if months.get("count") is not None         else float(len(calc["inputs"]["unpaid_months"]))
     case.work_type = facts.get("work_type") or case.work_type
     case.category = calc["inputs"]["category"]
     case.dismissed = bool(facts.get("dismissed_on") or facts.get("dismissed"))
@@ -158,6 +130,8 @@ def apply_calc(s: Session, case: Case, facts: dict[str, Any], include_shortfall:
     s.add(case)
     s.flush()
     _write_items(s, case, calc)
+    from .. import ledger  # F2: status, badge, plan and overpaid follow the new total
+    ledger.reconcile(s, case)
     return calc
 
 
@@ -168,7 +142,34 @@ def readback_facts(facts: dict[str, Any], employer: Employer | None, lang: str) 
     return {**facts, "employer_name": name_in(employer.name, lang)}
 
 
+LADDER_STEPS = ("polite", "firm", "formal")
+
+
+def pending_claims(s: Session, case: Case) -> dict[str, Any]:
+    """Employer "I've paid" claims waiting for her answer (Hisaab proposals kind said_paid, status proposed)."""
+    from ..hisaab_models import HisaabProposal  # lazy: hisaab imports this module
+
+    rows = list(s.exec(select(HisaabProposal).where(HisaabProposal.case_id == case.id,
+                                                    HisaabProposal.kind == "said_paid",
+                                                    HisaabProposal.status == "proposed")
+                       .order_by(HisaabProposal.id)))
+    return {"count": len(rows), "amount": wages.money(sum(float(r.amount or 0) for r in rows)),
+            "proposal_ids": [r.id for r in rows]}
+
+
+def _message_row(s: Session, m: Message, case: Case) -> dict[str, Any]:
+    """A message, plus (ladder steps) whether it was made for a different balance than today's."""
+    row = m.model_dump()
+    if m.direction == "to_employer" and m.step in LADDER_STEPS:
+        from .. import ledger  # lazy: ledger imports models only, but keep cases importable on its own
+
+        row.update(ledger.staleness(s, m, case))
+    return row
+
+
 def case_json(s: Session, case: Case) -> dict[str, Any]:
+    from .. import ledger
+
     worker = s.get(Worker, case.worker_id)
     employer = s.get(Employer, case.employer_id)
     items = s.exec(select(CaseItem).where(CaseItem.case_id == case.id).order_by(CaseItem.id)).all()
@@ -182,6 +183,7 @@ def case_json(s: Session, case: Case) -> dict[str, Any]:
         "employer": employer.model_dump() if employer else None,
         "work_type": case.work_type, "category": case.category, "monthly_wage": case.monthly_wage,
         "hours_per_day": case.hours_per_day, "days_per_week": case.days_per_week,
+        "hours_known": calc_inputs.case_hours(case) is not None,  # False: hours_per_day is only the DB default
         "months_unpaid": case.months_unpaid, "dismissed": case.dismissed, "end_date": case.end_date,
         "transcript": case.transcript, "transcript_lang": case.transcript_lang,
         "facts": facts, "calc": case.calc(), "safety": json.loads(case.safety_json or "{}"),
@@ -189,7 +191,9 @@ def case_json(s: Session, case: Case) -> dict[str, Any]:
         "amount_paid": case.amount_paid, "balance": case.balance,
         "items": [i.model_dump() for i in items],
         "payments": [p.model_dump() for p in pays],
-        "messages": [m.model_dump() for m in msgs],
+        "messages": [_message_row(s, m, case) for m in msgs],
+        **ledger.money_view(s, case),  # total_due / amount_paid / balance (same values) + overpaid
+        "pending_claims": pending_claims(s, case),
         "employer_token": case.employer_token, "employer_path": f"/e/{case.employer_token}",
         "readback": rb, "readback_confirmed": case.readback_confirmed, "confirmed_at": case.confirmed_at,
         "created_at": case.created_at, "updated_at": case.updated_at,
@@ -271,11 +275,58 @@ class CaseIn(BaseModel):
     use_llm: bool = True
 
 
+CLOSED_STATUSES = ("paid", "closed")
+
+
+def _homes(s: Session, worker_id: int) -> list[Employer]:
+    """Every home this worker has a case with (drafts included), oldest first."""
+    ids: list[int] = []
+    for c in s.exec(select(Case).where(Case.worker_id == worker_id).order_by(Case.id)).all():
+        if c.employer_id not in ids:
+            ids.append(c.employer_id)
+    return [e for e in (s.get(Employer, i) for i in ids) if e is not None]
+
+
+def open_case_for(s: Session, worker_id: int, employer_id: int) -> Case | None:
+    """Her latest case with this home that is not paid / closed (a draft counts: it gets reused, not doubled)."""
+    for c in s.exec(select(Case).where(Case.worker_id == worker_id, Case.employer_id == employer_id)
+                    .order_by(Case.id.desc())).all():
+        if c.status not in CLOSED_STATUSES:
+            return c
+    return None
+
+
+def _retell(s: Session, case: Case, body: "CaseIn", facts: dict[str, Any], sf: dict[str, Any]) -> dict[str, Any]:
+    """She told the story again for a home with an open case: recompute THAT case (one card per home).
+    The previous facts are kept in facts["retold"] so "Nahi" can undo it; the new facts need her tick again."""
+    current = case.facts()
+    pending = current.get("retold")
+    if pending and not case.readback_confirmed:
+        # told again before confirming the last re-telling: "Nahi" still goes back to what she CONFIRMED
+        facts["retold"] = {**pending, "at": db.now_iso()}
+    else:
+        old = {k: v for k, v in current.items() if k != "retold"}
+        facts["retold"] = {"at": db.now_iso(), "previous_facts": old, "previous_transcript": case.transcript,
+                           "previous_total": case.total_due, "previous_readback_confirmed": case.readback_confirmed,
+                           "previous_confirmed_at": case.confirmed_at, "previous_safety": case.safety_json}
+    case.transcript = body.transcript or case.transcript
+    case.transcript_lang = body.lang or case.transcript_lang
+    case.safety_json = json.dumps(sf, ensure_ascii=False)
+    case.readback_confirmed = False  # the new numbers are read back and confirmed like a first telling
+    apply_calc(s, case, facts, include_shortfall=body.include_shortfall)
+    return {"previous_total": facts["retold"]["previous_total"]}
+
+
 @router.post("")
 async def create_case(body: CaseIn, s: Session = Depends(db.get_session)) -> dict:
+    """Create her case for a home. Duplicates are designed out:
+    * a NEW home whose name matches one of her homes in any script (Telugu "Sharma garu" = Sharma ji) is that home;
+    * a home that already has an open case (draft, confirmed, sent, plan) gets that case recomputed from the new
+      telling and returned with `updated: true` (status kept; the read-back needs her confirmation again).
+      Paid / closed cases are history: a new telling then starts a new case."""
     worker = s.get(Worker, body.worker_id)
     if worker is None:
-        raise HTTPException(404, "worker not found")
+        raise HTTPException(404, {"error": "no_worker", "message": "worker not found"})
     facts: dict[str, Any] = {}
     warnings: list[str] = []
     source = "manual"
@@ -287,36 +338,103 @@ async def create_case(body: CaseIn, s: Session = Depends(db.get_session)) -> dic
         facts.update({k: v for k, v in body.facts.items() if v is not None})
     if not facts.get("monthly_wage"):
         raise HTTPException(422, "no monthly wage found: say or type the salary per month")
+    home_match = None
     if body.employer_id is not None:
         employer = s.get(Employer, body.employer_id)
         if employer is None:
             raise HTTPException(404, "employer not found")
     else:
         name = (body.employer.name if body.employer else None) or facts.get("employer_name") or "Employer"
-        employer = Employer(name=name, language=body.employer.language if body.employer else "hi-en",
-                            phone=body.employer.phone if body.employer else None,
-                            locality=body.employer.locality if body.employer else None)
-        s.add(employer)
-        s.flush()
+        found, method = match_home(name, _homes(s, worker.id))
+        if found is not None:
+            employer, home_match = found, method
+        else:
+            employer = Employer(name=name, language=body.employer.language if body.employer else "hi-en",
+                                phone=body.employer.phone if body.employer else None,
+                                locality=body.employer.locality if body.employer else None)
+            s.add(employer)
+            s.flush()
     # The home she picked is the employer of record: the read-back must name it, not a word from the
     # transcript ("అమ్మగారు" / "Madam" was read back as the employer even when she chose Sharma ji).
     facts["employer_name"] = employer.name
     sf = safety.check_sync(body.transcript)
+    facts["extraction"] = {"source": source, "warnings": warnings}
+    existing = open_case_for(s, worker.id, employer.id) if employer.id is not None else None
+    if existing is not None:
+        info = _retell(s, existing, body, facts, sf)
+        s.commit()
+        s.refresh(existing)
+        return {**case_json(s, existing), "updated": True, "home_match": home_match, **info}
     case = Case(worker_id=worker.id, employer_id=employer.id, transcript=body.transcript,
                 transcript_lang=body.lang or worker.language, safety_json=json.dumps(sf, ensure_ascii=False),
                 work_type=facts.get("work_type") or worker.work_type)
     s.add(case)
     s.flush()
-    facts["extraction"] = {"source": source, "warnings": warnings}
     apply_calc(s, case, facts, include_shortfall=body.include_shortfall)
     s.commit()
     s.refresh(case)
-    return case_json(s, case)
+    return {**case_json(s, case), "updated": False, "home_match": home_match}
 
 
 @router.get("/{case_id}")
 async def get_case(case_id: int, s: Session = Depends(db.get_session)) -> dict:
     return case_json(s, _get_case(s, case_id))
+
+
+@router.post("/{case_id}/undo-retell")
+async def undo_retell(case_id: int, s: Session = Depends(db.get_session)) -> dict:
+    """She said "Nahi" to the read-back of a re-telling: the open case goes back to what she confirmed before."""
+    case = _get_case(s, case_id)
+    facts = case.facts()
+    prev = facts.get("retold")
+    if not prev or case.readback_confirmed:
+        raise HTTPException(409, {"error": "nothing_to_undo", "message": "this case has no unconfirmed re-telling"})
+    old = dict(prev.get("previous_facts") or {})
+    case.transcript = prev.get("previous_transcript") or case.transcript
+    case.safety_json = prev.get("previous_safety") or case.safety_json
+    apply_calc(s, case, old, include_shortfall=bool(old.get("include_shortfall")))
+    case.readback_confirmed = bool(prev.get("previous_readback_confirmed"))
+    case.confirmed_at = prev.get("previous_confirmed_at")
+    s.add(case)
+    s.commit()
+    s.refresh(case)
+    return case_json(s, case)
+
+
+def _tables_with(column: str) -> list[Any]:
+    return [t for t in db.all_tables() if column in t.c]
+
+
+@router.delete("/{case_id}")
+async def delete_case(case_id: int, s: Session = Depends(db.get_session)) -> dict:
+    """Delete a draft she never confirmed (and every row that hangs off it). Anything confirmed is evidence: 409.
+    A home that only this draft created goes too, so it never lingers in the home picker."""
+    case = _get_case(s, case_id)
+    if case.status != "draft" or case.readback_confirmed:
+        raise HTTPException(409, {"error": "not_draft", "message": "only a draft can be deleted"})
+    if s.exec(select(DiaryEntry).where(DiaryEntry.case_id == case.id)).first() is not None:
+        raise HTTPException(409, {"error": "has_evidence",
+                                  "message": "this draft has diary evidence linked; it is kept"})
+    removed: dict[str, int] = {}
+    for t in reversed(_tables_with("case_id")):
+        if t.name in ("case", "diaryentry"):
+            continue
+        n = s.execute(t.delete().where(t.c.case_id == case.id)).rowcount or 0
+        if n:
+            removed[t.name] = n
+    employer_id = case.employer_id
+    s.delete(case)
+    s.flush()
+    emp_removed = False
+    if s.exec(select(Case).where(Case.employer_id == employer_id)).first() is None:
+        refs = [t for t in _tables_with("employer_id") if t.name != "case"]
+        if not any(s.execute(t.select().where(t.c.employer_id == employer_id).limit(1)).first() for t in refs):
+            emp = s.get(Employer, employer_id)
+            if emp is not None:
+                s.delete(emp)
+                emp_removed = True
+    s.commit()
+    return {"deleted": case_id, "rows_removed": removed, "employer_removed": emp_removed}
 
 
 # --------------------------------------------------------------------------- read-back / confirm
@@ -417,29 +535,46 @@ def _card(s: Session, case: Case) -> dict[str, Any]:
         except ValueError:
             next_reminder = None
     calc = case.calc()
+    claims = pending_claims(s, case)
+    from .. import ledger
+
     return {
         "case_id": case.id, "employer": emp.model_dump() if emp else None,
         "fair_employer": bool(emp and emp.fair_employer), "status": case.status, "state": state,
         "total_due": case.total_due, "amount_paid": case.amount_paid, "balance": balance,
         "shortfall_estimate": case.shortfall_estimate,
-        "haq_check": calc.get("haq_check"), "monthly_wage": case.monthly_wage, "hours_per_day": case.hours_per_day,
+        "haq_check": calc.get("haq_check"), "monthly_wage": case.monthly_wage,
+        "hours_per_day": calc_inputs.case_hours(case),  # None = hours not said (the DB default 8 is never shown)
         "months_unpaid": case.months_unpaid,
         "last_step": last.step if last else None, "last_sent_at": (last.sent_at or last.created_at) if last else None,
         "next_reminder": next_reminder, "employer_path": f"/e/{case.employer_token}",
         "earliest_overdue": (calc.get("due") or {}).get("earliest_overdue"),
+        "pending_claims": claims["count"],  # "Sharma ji says he paid ₹X. Did it arrive?"
+        "pending_claims_amount": claims["amount"],
+        "overpaid": ledger.overpaid(s, case),
     }
 
 
 @workers_router.get("/{worker_id}/dashboard")
 async def dashboard(worker_id: int, s: Session = Depends(db.get_session)) -> dict:
+    """Cards for the homes she has confirmed. Drafts (told but not yet confirmed) are listed in `drafts` with a
+    delete path and never count in "money still owed", recovered or hidden baaki."""
     worker = s.get(Worker, worker_id)
     if worker is None:
-        raise HTTPException(404, "worker not found")
+        raise HTTPException(404, {"error": "no_worker", "message": "worker not found"})
     cases = s.exec(select(Case).where(Case.worker_id == worker_id).order_by(Case.id)).all()
-    cards = [_card(s, c) for c in cases]
+    cards = [_card(s, c) for c in cases if c.status != "draft"]
+    drafts = []
+    for c in cases:
+        if c.status == "draft":
+            emp = s.get(Employer, c.employer_id)
+            drafts.append({"case_id": c.id, "employer": emp.model_dump() if emp else None, "total_due": c.total_due,
+                           "created_at": c.created_at, "resume_path": f"/case/{c.id}",
+                           "delete_path": f"/api/cases/{c.id}"})
     return {
         "worker": worker.model_dump(),
         "cards": cards,
+        "drafts": drafts,
         "totals": {"homes": len({c["employer"]["id"] for c in cards if c["employer"]}),
                    "baaki": wages.money(sum(c["balance"] for c in cards)),
                    "recovered": wages.money(sum(c["amount_paid"] for c in cards)),
@@ -447,11 +582,25 @@ async def dashboard(worker_id: int, s: Session = Depends(db.get_session)) -> dic
     }
 
 
+@workers_router.get("/{worker_id}/match-home")
+async def match_home_route(worker_id: int, name: str = Query("", max_length=120),
+                           s: Session = Depends(db.get_session)) -> dict:
+    """Which of her homes does this spoken name mean? Works with the LLM off and across scripts
+    (Telugu / Devanagari / Latin -> Sharma ji). `match` is null when unsure (she picks)."""
+    if s.get(Worker, worker_id) is None:
+        raise HTTPException(404, {"error": "no_worker", "message": "worker not found"})
+    homes = _homes(s, worker_id)
+    found, method = match_home(name, homes)
+    open_case = open_case_for(s, worker_id, found.id) if found is not None and found.id is not None else None
+    return {"name": name, "match": found.model_dump() if found is not None else None, "method": method,
+            "open_case_id": open_case.id if open_case else None, "homes": len(homes)}
+
+
 @workers_router.get("/{worker_id}")
 async def get_worker(worker_id: int, s: Session = Depends(db.get_session)) -> dict:
     worker = s.get(Worker, worker_id)
     if worker is None:
-        raise HTTPException(404, "worker not found")
+        raise HTTPException(404, {"error": "no_worker", "message": "worker not found"})
     return worker.model_dump()
 
 
@@ -519,4 +668,6 @@ async def diary_list(worker_id: int, employer_id: Optional[int] = None, s: Sessi
     return {"entries": [e.model_dump() for e in shown], "chain": verify_chain(all_entries)}
 
 
-ROUTERS = [router, workers_router, diary_router]
+from .reminders import router as reminders_router  # noqa: E402  (GET /api/cases/{id}/reminders)
+
+ROUTERS = [router, workers_router, diary_router, reminders_router]

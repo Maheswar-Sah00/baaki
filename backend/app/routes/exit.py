@@ -25,14 +25,19 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 from starlette.concurrency import run_in_threadpool
 
-from .. import audio, db, safety, tts_cache, wages
+from .. import audio, calc_inputs, db, safety, tts_cache, wages
 from .. import exit_kit as ek
 from ..gnani import GnaniError
-from ..lang import extract_dates, today_ist
+from ..lang import extract_dates
 from ..models import Case, DiaryEntry, Employer, Worker
 from .cases import calc_from_facts
 
 router = APIRouter(prefix="/api/exit", tags=["exit"])
+
+
+def today_ist() -> dt.date:
+    """Today in IST through app.clock (BAAKI_TODAY for filming); never the server's local date."""
+    return wages.default_today()
 
 
 class ExitIn(BaseModel):
@@ -180,16 +185,19 @@ async def create_exit(body: ExitIn, s: Session = Depends(db.get_session)) -> dic
     if monthly <= 0:
         raise HTTPException(422, "monthly wage needed: send monthly_wage")
     dpw = float(body.days_per_week or (case.days_per_week if case else 0) or 6)
-    hours = body.hours_per_day or (case.hours_per_day if case else None)
+    hours = body.hours_per_day or (calc_inputs.case_hours(case) if case else None)  # never the DB's default 8
     category = case.category if case else wages.category_for(worker.work_type, worker.category)
 
-    earlier, frozen = None, None
+    earlier, frozen, frozen_parts = None, None, None
     if case is not None:
-        # freeze the case's unpaid months first: "3 months unpaid" must not slide onto the dismissal month
-        frozen = list(calc_from_facts(clean, today=today)["inputs"]["unpaid_months"])
+        # freeze the case's counted months first: "3 months unpaid" must not slide onto the dismissal month
+        months = calc_from_facts(clean, today=today)["months"]
+        frozen, frozen_parts = list(months["whole"]), dict(months["part"])
         exit_facts = {**clean, "dismissed_on": last_day.isoformat()}
         if frozen and not clean.get("unpaid_months"):
             exit_facts["unpaid_months"] = frozen
+        if frozen_parts and not clean.get("part_months"):
+            exit_facts["part_months"] = frozen_parts
         earlier = calc_from_facts(exit_facts, today=today)
 
     checkins = [e.timestamp for e in s.exec(select(DiaryEntry).where(
@@ -200,7 +208,7 @@ async def create_exit(body: ExitIn, s: Session = Depends(db.get_session)) -> dic
                       category=category, days_given=body.days_worked_this_month, checkin_dates=checkins,
                       start_date=case.start_date if case else None, earlier=earlier,
                       amount_paid=float(case.amount_paid or 0) if case else 0.0, case_facts=facts,
-                      frozen_unpaid=frozen)
+                      frozen_unpaid=frozen, frozen_parts=frozen_parts)
     result["last_day_how"] = last_day_how
     result["worker"] = {"id": worker.id, "name": worker.name, "language": worker.language}
     result["employer"] = {"id": employer.id, "name": employer.name, "language": employer.language,
@@ -221,7 +229,7 @@ async def create_exit(body: ExitIn, s: Session = Depends(db.get_session)) -> dic
                   "create": {"worker_id": worker.id, "employer_id": employer.id, "use_llm": False,
                              "facts": {"monthly_wage": monthly, "hours_per_day": hours, "days_per_week": dpw,
                                        "work_type": worker.work_type, "category": category,
-                                       "owed_lumps": [lump] if lump > 0 else [],
+                                       "final_settlement": patch["final_settlement"],
                                        "dismissed_on": last_day.isoformat(), "dismissed": True,
                                        "exit_kit": patch["exit_kit"]}},
                   "then": "/api/cases/{id}/messages/polite"}

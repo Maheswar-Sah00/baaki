@@ -16,7 +16,7 @@ from pathlib import Path
 
 from starlette.concurrency import run_in_threadpool
 
-from . import audio, config, gnani
+from . import audio, config, gnani, security
 from .gnani import DEFAULT_VOICE, DEFAULT_VOICE_V25, TTS_MODEL_V3
 
 SYNTH_CALLS = {"count": 0}  # real Timbre calls made through this cache (budget tracking)
@@ -30,10 +30,8 @@ class Entry:
     duration_s: float
     cached: bool
     fmt: str = "ogg"
-
-    @property
-    def url(self) -> str:
-        return f"/api/tts-cache/{self.key}.{self.fmt}"
+    # (No `url`: there is no /api/tts-cache route. Callers serve cached audio through their own routes,
+    # e.g. /api/consent/audio/{key}.ogg and /api/exit/audio/{key}.ogg, or copy it into /api/media.)
 
 
 def cache_key(text: str, lang: str, voice: str, fmt: str = "ogg", model: str = TTS_MODEL_V3) -> str:
@@ -112,6 +110,9 @@ async def synth(text: str, lang: str, voice: str | None = None, fmt: str = "ogg"
         hit = lookup(key, fmt)
         if hit:
             return Entry(key, hit, duration_of(hit), True, fmt)
+        if not security.tts_live_allowed():  # public deploy: cache hits only outside the allowlist
+            _locks.pop(key, None)
+            raise security.cache_only_error()
         raw = await gnani.get_client().tts(text, lang, voice=voice, container=fmt, model=model)
         SYNTH_CALLS["count"] += 1
         data, dur = await run_in_threadpool(finish, raw, fmt)

@@ -200,7 +200,8 @@ def test_payment_marks_promise_kept(client):
     ids = make_case(diary_days=0)
     b = client.post(f"/api/inbox/{ids['case_id']}", data={"text": "agle hafte 5,000 de dungi", "use_llm": "false",
                                                          "speak": "false"}).json()
-    client.post(f"/api/e/{ids['token']}/pay", json={"amount": 5000, "alert_audio": False})
+    c = client.post(f"/api/e/{ids['token']}/pay", json={"amount": 5000, "alert_audio": False}).json()
+    client.post(f"/api/hisaab/{c['claim']['id']}/decide", json={"decision": "accept"})   # F2: she confirms
     g = client.get(f"/api/inbox/{ids['case_id']}?as_of=2026-11-30").json()
     assert g["promises"][0]["status"] == "kept" and b["promise"]["status"] == "pending"
 

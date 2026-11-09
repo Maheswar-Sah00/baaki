@@ -80,7 +80,11 @@ TIMBRE_V3_TAGS = (
 DEFAULT_VOICE = {"te-IN": "Kalpana", "hi-IN": "Shivani", "hi-en": "Shivani", "en-IN": "Tarika"}
 DEFAULT_VOICE_V25 = {"te-IN": "Suhana", "hi-IN": "Nalini", "hi-en": "Poorvi", "en-IN": "Kaveri"}
 
-RETRYABLE = {429, 500, 502, 503, 504}
+# Only 429 (the 1-active-request limit: nothing was processed) is retried. 5xx and read timeouts may
+# have been processed and billed already (backend design audit, 10 Nov 2026).
+RETRYABLE = {429}
+BREAKER_STATUSES = {401, 402}  # bad key / no credits: fail fast for GNANI_BREAKER_S
+LOCK_STATS: dict[str, float] = {"last_wait_s": 0.0, "max_wait_s": 0.0}
 
 CONTENT_TYPES = {"ogg": "audio/ogg", "mp3": "audio/mpeg", "wav": "audio/wav", "raw": "application/octet-stream"}
 
@@ -158,14 +162,19 @@ def _parse_error(resp: httpx.Response) -> tuple[str, str]:
 class GnaniClient:
     def __init__(self, api_key: str | None = None, base_url: str | None = None,
                  transport: httpx.AsyncBaseTransport | None = None,
-                 max_attempts: int = 5, backoff_s: float = 0.75, timeout_s: float = 60.0):
+                 max_attempts: int = 5, backoff_s: float = 0.75, timeout_s: float = 60.0,
+                 deadline_s: float | None = None):
         self._key = api_key if api_key is not None else config.gnani_key()
         self.base_url = (base_url or config.gnani_base()).rstrip("/")
         self._transport = transport
         self.max_attempts = max_attempts
         self.backoff_s = backoff_s
+        self.timeout_s = timeout_s
+        self.deadline_s = deadline_s  # None: config.gnani_deadline_s() (GNANI_DEADLINE_S, default 45 s)
         self.timeout = httpx.Timeout(timeout_s, connect=15.0)
         self.last_response_headers: dict[str, str] = {}
+        self._breaker_until = 0.0
+        self._breaker_code: str | None = None
 
     @property
     def configured(self) -> bool:
@@ -179,20 +188,68 @@ class GnaniClient:
             h.update(extra)
         return h
 
+    # ------------------------------------------------------------------ circuit breaker
+    def breaker_state(self) -> dict[str, Any]:
+        left = max(0.0, self._breaker_until - time.monotonic())
+        return {"open": left > 0, "seconds_left": round(left, 1), "reason": self._breaker_code if left > 0 else None}
+
+    def _trip(self, status: int, code: str) -> None:
+        secs = config.gnani_breaker_s()
+        if secs > 0:
+            self._breaker_until = time.monotonic() + secs
+            self._breaker_code = f"{status} {code}"
+            log.warning("gnani breaker open for %.0f s after %d %s", secs, status, code)
+
     async def _request(self, method: str, path: str, *, kind: str, **kwargs: Any) -> httpx.Response:
-        """Send one request under the global lock, retrying 429/5xx/timeouts with backoff."""
+        """Send one request under the global lock.
+
+        The single chokepoint for every Gnani call:
+          * circuit breaker: after 401/402 every call fails fast with 503 voice_unavailable for
+            GNANI_BREAKER_S (routes turn it into text-only; TTS still serves the cache / seed_cache);
+          * budget: security.take_gnani_budget(kind) (public mode only) -> 429 "budget";
+          * one total deadline (GNANI_DEADLINE_S, default 45 s) that includes waiting for the lock;
+          * retries ONLY on 429 and connection errors. A POST that timed out or got a 5xx may already
+            have been processed (and billed), so it is not sent again.
+        """
+        if time.monotonic() < self._breaker_until:
+            raise GnaniError(503, "voice_unavailable", "Voice is unavailable right now. Showing text instead.")
+        from .security import take_gnani_budget  # lazy: security imports models, not gnani
+
+        take_gnani_budget(kind)
         url = self.base_url + path
         headers = self._headers(kwargs.pop("headers", None))
         delay = self.backoff_s
         last_exc: Exception | None = None
-        async with _lock():
+        t0 = time.monotonic()
+        deadline = t0 + (self.deadline_s if self.deadline_s is not None else config.gnani_deadline_s())
+        lock = _lock()
+        try:
+            await asyncio.wait_for(lock.acquire(), timeout=max(0.01, deadline - time.monotonic()))
+        except (asyncio.TimeoutError, TimeoutError):
+            raise GnaniError(503, "BUSY", "Voice is busy right now (another request is still running).")
+        waited = time.monotonic() - t0
+        LOCK_STATS["last_wait_s"] = round(waited, 3)
+        LOCK_STATS["max_wait_s"] = max(LOCK_STATS["max_wait_s"], round(waited, 3))
+        if waited > 0.5:
+            log.info("gnani %s waited %.2f s for the 1-request lock", kind, waited)
+        try:
             async with httpx.AsyncClient(timeout=self.timeout, transport=self._transport) as client:
                 for attempt in range(1, self.max_attempts + 1):
+                    left = deadline - time.monotonic()
+                    if left <= 0.05:
+                        break
+                    timeout = httpx.Timeout(min(self.timeout_s, left), connect=min(15.0, left))
                     try:
-                        resp = await client.request(method, url, headers=headers, **kwargs)
-                    except (httpx.TimeoutException, httpx.TransportError) as exc:
-                        last_exc = exc
+                        resp = await client.request(method, url, headers=headers, timeout=timeout, **kwargs)
+                    except (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout) as exc:
+                        last_exc = exc  # never reached Gnani: safe to send again
                         log.warning("gnani %s %s: %s (attempt %d)", kind, path, type(exc).__name__, attempt)
+                    except httpx.TimeoutException as exc:
+                        log.warning("gnani %s %s: %s, not retried", kind, path, type(exc).__name__)
+                        raise GnaniError(504, "TIMEOUT", f"{type(exc).__name__}: no answer in time")
+                    except httpx.TransportError as exc:
+                        log.warning("gnani %s %s: %s, not retried", kind, path, type(exc).__name__)
+                        raise GnaniError(0, "NETWORK_ERROR", type(exc).__name__)
                     else:
                         if resp.status_code < 400:
                             # response headers only (never our request headers): used by M0 to look for credit info
@@ -201,6 +258,8 @@ class GnaniClient:
                                 if k.lower() not in ("set-cookie", "x-api-key-id") and self._key not in v}
                             return resp
                         code, msg = _parse_error(resp)
+                        if resp.status_code in BREAKER_STATUSES:
+                            self._trip(resp.status_code, code)
                         if resp.status_code not in RETRYABLE or attempt == self.max_attempts:
                             raise GnaniError(resp.status_code, code, msg)
                         log.warning("gnani %s %s -> %d %s (attempt %d)", kind, path, resp.status_code, code, attempt)
@@ -209,11 +268,17 @@ class GnaniClient:
                         if ra.isdigit():
                             delay = max(delay, float(ra))
                     if attempt < self.max_attempts:
+                        if time.monotonic() + delay >= deadline:
+                            break
                         STATS.retries += 1
                         await asyncio.sleep(delay)
                         delay = min(delay * 2, 8.0)  # multipart bodies from bytes are re-sendable
+        finally:
+            lock.release()
         if isinstance(last_exc, GnaniError):
             raise last_exc
+        if last_exc is None:
+            raise GnaniError(504, "TIMEOUT", "Gnani call deadline reached")
         raise GnaniError(0, "NETWORK_ERROR", f"{type(last_exc).__name__} after {self.max_attempts} attempts")
 
     # ------------------------------------------------------------------ STT

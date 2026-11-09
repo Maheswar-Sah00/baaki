@@ -202,12 +202,17 @@ def test_stt_down_still_offers_tap(client, mock_gnani):
     assert t["status"] == "ready" and "spoken check skipped" in t["consent"]["text"]
 
 
-def test_tap_without_prior_attempt_works(client, mock_gnani):
+def test_tap_without_prior_spoken_attempt_is_refused(client, mock_gnani):
+    """GAP_AUDIT #13 (intended change): a tap alone (a client flag) never makes a clone."""
     wid = _worker()
-    mock_gnani.default["/api/v1/tts/voice-clone/embeddings"] = _embed_ok([])
+    emb = []
+    mock_gnani.default["/api/v1/tts/voice-clone/embeddings"] = _embed_ok(emb)
     t = _attempt(client, wid, method="tap").json()
-    assert t["status"] == "ready" and t["match"] is None and t["consent"]["consent_method"] == "tap"
+    assert t["status"] == "spoken_first" and t["can_confirm_by_tap"] is False
+    assert emb == [] and _consents(wid) == []
     assert not [r for r in mock_gnani.requests if r.url.path == "/stt/v3"]
+    with db.session() as s:
+        assert s.exec(select(VoiceProfile).where(VoiceProfile.worker_id == wid)).first() is None
 
 
 def test_short_recording_spends_nothing(client, mock_gnani):
@@ -276,10 +281,17 @@ def test_prompt_tts_error_does_not_block(client, mock_gnani):
     assert r.status_code == 200 and r.json()["audio_url"] is None and r.json()["tts_error"]
 
 
-def test_old_voice_profile_flow_unchanged(client, mock_gnani):
+def test_voice_profile_post_goes_through_the_spoken_check(client, mock_gnani):
+    """GAP_AUDIT #13 (intended change): POST /api/voice-profile is no longer a bare consent=true flag."""
     wid = _worker()
-    mock_gnani.default["/api/v1/tts/voice-clone/embeddings"] = _embed_ok([])
+    emb = []
+    mock_gnani.default["/api/v1/tts/voice-clone/embeddings"] = _embed_ok(emb)
+    mock_gnani.default["/stt/v3"] = _stt(TE_UNRELATED)
     r = client.post("/api/voice-profile", data={"worker_id": str(wid), "consent": "true"},
                     files={"audio": ("v.wav", CLIP, "audio/wav")})
-    assert r.status_code == 200 and r.json()["exists"]
-    assert _consents(wid) == []
+    assert r.status_code == 400 and r.json()["detail"]["error"] == "consent_not_heard" and emb == []
+    mock_gnani.default["/stt/v3"] = _stt(TE_GOOD)
+    r = client.post("/api/voice-profile", data={"worker_id": str(wid), "consent": "true"},
+                    files={"audio": ("v.wav", CLIP, "audio/wav")})
+    assert r.status_code == 200 and r.json()["exists"] and len(emb) == 1
+    assert len(_consents(wid)) == 1 and "method: spoken" in _consents(wid)[0].text

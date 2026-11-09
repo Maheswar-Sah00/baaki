@@ -12,8 +12,12 @@ How the copy is made (no Gnani, no LLM):
   audio is assembled only from sentences already in the TTS cache (seed_cache/tts or data/tts_cache), in
   order, starting with the AI disclosure. A sentence that is not cached (the reply-by date changes daily)
   is left out of the audio and stays in the text. No disclosure clip = "voice note unavailable".
-* "Mark as paid" delegates to the real employer pay logic with alert audio off; the "Paisa aa gaya" clip is
-  attached only if the exact alert sentence is already cached.
+* "Mark as paid" goes through the real flow: the employer's tap is a claim (routes/employer.pay, alert audio off),
+  then a synthetic confirmation labelled "Demo: Lakshmi confirmed" accepts it through the same ledger code
+  (routes/hisaab.decide_proposal, demo=True). The "Paisa aa gaya" clip is attached only if the exact alert
+  sentence is already cached.
+* No database session is held across an await: rows are written in one short transaction, the note text and
+  its cached audio are prepared with the session closed, then the message is written in a second short one.
 
 Guards: per-IP creation limit (in memory), 1 hour expiry, a cap of MAX_SANDBOXES (oldest evicted),
 cleanup of expired rows, no UPI, no live voice reply, no employer token in any response, no voice clone.
@@ -35,7 +39,9 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, delete, func, select
 from starlette.concurrency import run_in_threadpool
 
-from . import config, db, messages, seed, storage, tts_cache, voice_note
+from . import config, db, ledger, messages, seed, storage, tts_cache, voice_note
+from .hisaab_models import HisaabClaim, HisaabProposal
+from .ledger_models import FairBadgeGrant, LedgerEntry, LedgerPlan, MessageSnapshot
 from .models import Case, CaseItem, DiaryEntry, Employer, Message, Payment, Worker
 from .sandbox_models import SandboxSession
 
@@ -47,6 +53,7 @@ REPLY_OFF = "Voice reply is switched off in the public demo."
 PAID_HEADLINE = "Paisa aa gaya!"
 PAID_HEADLINE_EN = "The money has arrived."
 NO_MONEY_NOTE = "Sandbox demo: no real money moved"
+DEMO_CONFIRMED_LABEL = "Demo: Lakshmi confirmed (synthetic)"
 
 TTL_S = 3600                 # a sandbox lives one hour
 MAX_SANDBOXES = 300          # total cap; the oldest is evicted to make room
@@ -220,7 +227,8 @@ def _delete_case_rows(s: Session, row: SandboxSession) -> None:
     (after a demo reset the ids may belong to someone else: then only the sandbox row goes)."""
     case = s.get(Case, row.case_id)
     if case is not None and case.employer_token == row.case_token:
-        for t in (Message, Payment, CaseItem, DiaryEntry):
+        for t in (Message, Payment, CaseItem, DiaryEntry, HisaabClaim, HisaabProposal, LedgerEntry, LedgerPlan,
+                  FairBadgeGrant, MessageSnapshot):
             s.exec(delete(t).where(t.case_id == case.id))  # type: ignore[call-overload]
         worker_id, employer_id = case.worker_id, case.employer_id
         s.delete(case)
@@ -269,7 +277,7 @@ async def create(ip: str) -> SandboxSession:
     iph = ip_hash(ip)
     check_rate(iph, RATE_MAX_SHARED if ip in SHARED_IPS else RATE_MAX)
     tpl = template()
-    with db.session() as s:
+    with db.session() as s:   # 1. short write: the sandbox's own rows
         SandboxSession.metadata.create_all(s.get_bind(), tables=[SandboxSession.__table__])  # type: ignore[attr-defined]
         cleanup(s)
         _evict_for_room(s)
@@ -289,19 +297,34 @@ async def create(ip: str) -> SandboxSession:
         s.flush()
         for it in tpl["items"]:
             s.add(CaseItem(**it, case_id=c.id))
-        s.flush()
-        ctx = messages.load_ctx(s, c.id)
-        draft = await messages.compose(ctx, "polite", use_llm=False)
-        note = await polite_note_audio(draft.speech, messages.tts_lang(draft.lang))
-        s.add(Message(case_id=c.id, step="polite", direction="to_employer", language=draft.lang, text=draft.text,
-                      audio_path=note["key"], status="sent", sent_at=now_iso))
         ts = _now()
         row = SandboxSession(id=secrets.token_urlsafe(12), case_id=c.id, case_token=c.employer_token,
                              worker_id=w.id, employer_id=e.id, ip_hash=iph, created_ts=ts, expires_ts=ts + TTL_S)
         s.add(row)
         s.commit()
         s.refresh(row)
-        return row
+        ctx = messages.load_ctx(s, c.id)   # loaded eagerly; usable after the session closes
+    # 2. no session open: template text (no LLM) and audio from cached clips only (ffmpeg, no Gnani)
+    try:
+        draft = await messages.compose(ctx, "polite", use_llm=False)
+        note = await polite_note_audio(draft.speech, messages.tts_lang(draft.lang))
+    except Exception:
+        with db.session() as s:   # do not leave a half-made sandbox behind
+            r = s.get(SandboxSession, row.id)
+            if r is not None:
+                _delete_case_rows(s, r)
+                s.commit()
+        raise
+    with db.session() as s:   # 3. short write: the note she "sent"
+        m = Message(case_id=row.case_id, step="polite", direction="to_employer", language=draft.lang,
+                    text=draft.text, audio_path=note["key"], status="sent", sent_at=now_iso)
+        s.add(m)
+        s.flush()
+        case = s.get(Case, row.case_id)
+        if case is not None:
+            ledger.snapshot_message(s, m, case)
+        s.commit()
+    return row
 
 
 def load(s: Session, sid: str) -> tuple[SandboxSession, Case]:

@@ -25,6 +25,8 @@ from sqlmodel import Session, select
 
 from . import storage, verify_guard
 from .exit_kit import ExitKit
+from .hisaab_core import CLAIM_KIND, _female
+from .hisaab_models import HisaabClaim, HisaabProposal
 from .inbox_models import InboxCard, InboxPromise
 from .messages import CaseCtx, load_ctx
 from .models import Case, Message, Payment
@@ -62,6 +64,12 @@ TITLES: dict[str, dict[str, str]] = {
     "promised": {"en": "Promise noted", "te": "మాట నమోదైంది", "hi": "वादा दर्ज"},
     "promise_kept": {"en": "Promise kept", "te": "మాట నిలబెట్టుకున్నారు", "hi": "वादा निभाया"},
     "promise_broken": {"en": "Promise broken", "te": "మాట తప్పారు", "hi": "वादा टूटा"},
+    "claim_made": {"en": "{employer} said {pron} paid", "te": "{employer} చెల్లించామన్నారు",
+                   "hi": "{employer} ने कहा पैसे दे दिए"},
+    "claim_confirmed": {"en": "{worker} confirmed the money arrived", "te": "{worker} డబ్బులు అందాయని నిర్ధారించారు",
+                        "hi": "{worker} ने पुष्टि की: पैसे मिल गए"},
+    "claim_disputed": {"en": "{worker} said it did not arrive (disputed)", "te": "{worker} డబ్బులు అందలేదన్నారు (వివాదం)",
+                       "hi": "{worker} ने कहा पैसे नहीं मिले (विवादित)"},
     "paid": {"en": "Paid", "te": "చెల్లించారు", "hi": "पैसे दिए"},
     "paid_alert": {"en": "Paisa aa gaya!", "te": "డబ్బులు వచ్చేశాయి!", "hi": "पैसा आ गया!"},
     "exit_kit": {"en": "Exit Kit worked out", "te": "ఎగ్జిట్ కిట్ లెక్క వేశాం", "hi": "Exit Kit का हिसाब बना"},
@@ -80,17 +88,20 @@ KIND_RANK = {k: i for i, k in enumerate((
     "work_logged", "absence_logged", "diary_note", "diary_payment", "evidence_saved",
     "spoke", "readback_confirmed", "exit_kit", "note_made", "listen_twice", "listen_twice_warn", "sent",
     "employer_replied", "reply_translated", "reply_saved", "promised", "plan_chosen",
-    "promise_kept", "promise_broken", "paid", "paid_alert",
+    "promise_kept", "promise_broken", "claim_made", "claim_disputed", "claim_confirmed", "paid", "paid_alert",
 ))}
 # Within one second, the case intake comes first (see the module docstring).
 INTAKE = {"spoke": 0, "readback_confirmed": 1}
 TO_EMPLOYER_STEPS = ("polite", "firm", "formal")
 
 
-def title(kind: str, step: str | None = None) -> dict[str, str]:
+def title(kind: str, step: str | None = None, who: dict[str, str] | None = None) -> dict[str, str]:
     t = TITLES[kind]
     names = STEP_NAMES.get(step or "", {})
-    return {lg: t[lg].replace("{step}", names.get(lg, step or "")).replace(" ()", "") for lg in LANGS}
+    out = {lg: t[lg].replace("{step}", names.get(lg, step or "")).replace(" ()", "") for lg in LANGS}
+    for k, v in (who or {}).items():
+        out = {lg: x.replace("{" + k + "}", v) for lg, x in out.items()}
+    return out
 
 
 def parse_at(value: str | None) -> Optional[dt.datetime]:
@@ -146,7 +157,8 @@ class _Timeline:
                 self.skipped.append({"kind": kind, "source_table": table, "source_id": row_id,
                                      "reason": f"unreadable {at_field}"})
             return
-        ev: dict[str, Any] = {"at": at, "at_field": at_field, "kind": kind, "title": title(kind, step),
+        who = extra.pop("_who", None)
+        ev: dict[str, Any] = {"at": at, "at_field": at_field, "kind": kind, "title": title(kind, step, who),
                               "source_table": table, "source_id": row_id}
         if step:
             ev["step"] = step
@@ -222,6 +234,25 @@ def build_story(s: Session, case_id: int) -> Optional[dict[str, Any]]:
                "payment", p.id, amount=round(float(p.amount), 2), amount_delta=-round(float(p.amount), 2),
                method=p.method, note=p.note)
 
+    # "I've paid" claims: his word first, then hers (confirmed or disputed), each at its stored time.
+    # The confirmed payment itself is the "paid" event above; the diary lines that mirror a claim are skipped.
+    claim_ids: set[int] = set()
+    emp, wkr = ctx.employer.name, ctx.worker.name
+    names = {"employer": emp, "worker": wkr, "pron": "she" if _female(emp) else "he"}
+    for p in s.exec(select(HisaabProposal).where(HisaabProposal.case_id == case.id,
+                                                 HisaabProposal.case_token == case.employer_token,
+                                                 HisaabProposal.kind == CLAIM_KIND).order_by(HisaabProposal.id)):
+        claim_ids.add(p.id)
+        cl = s.exec(select(HisaabClaim).where(HisaabClaim.proposal_id == p.id)).first()
+        demo = bool(cl and cl.demo)
+        tl.add("claim_made", p.created_at, "hisaab_proposal.created_at", "hisaab_proposal", p.id, _who=names,
+               amount=round(float(p.amount), 2), method=cl.method if cl else None)
+        if p.status in ("accepted", "rejected"):
+            tl.add("claim_confirmed" if p.status == "accepted" else "claim_disputed", p.decided_at,
+                   "hisaab_proposal.decided_at", "hisaab_proposal", p.id, _who=names,
+                   amount=round(float(p.amount), 2), payment_id=p.payment_id,
+                   demo=True if demo else None, label="Demo: Lakshmi confirmed (synthetic)" if demo else None)
+
     # Feature tables outside the core (inbox, exit kit) are not wiped by POST /api/demo/reset, and SQLite
     # reuses case ids, so a row stamped before this case existed belongs to an older case with the same id.
     born = parse_at(case.created_at)
@@ -258,6 +289,8 @@ def build_story(s: Session, case_id: int) -> Optional[dict[str, Any]]:
     for d in ctx.diary:
         if d.id in card_diary:
             continue  # the saved-reply card above is the same event
+        if claim_ids and (d.text or "").startswith("Payment claim #"):
+            continue  # the claim events above are the same event
         tl.add(_diary_kind(d.kind), d.timestamp, "diaryentry.timestamp", "diaryentry", d.id,
                text=d.text or None, hash=(d.hash[:12] if d.hash else None))
 

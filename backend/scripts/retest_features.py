@@ -1,6 +1,6 @@
 """Feature retest: drives every built feature through the HTTP API, end to end, with ZERO Gnani or LLM calls.
 
-Runs in-process against a throwaway database (B:/tmp/baaki-retest.db) and media folder, with every API key blanked,
+Runs in-process against a throwaway database (BAAKI_RETEST_DIR, default <system temp>/baaki-retest) and media folder, with every API key blanked,
 so it never touches the real demo data or spends credits. Cached voice clips are still served from the TTS cache.
 
   backend\\.venv\\Scripts\\python backend\\scripts\\retest_features.py            # all features
@@ -12,10 +12,12 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 import traceback
 from pathlib import Path
 
-TMP = Path(os.environ.get("BAAKI_RETEST_DIR", "B:/tmp/baaki-retest"))
+# BAAKI_RETEST_DIR wins; otherwise the system temp dir (set TMP/TEMP=B:/tmp on the dev box).
+TMP = Path(os.environ.get("BAAKI_RETEST_DIR") or Path(tempfile.gettempdir()) / "baaki-retest")
 TMP.mkdir(parents=True, exist_ok=True)
 for f in TMP.glob("retest.db*"):
     f.unlink()
@@ -213,15 +215,22 @@ with TestClient(app) as c:
         d = ok(c.post(f"/api/hisaab/{pid}/decide", json={"decision": "accept"}))
         return f"amount={p.get('amount') or (p.get('proposal') or {}).get('amount')} decide_keys={sorted(d)[:6]}"
 
-    @step("core: pay in parts -> balance 0 (Paisa aa gaya)")
+    @step("core: pay in parts -> claim -> she confirms -> balance 0 (Paisa aa gaya)")
     def _():
         tok = S["employer_tokens"]["rao"]
         ok(c.post(f"/api/e/{tok}/plan", json={"instalments": 2}))
-        first = ok(c.post(f"/api/e/{tok}/pay", json={"amount": 100, "method": "cash", "alert_audio": False}))
-        rest = ok(c.post(f"/api/e/{tok}/pay", json={"method": "upi", "alert_audio": False}))
+        paid = []
+        for body in ({"amount": 100, "method": "cash", "alert_audio": False}, {"method": "upi", "alert_audio": False}):
+            claim = ok(c.post(f"/api/e/{tok}/pay", json=body))   # "I've paid" is only a claim
+            assert claim.get("pending_confirmation") and not claim.get("fully_paid"), f"claim recorded money: {claim}"
+            assert "case_id" not in claim, "employer response leaks case_id"
+            d = ok(c.post(f"/api/hisaab/{claim['claim']['id']}/decide", json={"decision": "accept"}))
+            assert d.get("alert"), "no Paisa aa gaya alert after her confirmation"
+            paid.append(d)
         bal = ok(c.get(f"/api/e/{tok}")).get("balance")
         assert float(bal) == 0, f"balance after paying everything = {bal}"
-        return f"rao paid 100 + rest; balance={bal}"
+        assert paid[-1].get("fully_paid") and paid[-1].get("badge"), "no badge after confirmed full payment"
+        return f"rao claimed 100 + rest, Rafiq confirmed both; balance={bal}; badge={paid[-1]['badge']['title']}"
 
     @step("zero Gnani calls")
     def _():

@@ -67,4 +67,4 @@ def new_key(case_id: int | None, ext: str) -> str:
     import datetime as dt
 
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S")
-    return f"c{case_id or 0}/{stamp}_{secrets.token_hex(4)}.{ext.lstrip('.') or 'bin'}"
+    return f"c{case_id or 0}/{stamp}_{secrets.token_hex(16)}.{ext.lstrip('.') or 'bin'}"

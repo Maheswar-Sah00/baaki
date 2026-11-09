@@ -3,6 +3,19 @@
 
 export type ShareResult = "shared" | "shared_text" | "whatsapp" | "copied" | "cancelled" | "failed";
 
+/**
+ * Did the message reach a sending app? "copied" only put it on the clipboard (desktop, no Web Share, popup
+ * blocked): nothing was handed to WhatsApp, so the caller must NOT mark it sent until she says she sent it.
+ */
+export function reachedSendingApp(r: ShareResult | null | undefined): boolean {
+  return r === "shared" || r === "shared_text" || r === "whatsapp";
+}
+
+/** Only copied: ask "Did you send it?" before marking it sent. */
+export function needsSentConfirm(r: ShareResult | null | undefined): boolean {
+  return r === "copied";
+}
+
 /** Fetch an audio URL into a File that Web Share accepts (clean MIME, no codecs parameter). */
 export async function fileFromUrl(url: string, name: string, signal?: AbortSignal): Promise<File> {
   const res = await fetch(url, { signal });

@@ -2,15 +2,17 @@
 "by the end of this week"): the milkman, the paper boy, the dhobi, or a chit member waiting on an agent.
 
   POST /api/dues/parse                 multipart text | audio, lang?, kind?, party? -> chips + total (+ a promise), no writes
-  POST /api/dues                       JSON: kind, party_name, party_lang, owner_name, items[], promise_text?
-  GET  /api/dues?as_of=                people who owe you, by kind, with totals and broken-promise counts
+  POST /api/dues                       JSON: worker_id, kind, party_name, party_lang, owner_name, items[], promise_text?
+  GET  /api/dues?worker_id=&as_of=     people who owe this worker, by kind, with totals and broken-promise counts
+                                       (accounts belong to a worker through DuesOwner; without worker_id only
+                                       accounts that belong to nobody are listed, never another worker's)
   GET  /api/dues/{id}?as_of=           items, promise log (hash-chained), counter, reminder/pack availability
   POST /api/dues/{id}/items            JSON items[] (more owed)          POST /api/dues/{id}/paid   JSON amount
   POST /api/dues/{id}/promises         multipart text | audio, said_on?, lang?, due_date? -> a dated, chained entry
   POST /api/dues/promises/{pid}/status kept | broken | pending
   POST /api/dues/{id}/remind           polite reminder in the other party's language (+ voice note, UPI, wa.me)
   GET  /api/dues/{id}/pack.pdf         record pack (chit / other, after 3 broken promises)
-  POST /api/dues/demo                  synthetic demo: Ramu's milk bill, Lakshmi's chit money
+  POST /api/dues/demo?worker_id=       synthetic demo: Ramu's milk bill, Lakshmi's chit money (owned by Lakshmi)
   DELETE /api/dues/{id}
 
 Nothing is sent from here. Amounts come from app.lang only (never an LLM); every reminder is re-checked.
@@ -31,9 +33,10 @@ from sqlmodel import Session, select
 from .. import audio, db, storage, voice_note
 from ..dues_core import (KINDS, LANGS, PACK_MIN_BROKEN, counter, item_label, lang_of, log_hash, name_of, norm_kind,
                          pack_blocks, pack_eligible, parse_items, parse_promise, promise_status, reminder, verify_log)
-from ..dues_models import DuesAccount, DuesItem, DuesLog, DuesPromise
+from .. import clock
+from ..dues_models import DuesAccount, DuesItem, DuesLog, DuesOwner, DuesPromise
 from ..gnani import GnaniError
-from ..lang import today_ist
+from ..models import Worker
 from ..messages import MONTHS, disclosure, fmt_date, fmt_money, norm_lang, tts_lang, upi_link
 from ..pdf import render_pdf
 from ..stt_service import transcribe_upload
@@ -47,7 +50,40 @@ AUTO_STT = ("te-IN,hi-IN,en-IN", "codemix")
 
 
 def _today() -> dt.date:
-    return today_ist()
+    return clock.today()
+
+
+# ------------------------------------------------------------------ ownership (DuesOwner)
+def _owner_of(s: Session, account_id: int) -> Optional[int]:
+    o = s.get(DuesOwner, account_id)
+    return o.worker_id if o else None
+
+
+def _set_owner(s: Session, account_id: int, worker_id: Optional[int]) -> None:
+    if worker_id is None:
+        return
+    s.merge(DuesOwner(account_id=account_id, worker_id=worker_id))
+
+
+def _check_worker(s: Session, worker_id: Optional[int]) -> None:
+    if worker_id is not None and s.get(Worker, worker_id) is None:
+        raise HTTPException(404, {"error": "no_worker", "message": "worker not found"})
+
+
+def _accounts_for(s: Session, worker_id: Optional[int]) -> list[DuesAccount]:
+    """This worker's accounts (newest first); worker_id None = accounts that belong to nobody."""
+    owners = {o.account_id: o.worker_id for o in s.exec(select(DuesOwner)).all()}
+    accts = s.exec(select(DuesAccount).order_by(DuesAccount.id.desc())).all()
+    return [a for a in accts if owners.get(a.id) == worker_id]
+
+
+def _demo_owner(s: Session, worker_id: Optional[int]) -> Optional[int]:
+    """The demo accounts belong to the given worker, else to the seeded Lakshmi, else to nobody."""
+    if worker_id is not None:
+        _check_worker(s, worker_id)
+        return worker_id
+    w = s.exec(select(Worker).where(Worker.name == "Lakshmi").order_by(Worker.id)).first()
+    return w.id if w else None
 
 
 def _as_of(as_of: Optional[str]) -> dt.date:
@@ -239,6 +275,7 @@ class ItemIn(BaseModel):
 
 
 class AccountIn(BaseModel):
+    worker_id: Optional[int] = None            # the worker this account belongs to (the UI always sends it)
     kind: Literal["vendor", "chit", "other"] = "vendor"
     party_name: str = Field(..., min_length=1, max_length=80)
     party_lang: str = "hi-en"
@@ -292,12 +329,14 @@ def _add_promise(s: Session, a: DuesAccount, words: str, said: dt.date, lang: Op
 async def create(body: AccountIn) -> dict:
     said = _iso_day(body.said_on, "said_on", _today())
     with db.session() as s:
+        _check_worker(s, body.worker_id)
         a = DuesAccount(kind=body.kind, title=body.title.strip(), party_name=body.party_name.strip(),
                         party_lang=norm_lang(body.party_lang), party_phone=(body.party_phone or "").strip() or None,
                         owner_name=body.owner_name.strip(), owner_lang=norm_lang(body.owner_lang),
                         owner_vpa=(body.owner_vpa or "").strip() or None, note=body.note.strip())
         s.add(a)
         s.flush()
+        _set_owner(s, a.id, body.worker_id)
         _append(s, a.id, "account", said.isoformat(), f"{a.owner_name or 'User'} is owed money by {a.party_name}",
                 {"kind": a.kind, "title": a.title, "party": a.party_name})
         for it in body.items:
@@ -309,10 +348,11 @@ async def create(body: AccountIn) -> dict:
 
 
 @router.get("")
-async def list_dues(as_of: Optional[str] = Query(None)) -> dict:
+async def list_dues(as_of: Optional[str] = Query(None), worker_id: Optional[int] = Query(None)) -> dict:
     day = _as_of(as_of)
     with db.session() as s:
-        accts = s.exec(select(DuesAccount).order_by(DuesAccount.id.desc())).all()
+        _check_worker(s, worker_id)
+        accts = _accounts_for(s, worker_id)
         rows = [summary_view(account_view(s, a, day)) for a in accts]
         by_kind = {k: {"count": 0, "balance": 0.0, "broken": 0} for k in KINDS}
         for r in rows:
@@ -321,16 +361,21 @@ async def list_dues(as_of: Optional[str] = Query(None)) -> dict:
             b["balance"] = round(b["balance"] + r["balance"], 2)
             b["broken"] += r["promises_broken"]
         total = round(sum(r["balance"] for r in rows), 2)
-        return {"as_of": day.isoformat(), "accounts": rows, "by_kind": by_kind, "total": total,
+        return {"as_of": day.isoformat(), "worker_id": worker_id, "accounts": rows, "by_kind": by_kind,
+                "total": total,
                 "total_display": fmt_money(total),
                 "promises_broken": sum(r["promises_broken"] for r in rows)}
 
 
 @router.get("/{account_id}")
-async def get_dues(account_id: int, as_of: Optional[str] = Query(None)) -> dict:
+async def get_dues(account_id: int, as_of: Optional[str] = Query(None),
+                   worker_id: Optional[int] = Query(None)) -> dict:
     day = _as_of(as_of)
     with db.session() as s:
-        return account_view(s, _account(s, account_id), day)
+        a = _account(s, account_id)
+        if worker_id is not None and _owner_of(s, a.id) != worker_id:
+            raise HTTPException(404, "not found")  # another worker's account
+        return account_view(s, a, day)
 
 
 @router.delete("/{account_id}")
@@ -349,6 +394,9 @@ def _delete(s: Session, a: DuesAccount) -> None:
     s.flush()
     for r in s.exec(select(DuesLog).where(DuesLog.account_id == a.id)).all():
         s.delete(r)
+    owner = s.get(DuesOwner, a.id)
+    if owner is not None:
+        s.delete(owner)
     s.flush()
     s.delete(a)
 
@@ -499,45 +547,52 @@ CHIT_PROMISES = (   # (days before today, words) - Srinivas, in Telugu; all synt
 
 
 @router.post("/demo")
-async def demo() -> dict:
+async def demo(worker_id: Optional[int] = Query(None)) -> dict:
     """Synthetic demo set (replaces the previous demo set): Ramu the milkman, owed ₹1,850 for last month by
     Reddy garu (two "first week" promises), and Lakshmi's chit money from Srinivas agent, ₹40,000 with six
-    "end of this week" promises over four months."""
+    "end of this week" promises over four months. Both accounts belong to Lakshmi (or `worker_id`)."""
     today = _today()
     with db.session() as s:
-        for old in s.exec(select(DuesAccount).where(DuesAccount.demo == True)).all():  # noqa: E712
-            _delete(s, old)
-        s.flush()
-        # 1. milk
-        pm = _prev_month(today)
-        mname = MONTHS["en"][pm.month - 1]
-        milk = DuesAccount(kind="vendor", title="Milk bill", party_name="Reddy garu", party_lang="hi-en",
-                           owner_name="Ramu", owner_lang="hi-en", owner_vpa="demo.ramu@baaki", demo=True)
-        s.add(milk)
-        s.flush()
-        _append(s, milk.id, "account", pm.replace(day=1).isoformat(), "Ramu is owed money by Reddy garu",
-                {"kind": "vendor", "title": "Milk bill", "party": "Reddy garu"})
-        parsed = parse_items(f"{mname} doodh 1850", "hinglish", "vendor")["items"][0]
-        _add_item(s, milk, ItemIn(label=parsed["label"], amount=parsed["amount"], item_key=parsed["item_key"],
-                                  month=parsed["month"], source_text=parsed["source_text"],
-                                  said_on=pm.isoformat()), pm)
-        _add_promise(s, milk, "Ramu bhai, agle mahine pehle hafte mein pakka de dunga", pm, "hi-en")
-        _add_promise(s, milk, "agle mahine pehle hafte pakka, dono mahine ka saath mein",
-                     today - dt.timedelta(days=1), "hi-en")
-        # 2. chit
-        first = today - dt.timedelta(days=CHIT_PROMISES[0][0])
-        chit = DuesAccount(kind="chit", title="Chit money from Srinivas agent", party_name="Srinivas agent",
-                           party_lang="te-IN", owner_name="Lakshmi", owner_lang="te-IN", demo=True,
-                           note="Chit lifted; payout promised")
-        s.add(chit)
-        s.flush()
-        start = first - dt.timedelta(days=4)
-        _append(s, chit.id, "account", start.isoformat(), "Lakshmi is owed money by Srinivas agent",
-                {"kind": "chit", "title": chit.title, "party": "Srinivas agent"})
-        _add_item(s, chit, ItemIn(label="చిట్టీ డబ్బులు", amount=40000, item_key="chit", source_text="40,000",
-                                  said_on=start.isoformat()), start)
-        for days, words in CHIT_PROMISES:
-            _add_promise(s, chit, words, today - dt.timedelta(days=days), "te-IN")
-        s.commit()
-        return {"accounts": {"milk": milk.id, "chit": chit.id}, "as_of": today.isoformat(),
-                "milk": summary_view(account_view(s, milk, today)), "chit": summary_view(account_view(s, chit, today))}
+        return seed_demo(s, today, _demo_owner(s, worker_id))
+
+
+def seed_demo(s: Session, today: dt.date, owner: Optional[int]) -> dict:
+    """Write the demo accounts for `owner` (sync; the demo route and seed.reset share it). Commits."""
+    for old in s.exec(select(DuesAccount).where(DuesAccount.demo == True)).all():  # noqa: E712
+        _delete(s, old)
+    s.flush()
+    # 1. milk
+    pm = _prev_month(today)
+    mname = MONTHS["en"][pm.month - 1]
+    milk = DuesAccount(kind="vendor", title="Milk bill", party_name="Reddy garu", party_lang="hi-en",
+                       owner_name="Ramu", owner_lang="hi-en", owner_vpa="demo.ramu@baaki", demo=True)
+    s.add(milk)
+    s.flush()
+    _set_owner(s, milk.id, owner)
+    _append(s, milk.id, "account", pm.replace(day=1).isoformat(), "Ramu is owed money by Reddy garu",
+            {"kind": "vendor", "title": "Milk bill", "party": "Reddy garu"})
+    parsed = parse_items(f"{mname} doodh 1850", "hinglish", "vendor")["items"][0]
+    _add_item(s, milk, ItemIn(label=parsed["label"], amount=parsed["amount"], item_key=parsed["item_key"],
+                              month=parsed["month"], source_text=parsed["source_text"],
+                              said_on=pm.isoformat()), pm)
+    _add_promise(s, milk, "Ramu bhai, agle mahine pehle hafte mein pakka de dunga", pm, "hi-en")
+    _add_promise(s, milk, "agle mahine pehle hafte pakka, dono mahine ka saath mein",
+                 today - dt.timedelta(days=1), "hi-en")
+    # 2. chit
+    first = today - dt.timedelta(days=CHIT_PROMISES[0][0])
+    chit = DuesAccount(kind="chit", title="Chit money from Srinivas agent", party_name="Srinivas agent",
+                       party_lang="te-IN", owner_name="Lakshmi", owner_lang="te-IN", demo=True,
+                       note="Chit lifted; payout promised")
+    s.add(chit)
+    s.flush()
+    _set_owner(s, chit.id, owner)
+    start = first - dt.timedelta(days=4)
+    _append(s, chit.id, "account", start.isoformat(), "Lakshmi is owed money by Srinivas agent",
+            {"kind": "chit", "title": chit.title, "party": "Srinivas agent"})
+    _add_item(s, chit, ItemIn(label="చిట్టీ డబ్బులు", amount=40000, item_key="chit", source_text="40,000",
+                              said_on=start.isoformat()), start)
+    for days, words in CHIT_PROMISES:
+        _add_promise(s, chit, words, today - dt.timedelta(days=days), "te-IN")
+    s.commit()
+    return {"accounts": {"milk": milk.id, "chit": chit.id}, "as_of": today.isoformat(), "worker_id": owner,
+            "milk": summary_view(account_view(s, milk, today)), "chit": summary_view(account_view(s, chit, today))}

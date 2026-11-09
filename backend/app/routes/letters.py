@@ -19,9 +19,16 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 from starlette.concurrency import run_in_threadpool
 
-from .. import audio, db, letter, storage, voice_note
+from .. import audio, db, ledger, letter, storage, voice_note
 from ..gnani import GnaniError
 from ..lang import today_ist
+
+try:  # F4's IST clock (one "today" for the whole app); app.lang's IST date until it lands
+    from ..clock import today as _today_ist  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - depends on merge order
+    _today_ist = today_ist
+
+IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 from ..messages import (STEPS, CaseCtx, compose, disclosure, employer_url, fmt_money, load_ctx, norm_lang,
                         tts_lang, upi_link)
 from ..models import Case, Message
@@ -68,19 +75,29 @@ def message_view(m: Message, ctx: CaseCtx | None = None) -> dict[str, Any]:
     return out
 
 
-def _today_utc_prefix() -> str:
-    return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+def _ist_day(stamp: str | None) -> dt.date | None:
+    """The IST calendar day of a stored UTC timestamp (00:00-05:30 IST is still 'today' in Hyderabad)."""
+    if not stamp:
+        return None
+    try:
+        d = dt.datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=dt.timezone.utc)
+    return d.astimezone(IST).date()
 
 
 def _reusable(s: Session, ctx: CaseCtx, step: str, lang: str, mode: str, want_audio: bool) -> Message | None:
+    """Today's (IST) note for this step, only if it was made for exactly today's balance (MessageSnapshot)."""
     m = s.exec(select(Message).where(Message.case_id == ctx.case.id, Message.step == step,
                                      Message.direction == "to_employer", Message.language == lang)
                .order_by(Message.id.desc())).first()
-    if m is None or not (m.created_at or "").startswith(_today_utc_prefix()):
+    if m is None or _ist_day(m.created_at) != _today_ist():
         return None
     if not m.text.startswith(disclosure(ctx.worker.name, lang, mode)):
         return None
-    if fmt_money(ctx.balance) not in m.text or (want_audio and not m.audio_path) or not m.pdf_path:
+    if not ledger.same_balance(s, m, ctx.case) or (want_audio and not m.audio_path) or not m.pdf_path:
         return None
     return m
 
@@ -93,7 +110,7 @@ async def make_step(case_id: int, step: str, body: StepIn = Body(default_factory
     """
     if step not in STEPS:
         raise HTTPException(404, f"step must be one of {list(STEPS)}")
-    with db.session() as s:
+    with db.session() as s:   # read only; closed before any Gnani / LLM / PDF work
         ctx = load_ctx(s, case_id)
         if ctx is None:
             raise HTTPException(404, "case not found")
@@ -111,56 +128,67 @@ async def make_step(case_id: int, step: str, body: StepIn = Body(default_factory
             old = _reusable(s, ctx, step, lang, mode, body.audio)
             if old is not None:
                 return {**message_view(old, ctx), "reused": True, "upi_link": upi, "voice_mode": mode,
-                        "balance": ctx.balance}
+                        "balance": ctx.balance, "stale": False}
+        made_for = {"balance": ctx.balance, "token": ctx.case.employer_token}
 
-        draft = await compose(ctx, step, voice_mode=mode, use_llm=body.use_llm, lang=lang)
-        worker_view = await compose(ctx, step, voice_mode=mode, use_llm=False, lang=ctx.worker_lang)
-        draft_en = await compose(ctx, step, voice_mode=mode, use_llm=False, lang="en") if step == "formal" else None
+    draft = await compose(ctx, step, voice_mode=mode, use_llm=body.use_llm, lang=lang)
+    worker_view = await compose(ctx, step, voice_mode=mode, use_llm=False, lang=ctx.worker_lang)
+    draft_en = await compose(ctx, step, voice_mode=mode, use_llm=False, lang="en") if step == "formal" else None
 
-        audio_info, audio_error, audio_key = None, None, None
-        if body.audio:
-            try:
-                note = await voice_note.make_voice_note(draft.speech, tts_lang(lang), worker_name=ctx.worker.name,
-                                                        embedding=embedding)
-                audio_key = store(case_id, note.data, "ogg")
-                audio_info = {"url": media_url(audio_key), "duration_s": note.duration_s, "voice_mode": note.voice_mode,
-                              "voice": note.voice, "voice_note_id": note.id, "gnani_calls": note.gnani_calls,
-                              "cache_hits": note.cache_hits, "sentences": len(note.sentences),
-                              "metadata_comment": note.comment}
-            except (GnaniError, audio.AudioError, ValueError) as e:
-                log.warning("voice note failed: %s", str(e)[:160])
-                audio_error = gnani_error_dict(e)
+    audio_info, audio_error, audio_key = None, None, None
+    if body.audio:
+        try:
+            note = await voice_note.make_voice_note(draft.speech, tts_lang(lang), worker_name=ctx.worker.name,
+                                                    embedding=embedding)
+            audio_key = store(case_id, note.data, "ogg")
+            audio_info = {"url": media_url(audio_key), "duration_s": note.duration_s, "voice_mode": note.voice_mode,
+                          "voice": note.voice, "voice_note_id": note.id, "gnani_calls": note.gnani_calls,
+                          "cache_hits": note.cache_hits, "sentences": len(note.sentences),
+                          "metadata_comment": note.comment}
+        except (GnaniError, audio.AudioError, ValueError) as e:
+            log.warning("voice note failed: %s", str(e)[:160])
+            audio_error = gnani_error_dict(e)
 
-        pdf_key = None
-        if body.pdf:
-            pdf_bytes = await run_in_threadpool(letter.render, letter.LetterInput(
-                ctx=ctx, step=step, draft=draft, draft_en=draft_en, upi_link=upi))
-            pdf_key = store(case_id, pdf_bytes, "pdf")
+    pdf_key = None
+    if body.pdf:
+        pdf_bytes = await run_in_threadpool(letter.render, letter.LetterInput(
+            ctx=ctx, step=step, draft=draft, draft_en=draft_en, upi_link=upi))
+        pdf_key = store(case_id, pdf_bytes, "pdf")
 
+    with db.session() as s:   # short write: the message and the balance it was made for
+        case = s.get(Case, case_id)
+        if case is None or case.employer_token != made_for["token"]:
+            raise HTTPException(404, "case not found")
         m = Message(case_id=case_id, step=step, direction="to_employer", language=lang, text=draft.text,
                     text_worker_lang=worker_view.text if ctx.worker_lang != lang else None,
                     audio_path=audio_key, pdf_path=pdf_key,
                     voice_note_id=audio_info["voice_note_id"] if audio_info else None, status="draft")
         s.add(m)
+        s.flush()
+        snap = ledger.snapshot_message(s, m, case)
+        snap.balance_at_make = made_for["balance"]   # the figure the note actually says
+        s.add(snap)
         s.commit()
         s.refresh(m)
-        url = employer_url(ctx.case.employer_token)
-        return {
-            **message_view(m, ctx),
-            "reused": False,
-            "source": draft.source,
-            "sentences": draft.display_sentences,
-            "speech": draft.speech,
-            "disclosure": draft.disclosure_display,
-            "reply_by": draft.reply_by,
-            "voice_mode": mode,
-            "audio": audio_info,
-            "audio_error": audio_error,
-            "upi_link": upi,
-            "share_text": f"{draft.text}\n\n{url}",
-            "balance": ctx.balance,
-            "checks": draft.checks,
-        }
+        stale = ledger.staleness(s, m, case)
+    url = employer_url(ctx.case.employer_token)
+    return {
+        **message_view(m, ctx),
+        "reused": False,
+        "source": draft.source,
+        "sentences": draft.display_sentences,
+        "speech": draft.speech,
+        "disclosure": draft.disclosure_display,
+        "reply_by": draft.reply_by,
+        "voice_mode": mode,
+        "audio": audio_info,
+        "audio_error": audio_error,
+        "upi_link": upi,
+        "share_text": f"{draft.text}\n\n{url}",
+        "balance": made_for["balance"],
+        "checks": draft.checks,
+        **stale,
+    }
 
 
 @router.get("/api/cases/{case_id}/messages")
@@ -168,8 +196,15 @@ async def list_messages(case_id: int) -> dict:
     with db.session() as s:
         if s.get(Case, case_id) is None:
             raise HTTPException(404, "case not found")
+        case = s.get(Case, case_id)
         rows = list(s.exec(select(Message).where(Message.case_id == case_id).order_by(Message.id)))
-        return {"case_id": case_id, "messages": [message_view(m) for m in rows]}
+        out = []
+        for m in rows:
+            v = message_view(m)
+            if m.direction == "to_employer" and m.step in STEPS:
+                v.update(ledger.staleness(s, m, case))   # {"stale", "balance_at_make"}
+            out.append(v)
+        return {"case_id": case_id, "messages": out}
 
 
 @router.post("/api/messages/{message_id}/sent")

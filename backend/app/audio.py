@@ -24,6 +24,20 @@ class AudioError(Exception):
     pass
 
 
+class AudioTooLong(Exception):
+    """An upload longer than config.stt_max_seconds(). Deliberately NOT an AudioError/ValueError, so route
+    handlers that turn those into 400/415 let it through to the app handler in main.py (413)."""
+
+    def __init__(self, duration_s: float, max_s: float):
+        super().__init__(f"recording is {duration_s:.0f} s; the limit is {max_s:.0f} s")
+        self.duration_s, self.max_s = duration_s, max_s
+
+    def as_dict(self) -> dict:
+        return {"error": "audio_too_long", "duration_s": round(self.duration_s, 1), "max_s": self.max_s,
+                "message": f"The recording is {self.duration_s:.0f} seconds. Please keep it under "
+                           f"{self.max_s:.0f} seconds, or send it in parts."}
+
+
 _ffmpeg: str | None = None
 
 
@@ -258,6 +272,9 @@ def prepare_for_stt(data: bytes, filename: str, max_len_s: float = STT_MAX_CHUNK
     ext = ext_of(filename) or "bin"
     info = probe(data, ext)
     total = info.duration_s
+    cap = config.stt_max_seconds()
+    if total is not None and total > cap:  # before any split or Gnani call (a 60-min upload = 129 calls)
+        raise AudioTooLong(total, cap)
     if ext in OGG_ALIASES:
         data, ext = remux_to_ogg(data, ext), "ogg"
     if ext in STT_NATIVE_EXTS and total is not None and total <= max_len_s:
@@ -265,6 +282,8 @@ def prepare_for_stt(data: bytes, filename: str, max_len_s: float = STT_MAX_CHUNK
     chunks = split_on_silence(data, ext, max_len_s=max_len_s)
     if total is None:
         total = chunks[-1]["end_s"] if chunks else 0.0
+        if total > cap:
+            raise AudioTooLong(total, cap)
     return [{"filename": f"chunk{i:02d}.wav", "audio": c["audio"], "start_s": c["start_s"], "end_s": c["end_s"]}
             for i, c in enumerate(chunks)], total
 

@@ -154,12 +154,15 @@ try {
   # ---------------------------------------------------------------- 4. fresh demo story
   $token = $null
   if (-not $NoReset) {
-    $seed = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/demo/reset" -TimeoutSec 60
+    # Public mode (BAAKI_PUBLIC=1) needs the admin token on demo resets; pass it through the environment if set.
+    $adm = @{}; if ($env:BAAKI_ADMIN_TOKEN) { $adm["X-Admin-Token"] = $env:BAAKI_ADMIN_TOKEN }
+    $seed = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/demo/reset" -Headers $adm -TimeoutSec 60
     $token = $seed.employer_tokens.sharma
     $sharmaCase = $seed.cases.sharma
+    $lakshmi = $seed.workers.lakshmi
     # Add-on demos: Haq Raise (Mehta madam) and "Baaki for every promise" (milkman, chit).
-    try { $raise = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/raise/demo" -ContentType "application/json" -Body '{"audio":true}' -TimeoutSec 120 } catch { Write-Warning "Haq Raise demo seed failed: $_" }
-    try { $null = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/dues/demo" -TimeoutSec 60 } catch { Write-Warning "Dues demo seed failed: $_" }
+    try { $raise = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/raise/demo" -Headers $adm -ContentType "application/json" -Body '{"audio":true}' -TimeoutSec 120 } catch { Write-Warning "Haq Raise demo seed failed: $_" }
+    try { $null = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/dues/demo" -Headers $adm -TimeoutSec 60 } catch { Write-Warning "Dues demo seed failed: $_" }
   }
 } catch {
   Write-Warning $_
@@ -174,14 +177,19 @@ Write-Host "Baaki demo is running (local only)." -ForegroundColor Green
 Write-Host "  Website        $WebUrl/"
 Write-Host "  Worker app     $WebUrl/app"
 Write-Host "  Fair Pay Check $WebUrl/check"
+Write-Host "  Fair or Not    $WebUrl/quiz"
+Write-Host "  Be Sharma ji   $WebUrl/try/employer   (public sandbox, cached audio only)"
 Write-Host "  Noise proof    $WebUrl/proof"
 if ($token) {
   Write-Host "  Employer link  $WebUrl/e/$token   (Sharma ji, case $sharmaCase)"
-  if ($raise) { Write-Host "  Haq Raise      $WebUrl$($raise.worker_path)   (worker)  |  $WebUrl$($raise.employer_path)   (employer)" }
+  if ($raise) { Write-Host "  Haq Raise      $WebUrl$($raise.worker_path)   (worker)  |  $WebUrl$($raise.employer_path)   (employer)" } else { Write-Host "  Haq Raise      $WebUrl/raise/<case>   (POST /api/raise/demo failed; see the warning above)" }
   Write-Host "  Other dues     $WebUrl/dues   (milkman, chit)"
   Write-Host "  Case           $WebUrl/case/$sharmaCase"
+  Write-Host "  Case Replay    $WebUrl/story/$sharmaCase"
+  Write-Host "  Hisaab Milao   $WebUrl/hisaab/$sharmaCase   (worker)  |  $WebUrl/hisaab/e/$token   (employer)"
   Write-Host "  Replies inbox  $WebUrl/inbox/$sharmaCase"
   Write-Host "  Exit Kit       $WebUrl/exit?case=$sharmaCase"
+  if ($lakshmi) { Write-Host "  Voice consent  $WebUrl/voice/consent?worker=$lakshmi   (spoken consent; uses live Prisma STT)" }
 }
 Write-Host "  Backend        $BackendUrl/health"
 Write-Host ""

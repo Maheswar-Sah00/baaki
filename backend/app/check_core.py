@@ -99,7 +99,7 @@ def compute(work_type: str, hours_per_day: float, days_per_week: float, monthly_
     else:
         explanation = (f"You pay {wages.fmt_inr(pay)} a month. Telangana's {'estimated ' if mw.is_estimate else ''}minimum "
                        f"for this work is {wages.fmt_inr(minimum)}, a gap of {wages.fmt_inr(gap)} a month. Matching it "
-                       f"costs about Rs {per_day} a working day.")
+                       f"costs about ₹{per_day} a working day.")
 
     return {
         "work_type": work_type,

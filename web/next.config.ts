@@ -51,6 +51,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Security headers on every page (GAP_AUDIT #30). The mic is used by this origin only.
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Permissions-Policy", value: "microphone=(self), camera=(), geolocation=()" },
+        ],
+      },
+      {
         source: "/manifest.webmanifest",
         headers: [
           { key: "Content-Type", value: "application/manifest+json; charset=utf-8" },

@@ -95,5 +95,123 @@ def tts_cache_dir() -> Path:
 
 
 def public_base_url() -> str:
-    """Origin of the web app (used for links in letters and share messages)."""
+    """Origin of the web app (used for links in letters and share messages). Behind a trusted proxy
+    (TRUSTED_PROXY=1) it is derived per request from X-Forwarded-Host/Host; PUBLIC_BASE_URL is the fallback."""
+    per_request = REQUEST_BASE_URL.get()
+    if per_request:
+        return per_request
     return os.environ.get("PUBLIC_BASE_URL", "http://localhost:3000").strip().rstrip("/")
+
+
+# --------------------------------------------------------------------------- public deploy (app/security.py)
+def _flag(name: str, default: str = "0") -> bool:
+    return os.environ.get(name, default).strip().lower() in ("1", "true", "yes", "on")
+
+
+def baaki_public() -> bool:
+    """BAAKI_PUBLIC=1: a public deploy (judges, LinkedIn). Turns on worker keys, the admin token on demo
+    routes, the Gnani budget, cache-only TTS and no cloning. Unset (localhost filming): behaviour as before."""
+    return _flag("BAAKI_PUBLIC")
+
+
+def demo_open() -> bool:
+    """BAAKI_DEMO_OPEN (default on in public mode): the seeded synthetic workers (no key) are viewable."""
+    return _flag("BAAKI_DEMO_OPEN", "1")
+
+
+def admin_token() -> str:
+    return os.environ.get("BAAKI_ADMIN_TOKEN", "").strip()
+
+
+def trusted_proxy() -> str:
+    """How far to trust client-IP headers: "1" = behind a trusted proxy (cf-connecting-ip, else the
+    X-Forwarded-For hop the proxy added); "0" = the socket peer only. Unset: "legacy" (the old behaviour,
+    first X-Forwarded-For hop) on localhost, "0" in public mode."""
+    raw = os.environ.get("TRUSTED_PROXY", "").strip().lower()
+    if raw in ("1", "true", "yes"):
+        return "1"
+    if raw in ("0", "false", "no"):
+        return "0"
+    return "0" if baaki_public() else "legacy"
+
+
+def trusted_proxy_hops() -> int:
+    """X-Forwarded-For hops appended by trusted proxies (1 = the last entry is the client the proxy saw)."""
+    try:
+        return max(1, int(os.environ.get("TRUSTED_PROXY_HOPS", "1")))
+    except ValueError:
+        return 1
+
+
+def _int_env(name: str, default: int) -> int:
+    try:
+        return max(0, int(os.environ.get(name, str(default)).strip()))
+    except ValueError:
+        return default
+
+
+def gnani_budget(kind: str) -> int | None:
+    """Daily Gnani calls allowed per kind (stt | tts | vc) in public mode; None = unlimited (localhost)."""
+    if not baaki_public():
+        return None
+    name, default = {"stt": ("GNANI_BUDGET_STT", 400), "tts": ("GNANI_BUDGET_TTS", 150),
+                     "vc": ("GNANI_BUDGET_VC", 0)}[kind]
+    return _int_env(name, default)
+
+
+def gnani_budget_per_ip() -> int | None:
+    """Daily Gnani calls (all kinds) one client IP may cause in public mode; None = unlimited."""
+    return _int_env("GNANI_BUDGET_PER_IP", 40) if baaki_public() else None
+
+
+def gnani_deadline_s() -> float:
+    """Total time one Gnani call may take, waiting for the 1-request lock included."""
+    try:
+        return max(5.0, float(os.environ.get("GNANI_DEADLINE_S", "45")))
+    except ValueError:
+        return 45.0
+
+
+def gnani_breaker_s() -> float:
+    """After 401/402 from Gnani, fail fast (voice_unavailable) for this many seconds."""
+    try:
+        return max(0.0, float(os.environ.get("GNANI_BREAKER_S", "300")))
+    except ValueError:
+        return 300.0
+
+
+def stt_max_seconds() -> float:
+    """Hard cap on one upload sent to STT (also on localhost: a 60-minute upload is never legitimate)."""
+    try:
+        return max(5.0, float(os.environ.get("STT_MAX_SECONDS", "90")))
+    except ValueError:
+        return 90.0
+
+
+def tts_live_routes() -> list[str]:
+    """Public mode: route templates that may synthesise NEW Timbre audio (everything else is cache-only).
+    "*" allows every route."""
+    raw = os.environ.get("TTS_LIVE_ROUTES", "")
+    if raw.strip():
+        return [r.strip() for r in raw.split(",") if r.strip()]
+    return ["/api/e/{token}/reply", "/api/cases/{case_id}/readback", "/api/cases/{case_id}/messages/{step}",
+            "/api/inbox/{case_id}"]
+
+
+def onboard_per_ip_day() -> int | None:
+    return _int_env("ONBOARD_PER_IP_DAY", 5) if baaki_public() else None
+
+
+def seed_on_boot() -> bool:
+    """BAAKI_SEED_ON_BOOT: seed the synthetic demo story at startup when the database is empty. Default on in
+    public mode, off on localhost unless set. SEED_ON_BOOT is accepted as a legacy alias."""
+    raw = os.environ.get("BAAKI_SEED_ON_BOOT", "").strip() or os.environ.get("SEED_ON_BOOT", "").strip()
+    if not raw:
+        return baaki_public()
+    return raw.lower() in ("1", "true", "yes", "on")
+
+
+# Per-request public origin (set by security.RequestContextMiddleware when TRUSTED_PROXY=1).
+from contextvars import ContextVar  # noqa: E402
+
+REQUEST_BASE_URL: ContextVar[str | None] = ContextVar("baaki_request_base_url", default=None)

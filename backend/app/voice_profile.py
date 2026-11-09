@@ -1,6 +1,7 @@
 """Opt-in voice profile: a Gnani voice-clone embedding of the worker's own voice.
 
-- Only with explicit consent=true. Without it nothing is processed.
+- Only with explicit consent=true. Without it nothing is processed. The API reaches create_profile only
+  through the spoken consent check (consent_flow.attempt); never on a public deploy (CloningDisabled).
 - The recording (10-20 s) is converted in memory / a temp dir that is deleted at once, sent to the
   embeddings endpoint, and discarded. Only the embedding is stored (VoiceProfile.embedding_json).
 - Delete removes the profile row and every cached clip spoken in the cloned voice.
@@ -37,6 +38,17 @@ CONSENT_TEXT = {
 
 class ConsentRequired(ValueError):
     pass
+
+
+class CloningDisabled(Exception):
+    """Voice cloning is switched off on a public deploy (BAAKI_PUBLIC=1)."""
+
+
+def check_cloning_enabled() -> None:
+    from . import security
+
+    if not security.cloning_enabled():
+        raise CloningDisabled("Voice cloning is switched off on the public demo. Messages use a stock voice.")
 
 
 @dataclass
@@ -76,6 +88,7 @@ def _prepare(data: bytes, filename: str) -> tuple[bytes, float, bool]:
 
 
 async def create_profile(s: Session, worker_id: int, consent: bool, data: bytes, filename: str) -> ProfileResult:
+    check_cloning_enabled()
     if consent is not True:
         raise ConsentRequired("explicit consent=true is required to make a voice profile")
     if s.get(Worker, worker_id) is None:

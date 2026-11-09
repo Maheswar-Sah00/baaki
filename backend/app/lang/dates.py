@@ -45,7 +45,12 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 
 def today_ist() -> date:
-    return datetime.now(IST).date()
+    """IST today, through the one app clock (honours BAAKI_TODAY), so parsers and routes agree."""
+    try:
+        from ..clock import today
+        return today()
+    except ImportError:  # pragma: no cover - clock.py always ships with the app
+        return datetime.now(IST).date()
 
 
 # ---------------------------------------------------------------------------
@@ -249,6 +254,16 @@ def _named_month(today: date, m: int, d: int | None, y: int | None) -> date:
     return cand
 
 
+def _named_month_past(today: date, m: int, d: int | None, y: int | None) -> date:
+    """A named day in a past-tense clause ("5 November ko diya tha"): the most recent one, never next year."""
+    if y is not None:
+        return _clamp(y, m, d if d is not None else 31)
+    cand = _clamp(today.year, m, d if d is not None else 1)
+    if cand > today:
+        cand = _clamp(today.year - 1, m, d if d is not None else 1)
+    return cand
+
+
 # ---------------------------------------------------------------------------
 # Matcher
 # ---------------------------------------------------------------------------
@@ -309,6 +324,12 @@ class _Matcher:
                 if key in _PAST:
                     return True
         return False
+
+    def named(self, i0: int, i1: int, m: int, d: int | None, y: int | None) -> date:
+        """Day + month name: future by default, the most recent one in a past-tense clause."""
+        if y is None and self.past(i0, i1):
+            return _named_month_past(self.today, m, d, y)
+        return _named_month(self.today, m, d, y)
 
     def date_word(self, i: int) -> bool:
         t = self.tok(i)
@@ -529,7 +550,7 @@ class _Matcher:
         if mo is not None:
             yv = self.year_at(k + 1)
             y, end = (yv if yv else (None, k + 1))
-            return end, _named_month(self.today, mo[0], d, y), "day"
+            return end, self.named(i, end, mo[0], d, y), "day"
         return None
 
     def p_weak_day_then_month(self, i: int):
@@ -542,7 +563,7 @@ class _Matcher:
             return None
         yv = self.year_at(i + 2)
         y, end = (yv if yv else (None, i + 2))
-        return end, _named_month(self.today, mo[0], d, y), "day"
+        return end, self.named(i, end, mo[0], d, y), "day"
 
     def p_month_then_day(self, i: int):
         mo = MONTHS.get(self.tok(i))
@@ -554,7 +575,7 @@ class _Matcher:
         d, j, _ = day
         yv = self.year_at(j)
         y, end = (yv if yv else (None, j))
-        return end, _named_month(self.today, mo[0], d, y), "day"
+        return end, self.named(i, end, mo[0], d, y), "day"
 
     def p_day_alone(self, i: int):
         day = self.day_at(i, allow_weak=False)

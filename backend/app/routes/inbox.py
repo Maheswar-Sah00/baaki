@@ -26,13 +26,14 @@ from fastapi import APIRouter, Body, File, Form, HTTPException, Query, UploadFil
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
-from .. import audio, db, voice_note
+from .. import audio, clock, db, voice_note
 from ..gnani import GnaniError
-from ..inbox_logic import (detect_lang, effective_status, evidence_text, extract_promises, readback_speech,
-                           reminder, summary)
+from ..inbox_logic import (detect_lang, effective_status, evidence_text, extract_past_payments, extract_promises,
+                           readback_speech, reminder, summary)
 from ..inbox_models import InboxCard, InboxPromise
-from ..lang import extract_amounts, today_ist
-from ..messages import CaseCtx, employer_url, fmt_date, fmt_money, load_ctx, norm_lang, parse_lang, tts_lang
+from ..lang import extract_amounts
+from ..messages import (CaseCtx, employer_url, fmt_date, fmt_money, load_ctx, name_in, norm_lang, parse_lang,
+                        tts_lang)
 from ..models import DiaryEntry, Payment
 from ..stt_service import transcribe_upload
 from ..translate import translate
@@ -50,7 +51,7 @@ _AUTO_LANG = ("auto", "indic-auto", "unknown")
 
 
 def _today() -> dt.date:
-    return today_ist()
+    return clock.today()
 
 
 def _ctx(s: Session, case_id: int) -> CaseCtx:
@@ -92,6 +93,41 @@ def promise_view(s: Session, p: InboxPromise, as_of: dt.date, balance: float, wo
             "can_remind": status == "passed"}
 
 
+PAST_PAID_LINE = {
+    "te-IN": ("{employer} {date} న {amount} ఇచ్చామని చెప్పారు. మీకు అందిందా?",
+              "{employer} {amount} ఇచ్చామని చెప్పారు. మీకు అందిందా?",
+              "{employer} {date} న డబ్బు ఇచ్చామని చెప్పారు. మీకు అందిందా?"),
+    "hi-en": ("{employer} कहते हैं {date} को {amount} दिए थे। क्या आपको मिले?",
+              "{employer} कहते हैं {amount} दिए थे। क्या आपको मिले?",
+              "{employer} कहते हैं {date} को पैसे दिए थे। क्या आपको मिले?"),
+    "en": ("{employer} says {amount} was paid on {date}. Did it reach you?",
+           "{employer} says {amount} was paid. Did it reach you?",
+           "{employer} says money was paid on {date}. Did it reach you?"),
+}
+
+
+def past_payments_view(c: InboxCard, ctx: CaseCtx) -> list[dict[str, Any]]:
+    """Payments the employer SAYS he already made ("5 November ko 2000 diya tha"), for her to check. Read-only:
+    nothing is recorded; only her confirmation through Hisaab could ever record money."""
+    try:
+        said = dt.date.fromisoformat((c.said_on or "")[:10])
+    except ValueError:
+        return []
+    wl = norm_lang(ctx.worker_lang)
+    wl = wl if wl in PAST_PAID_LINE else "en"
+    emp = name_in(ctx.employer.name, wl)
+    out = []
+    for x in extract_past_payments(c.transcript, c.language_code, said):
+        amount = fmt_money(x["amount"]) if x.get("amount") else None
+        date = fmt_date(x["paid_on"], wl, year=False) if x.get("paid_on") else None
+        both, amount_only, date_only = PAST_PAID_LINE[wl]
+        line = (both if amount and date else amount_only if amount else date_only).format(
+            employer=emp, amount=amount, date=date)
+        out.append({"amount": x.get("amount"), "amount_display": amount, "paid_on": x.get("paid_on"),
+                    "text": x.get("quote", ""), "line": line, "line_lang": wl, "recorded": False})
+    return out
+
+
 def card_view(s: Session, c: InboxCard, ctx: CaseCtx, as_of: dt.date) -> dict[str, Any]:
     ps = s.exec(select(InboxPromise).where(InboxPromise.card_id == c.id).order_by(InboxPromise.due_date)).all()
     pv = [promise_view(s, p, as_of, ctx.balance, ctx.worker_lang) for p in ps]
@@ -107,6 +143,7 @@ def card_view(s: Session, c: InboxCard, ctx: CaseCtx, as_of: dt.date) -> dict[st
         "summary": {"text": summary(ctx.employer.name, c.said_on, prim, wl), "language": wl,
                     "text_en": summary(ctx.employer.name, c.said_on, prim, "en")},
         "promise": prim, "promises": pv,
+        "past_payments": past_payments_view(c, ctx),
         "card": {"id": c.id, "hash": c.hash, "prev_hash": c.prev_hash, "at": c.created_at,
                  "diary_entry_id": c.diary_entry_id},
     }
@@ -158,70 +195,85 @@ async def add_reply(case_id: int, audio_file: Optional[UploadFile] = File(None, 
         data, ext = await _read_upload(audio_file)
     content_sha = db.sha256_hex(data if data is not None else text.encode("utf-8"))
 
+    def _duplicate(s: Session) -> Optional[dict]:
+        """The same note shared twice FOR THIS CASE: the card already made (no new credits, no second chain entry).
+        Scoped to the case: the same clip forwarded into another case is new evidence there."""
+        dup = s.exec(select(InboxCard).where(InboxCard.case_id == case_id, InboxCard.content_sha256 == content_sha)).first()
+        if dup is None:
+            return None
+        out = card_view(s, dup, _ctx(s, case_id), _today())
+        out.update({"duplicate": True, "audio": None, "audio_error": None})
+        return out
+
+    # 1. short read: the case context and the duplicate check. No session is held during Gnani / LLM work
+    #    (a session per waiting upload exhausted the pool and blocked every other request).
     with db.session() as s:
         ctx = _ctx(s, case_id)
-        # The same note shared twice: return the card already made (no new Gnani credits, no second chain entry).
-        dup = s.exec(select(InboxCard).where(InboxCard.case_id == case_id, InboxCard.content_sha256 == content_sha)).first()
-        if dup is not None:
-            out = card_view(s, dup, ctx, _today())
-            out.update({"duplicate": True, "audio": None, "audio_error": None})
-            return out
+        dup_view = _duplicate(s)
+    if dup_view is not None:
+        return dup_view
+    employer_lang, wl = ctx.employer_lang, ctx.worker_lang
+    employer_name, worker_id, employer_id = ctx.employer.name, ctx.worker.id, ctx.employer.id
 
-        employer_lang = ctx.employer_lang
-        stt_info: dict[str, Any] = {"language_code": None, "detected_language_code": None, "mode": None}
-        if data is not None:
-            if lang_in in _DEFAULT_LANG:
-                codes, mode = STT_FOR[employer_lang]
-            elif lang_in in _AUTO_LANG:
-                codes, mode = AUTO_STT
-            else:
-                codes, mode = STT_FOR[norm_lang(lang_in)]
-            try:
-                stt = await transcribe_upload(data, f"reply.{ext}", lang=codes, mode=mode)
-            except ValueError as e:
-                raise HTTPException(400, str(e))
-            except audio.AudioError as e:
-                raise HTTPException(415, f"could not decode audio: {e}")
-            except GnaniError as e:
-                raise HTTPException(503 if e.status == 429 else 502, e.as_dict())
-            transcript = (stt.get("transcript") or "").strip()
-            if not transcript:
-                raise HTTPException(422, {"error": "no_speech", "message": "nothing was heard; please try another clip"})
-            stt_info = {"language_code": stt.get("language_code"),
-                        "detected_language_code": stt.get("detected_language_code"), "mode": stt.get("mode")}
-            fallback = employer_lang if lang_in in _DEFAULT_LANG + _AUTO_LANG else norm_lang(lang_in)
-            src = detect_lang(transcript, stt.get("detected_language_code"), fallback)
-            source = "audio"
+    # 2. the slow part, no database connection: STT -> translation -> Timbre read-out
+    stt_info: dict[str, Any] = {"language_code": None, "detected_language_code": None, "mode": None}
+    if data is not None:
+        if lang_in in _DEFAULT_LANG:
+            codes, mode = STT_FOR[employer_lang]
+        elif lang_in in _AUTO_LANG:
+            codes, mode = AUTO_STT
         else:
-            transcript = text
-            src = detect_lang(text, None, employer_lang) if lang_in in _DEFAULT_LANG + _AUTO_LANG else norm_lang(lang_in)
-            source = "text"
+            codes, mode = STT_FOR[norm_lang(lang_in)]
+        try:
+            stt = await transcribe_upload(data, f"reply.{ext}", lang=codes, mode=mode)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        except audio.AudioError as e:
+            raise HTTPException(415, f"could not decode audio: {e}")
+        except GnaniError as e:
+            raise HTTPException(503 if e.status == 429 else 502, e.as_dict())
+        transcript = (stt.get("transcript") or "").strip()
+        if not transcript:
+            raise HTTPException(422, {"error": "no_speech", "message": "nothing was heard; please try another clip"})
+        stt_info = {"language_code": stt.get("language_code"),
+                    "detected_language_code": stt.get("detected_language_code"), "mode": stt.get("mode")}
+        fallback = employer_lang if lang_in in _DEFAULT_LANG + _AUTO_LANG else norm_lang(lang_in)
+        src = detect_lang(transcript, stt.get("detected_language_code"), fallback)
+        source = "audio"
+    else:
+        transcript = text
+        src = detect_lang(text, None, employer_lang) if lang_in in _DEFAULT_LANG + _AUTO_LANG else norm_lang(lang_in)
+        source = "text"
 
-        amounts = [{"value": a["amount_inr"], "text": a["source_text"], "start": a["start"], "end": a["end"]}
-                   for a in extract_amounts(transcript, parse_lang(src))]
-        promises = extract_promises(transcript, src, said)
+    amounts = [{"value": a["amount_inr"], "text": a["source_text"], "start": a["start"], "end": a["end"]}
+               for a in extract_amounts(transcript, parse_lang(src))]
+    promises = extract_promises(transcript, src, said)
+    tr = await translate(transcript, src, wl, speaker=employer_name, use_llm=use_llm)
 
-        wl = ctx.worker_lang
-        tr = await translate(transcript, src, wl, speaker=ctx.employer.name, use_llm=use_llm)
+    orig_key = store(case_id, data, ext) if data is not None else None
+    audio_key, audio_err, audio_info = None, None, None
+    if speak:
+        sentence = " ".join([*tr.speech, *readback_speech(promises, wl)])
+        try:
+            # one Timbre call: translation + promise read-back (stock voice; the employer's voice is never cloned)
+            note = await voice_note.make_voice_note([sentence], tts_lang(wl), purpose="reply translation")
+            audio_key = store(case_id, note.data, "ogg")
+            audio_info = {"duration_s": note.duration_s, "voice": note.voice, "voice_note_id": note.id,
+                          "gnani_calls": note.gnani_calls, "cache_hits": note.cache_hits}
+        except (GnaniError, audio.AudioError, ValueError) as ex:
+            audio_err = gnani_error_dict(ex)
 
-        orig_key = store(case_id, data, ext) if data is not None else None
-        audio_key, audio_err, audio_info = None, None, None
-        if speak:
-            sentence = " ".join([*tr.speech, *readback_speech(promises, wl)])
-            try:
-                # one Timbre call: translation + promise read-back (stock voice; the employer's voice is never cloned)
-                note = await voice_note.make_voice_note([sentence], tts_lang(wl), purpose="reply translation")
-                audio_key = store(case_id, note.data, "ogg")
-                audio_info = {"duration_s": note.duration_s, "voice": note.voice, "voice_note_id": note.id,
-                              "gnani_calls": note.gnani_calls, "cache_hits": note.cache_hits}
-            except (GnaniError, audio.AudioError, ValueError) as ex:
-                audio_err = gnani_error_dict(ex)
-
-        entry = add_diary_entry(s, ctx.worker.id,
-                                evidence_text(ctx.employer.name, said.isoformat(), source, transcript, promises),
-                                employer_id=ctx.employer.id, case_id=case_id, kind="evidence",
+    # 3. short write (no awaits inside, so the chain append cannot interleave with another request's)
+    with db.session() as s:
+        dup_view = _duplicate(s)  # the same clip may have landed while this one was in STT
+        if dup_view is not None:
+            return dup_view
+        ctx = _ctx(s, case_id)
+        entry = add_diary_entry(s, worker_id,
+                                evidence_text(employer_name, said.isoformat(), source, transcript, promises),
+                                employer_id=employer_id, case_id=case_id, kind="evidence",
                                 audio_sha256=db.sha256_hex(data) if data is not None else None)
-        card = InboxCard(case_id=case_id, worker_id=ctx.worker.id, employer_id=ctx.employer.id, source=source,
+        card = InboxCard(case_id=case_id, worker_id=worker_id, employer_id=employer_id, source=source,
                          language_code=src, stt_language_code=stt_info["language_code"],
                          detected_language_code=stt_info["detected_language_code"], stt_mode=stt_info["mode"],
                          transcript=transcript, translation=tr.text, translation_lang=wl, translation_source=tr.source,

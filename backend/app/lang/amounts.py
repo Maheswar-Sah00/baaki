@@ -1,7 +1,7 @@
 """Deterministic rupee-amount extraction from code-mixed transcripts.
 
 extract_amounts(text, lang_hint=None) -> list of
-    {"amount_inr": int, "start": int, "end": int, "source_text": str,
+    {"amount_inr": int (or float when paise were said: ₹615.50 -> 615.5), "start": int, "end": int, "source_text": str,
      "label_hint": str | None}
 
 Spans index into the original text and cover the currency sign/word when it
@@ -265,6 +265,19 @@ def _rate_after(t: Tok | None) -> bool:
     return _wkey(t) in _RATE_MONTH_AFTER
 
 
+# a payment verb right after a bare 1900-2100: "2000 diya hai" is money, not the year 2000
+_PAY_AFTER = _keys(["diya", "diye", "di", "dia", "dete", "deti", "deta", "mila", "mile", "mili", "milte", "paid",
+                    "gave", "received", "bheja", "bheje", "kaat", "kata", "cut", "advance", "दिया", "दिए", "दी",
+                    "देते", "मिला", "मिले", "मिली", "भेजा", "काटे", "ichcharu", "icharu", "ichaaru", "istaru"])
+_AUX_PAST = _keys(["tha", "thi", "the", "था", "थी", "थे"])
+_PAY_AFTER_TE = [norm_telu(w) for w in ["ఇచ్చారు", "ఇచ్చాడు", "ఇచ్చింది", "ఇచ్చా", "ఇస్తారు", "కట్"]]
+
+
+def _te_pay(t: Tok | None) -> bool:
+    return t is not None and t.kind == "word" and t.script == "telu" and \
+        any(norm_telu(t.w).startswith(p) for p in _PAY_AFTER_TE)
+
+
 def _count_after(t: Tok | None) -> bool:
     if t is None:
         return False
@@ -328,12 +341,15 @@ def extract_amounts(text: str, lang_hint: str | None = None) -> list[dict]:
         has_cur = t0 != p.ti0 or t1 != p.ti1
         has_mult = p.has_mult
         value: Fraction = p.value
+        amount: int | float
         if value.denominator != 1:
             if has_cur and not has_mult:
-                value = Fraction(int(value + Fraction(1, 2)))  # ₹3.50 -> 4: round half up
+                paise = int(value * 100 + Fraction(1, 2))  # paise kept: ₹615.50 stays 615.5, never 616
+                amount = paise // 100 if paise % 100 == 0 else paise / 100
             else:
                 continue
-        amount = int(value)
+        else:
+            amount = int(value)
         if amount < 0 or amount > MAX_INR or (amount == 0 and not has_cur):
             continue
         start, end = toks[t0].start, toks[t1].end
@@ -368,7 +384,11 @@ def extract_amounts(text: str, lang_hint: str | None = None) -> list[dict]:
             if "," not in num_tok.w and 1900 <= amount <= 2100:
                 if key(p.ti0 - 1) in _YEAR_CTX_BEFORE or key(p.ti1 + 1) in _YEAR_CTX_AFTER:
                     continue
-                year_like = True
+                # "2000 diya hai" / "diya tha 2000" / "2000 ichcharu": a number someone paid is money, not a year
+                paid_next = key(p.ti1 + 1) in _PAY_AFTER or _te_pay(tok(p.ti1 + 1))
+                paid_before = key(p.ti0 - 1) in _PAY_AFTER or (key(p.ti0 - 1) in _AUX_PAST
+                                                               and key(p.ti0 - 2) in _PAY_AFTER)
+                year_like = not (paid_next or paid_before)
         if not has_cur and _count_after(tok(t1 + 1)) and not ((has_mult or amount >= 100) and _rate_after(tok(t1 + 1))):
             continue
         cands.append(_Cand(p, amount, t0, t1, start, end, has_cur, year_like))

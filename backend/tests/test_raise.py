@@ -42,8 +42,10 @@ def make_home(worker="Lakshmi", worker_lang="te-IN", employer="Mehta madam", emp
         s.add(w)
         s.add(e)
         s.commit()
-        c = Case(worker_id=w.id, employer_id=e.id, monthly_wage=wage, hours_per_day=hours, days_per_week=days,
-                 work_type=work_type, status="draft")
+        # hours=None models a case where she never said her hours (the DB column still defaults to 8).
+        facts = {"hours_per_day": hours, "hours_known": True} if hours else {}
+        c = Case(worker_id=w.id, employer_id=e.id, monthly_wage=wage, hours_per_day=hours or 8, days_per_week=days,
+                 work_type=work_type, status="draft", facts_json=json.dumps(facts))
         s.add(c)
         s.commit()
         return {"worker_id": w.id, "employer_id": e.id, "case_id": c.id}
@@ -313,7 +315,7 @@ def test_summary_endpoint(client):
             s.add(e)
             s.commit()
             c = Case(worker_id=w.id, employer_id=e.id, monthly_wage=wage, hours_per_day=2, days_per_week=6,
-                     work_type="housekeeping")
+                     work_type="housekeeping", facts_json=json.dumps({"hours_per_day": 2, "hours_known": True}))
             s.add(c)
             s.commit()
             homes.append(c.id)
@@ -348,3 +350,17 @@ def test_demo_prepares_mehta_home(client):
     assert b2["token"] != b["token"] and client.get(f"/api/raise/e/{b['token']}").status_code == 404
     seed.reset()
     assert client.get(f"/api/raise/e/{b2['token']}").status_code == 404
+
+
+# --------------------------------------------------------------------------- hours not said (GAP_AUDIT #15)
+def test_unknown_hours_never_shown_as_fair_or_guessed_as_eight(client):
+    h = make_home(employer="Kapoor madam", wage=4000, hours=None)
+    summ = client.get("/api/raise/summary", params={"worker_id": h["worker_id"]}).json()
+    home = next(x for x in summ["per_home"] if x["case_id"] == h["case_id"])
+    assert home["status"] == "needs_hours"
+    assert home["legal_estimate"] is None and home["gap_yearly"] == 0
+    view = client.get(f"/api/raise/case/{h['case_id']}")
+    assert view.status_code == 200, view.text
+    assert view.json()["numbers"]["needs_hours"] is True
+    r = client.post(f"/api/raise/case/{h['case_id']}/compose", json={"plan": "full", "audio": False})
+    assert r.status_code == 409 and r.json()["detail"]["error"] == "needs_hours"

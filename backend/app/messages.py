@@ -187,8 +187,13 @@ class CaseCtx:
         return max(0.0, round(self.total_due - self.paid, 2))
 
     def unpaid_months(self) -> list[str]:
-        ms = sorted({i.month for i in self.included if i.kind == "unpaid_wage" and i.month})
-        return ms
+        """Months with no pay at all ("my salary for October has not been paid")."""
+        part = set(self.part_unpaid_months())
+        return sorted({i.month for i in self.included if i.kind == "unpaid_wage" and i.month} - part)
+
+    def part_unpaid_months(self) -> list[str]:
+        """Months paid in part, or part of a month she said: "part of my October salary is still due"."""
+        return sorted({i.month for i in self.included if i.kind == "unpaid_wage" and i.month and is_part_item(i)})
 
     def sum_kind(self, kind: str) -> float:
         return round(sum(float(i.amount) for i in self.included if i.kind == kind), 2)
@@ -240,14 +245,22 @@ ITEM_LABELS = {
                            "en": "Minimum-wage shortfall (estimate)"},
     "advance_recovery": {"hi-en": "पहले लिया advance (घटाया गया)", "te-IN": "ముందు తీసుకున్న అడ్వాన్స్ (తీసివేశాం)",
                          "en": "Advance still to be recovered (subtracted)"},
+    "paid_received": {"hi-en": "पहले मिल चुके (घटाए गए)", "te-IN": "ముందే అందినది (తీసివేశాం)",
+                      "en": "Already received from the employer (subtracted)"},
 }
 PART_UNPAID = {"hi-en": "{m} की बची हुई salary", "te-IN": "{m} మిగిలిన జీతం", "en": "Unpaid part of wages, {m}"}
+
+
+def is_part_item(item: Any) -> bool:
+    """An unpaid-wage line for only part of a month (part-paid, or "dhai mahine")."""
+    label = (getattr(item, "label", None) or "").lower()
+    return label.startswith("part") or " of a month" in label
 
 
 def item_label(item: CaseItem, lang: str) -> str:
     lang = norm_lang(lang)
     tpl = ITEM_LABELS.get(item.kind, {}).get(lang)
-    if item.kind == "unpaid_wage" and (item.label or "").lower().startswith("part"):
+    if item.kind == "unpaid_wage" and is_part_item(item):
         tpl = PART_UNPAID[lang]
     if not tpl:
         return item.label
@@ -283,6 +296,8 @@ TEMPLATES: dict[str, dict[str, list[tuple[Optional[str], str]]]] = {
     "polite": {
         "hi-en": [
             ("months_list", "नमस्ते {employer}, मेरी {months_list} की salary अभी तक नहीं मिली है, {monthly} हर महीने के हिसाब से।"),
+            ("part_only", "नमस्ते {employer}, मेरी {part_list} की salary का कुछ हिस्सा अभी बाकी है।"),
+            ("part_also", "{part_list} की salary का कुछ हिस्सा भी बाकी है।"),
             ("cut", "salary की कटौती में से {cut} भी वापस बनते हैं।"),
             ("shortfall", "इसमें न्यूनतम वेतन से कमी का अनुमान, {shortfall}, भी जोड़ा है।"),
             ("paid", "{paid} मिल चुके हैं, उसके लिए धन्यवाद।"),
@@ -291,6 +306,8 @@ TEMPLATES: dict[str, dict[str, list[tuple[Optional[str], str]]]] = {
         ],
         "te-IN": [
             ("months_list", "నమస్కారం {employer}, నా {months_list} నెలల జీతం ఇంకా రాలేదు; నా జీతం నెలకు {monthly}."),
+            ("part_only", "నమస్కారం {employer}, నా {part_list} జీతంలో కొంత భాగం ఇంకా రావాలి."),
+            ("part_also", "{part_list} జీతంలో కొంత భాగం కూడా ఇంకా రావాలి."),
             ("cut", "జీతంలో చేసిన కోతలో {cut} కూడా తిరిగి రావాలి."),
             ("shortfall", "కనీస వేతనం కంటే తక్కువ అయిన అంచనా మొత్తం {shortfall} కూడా ఇందులో ఉంది."),
             ("paid", "{paid} అందింది, ధన్యవాదాలు."),
@@ -299,6 +316,8 @@ TEMPLATES: dict[str, dict[str, list[tuple[Optional[str], str]]]] = {
         ],
         "en": [
             ("months_list", "Hello {employer}, my salary for {months_list} has not been paid yet, at {monthly} a month."),
+            ("part_only", "Hello {employer}, part of my salary for {part_list} is still due."),
+            ("part_also", "Part of my salary for {part_list} is also still due."),
             ("cut", "{cut} of the cut from my salary is also to be returned."),
             ("shortfall", "It also includes an estimated minimum-wage shortfall of {shortfall}."),
             ("paid", "I have received {paid}, thank you for that."),
@@ -310,6 +329,7 @@ TEMPLATES: dict[str, dict[str, list[tuple[Optional[str], str]]]] = {
         "hi-en": [
             (None, "नमस्ते {employer}, यह मेरे पिछले संदेश की याद दिलाने के लिए है।"),
             ("months_list", "मेरी {months_list} की salary अभी तक नहीं मिली है।"),
+            ("part_list", "{part_list} की salary का कुछ हिस्सा अभी बाकी है।"),
             ("first_due", "हर महीने की salary अगले महीने की सात तारीख तक दी जाती है, इसलिए पहली salary {first_due} तक मिलनी थी।"),
             ("cut", "salary की कटौती में से {cut} अभी लौटाने बाकी हैं।"),
             ("paid", "{paid} मिल चुके हैं।"),
@@ -320,6 +340,7 @@ TEMPLATES: dict[str, dict[str, list[tuple[Optional[str], str]]]] = {
         "te-IN": [
             (None, "నమస్కారం {employer}, ఇది నా ముందు మెసేజ్ గురించి గుర్తు చేయడానికి."),
             ("months_list", "నా {months_list} జీతం ఇంకా అందలేదు."),
+            ("part_list", "{part_list} జీతంలో కొంత భాగం ఇంకా రావాలి."),
             ("first_due", "ప్రతి నెల జీతం తర్వాతి నెల ఏడవ తేదీ లోపు ఇవ్వాలి, కాబట్టి మొదటి జీతం {first_due} లోపు రావాల్సింది."),
             ("cut", "జీతం కోతలో {cut} ఇంకా తిరిగి రావాల్సి ఉంది."),
             ("paid", "{paid} అందింది."),
@@ -330,6 +351,7 @@ TEMPLATES: dict[str, dict[str, list[tuple[Optional[str], str]]]] = {
         "en": [
             (None, "Hello {employer}, this is a reminder about my earlier message."),
             ("months_list", "My salary for {months_list} has still not been paid."),
+            ("part_list", "Part of my salary for {part_list} is still due."),
             ("first_due", "Monthly wages are due by the seventh of the next month, so the first of these was due by {first_due}."),
             ("cut", "{cut} of the cut from my salary is still to be returned."),
             ("paid", "I have received {paid}."),
@@ -441,6 +463,7 @@ def build_slots(ctx: CaseCtx, lang: str, today: dt.date | None = None) -> tuple[
     reply_by = today + dt.timedelta(days=REPLY_DAYS)
     months = ctx.unpaid_months()
     month_names = [month_name(m, lang) for m in months]
+    part_names = [month_name(m, lang) for m in ctx.part_unpaid_months()]
     cut = ctx.sum_kind("illegal_deduction")
     shortfall = ctx.sum_kind("min_wage_shortfall")
     first_due = ctx.first_due()
@@ -461,6 +484,9 @@ def build_slots(ctx: CaseCtx, lang: str, today: dt.date | None = None) -> tuple[
     both("monthly", fmt_money(monthly) if monthly else "", money_words(monthly, lang) if monthly else "")
     both("months_n", str(len(months)) if months else "", number_to_words(len(months), words_lang(lang)) if months else "")
     both("months_list", join_list(month_names, lang))
+    both("part_list", join_list(part_names, lang))
+    both("part_only", d["part_list"] if not month_names else "")
+    both("part_also", d["part_list"] if month_names else "")
     both("cut", fmt_money(cut) if cut else "", money_words(cut, lang) if cut else "")
     both("shortfall", fmt_money(shortfall) if shortfall else "", money_words(shortfall, lang) if shortfall else "")
     both("paid", fmt_money(ctx.paid) if ctx.paid else "", money_words(ctx.paid, lang) if ctx.paid else "")

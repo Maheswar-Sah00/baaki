@@ -33,8 +33,43 @@ import type {
   VoiceProfileView,
   Worker,
 } from "./types";
+import { currentWorkerKey, setWorker } from "./store";
 
 export type { Health } from "./types";
+
+// ------------------------------------------------------------------ worker key on every request
+// A public deploy (BAAKI_PUBLIC=1) opens a worker's data only with her key. One mechanism for every caller
+// (this file, lib/features/*.ts, components): a same-origin /api fetch gets X-Baaki-Key when a key is stored.
+// No key (the synthetic demo workers, or localhost): requests are untouched.
+const KEY_HEADER = "X-Baaki-Key";
+
+function isOwnApi(url: string): boolean {
+  if (url.startsWith("/api/")) return true;
+  try {
+    const u = new URL(url, window.location.href);
+    return u.origin === window.location.origin && u.pathname.startsWith("/api/");
+  } catch {
+    return false;
+  }
+}
+
+function installKeyHeader() {
+  if (typeof window === "undefined") return;
+  const w = window as Window & { __baakiKeyFetch?: boolean };
+  if (w.__baakiKeyFetch) return;
+  w.__baakiKeyFetch = true;
+  const original = window.fetch.bind(window);
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const key = currentWorkerKey();
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (!key || !isOwnApi(url)) return original(input, init);
+    const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+    if (!headers.has(KEY_HEADER)) headers.set(KEY_HEADER, key);
+    return original(input, { ...init, headers });
+  };
+}
+
+installKeyHeader();
 
 // ------------------------------------------------------------------ errors
 export class ApiError extends Error {
@@ -342,7 +377,20 @@ export function getDashboard(workerId: number, signal?: AbortSignal): Promise<Da
   return getJson<Dashboard>(`/api/workers/${workerId}/dashboard`, signal);
 }
 
-/** POST /api/demo/reset: wipes every table and re-seeds the synthetic story. */
+export type Onboarded = { worker_id: number; key: string; name: string; language: string; key_header: string; note: string };
+
+/** POST /api/onboard: a new worker and her secret key (returned once). Stores both, so every later request
+ * carries X-Baaki-Key. */
+export async function onboard(
+  body: { name: string; language: "te-IN" | "hi-en" | "hi-IN" | "en-IN"; work_type?: string },
+  signal?: AbortSignal,
+): Promise<Onboarded> {
+  const out = await sendJson<Onboarded>("POST", "/api/onboard", body, signal);
+  setWorker(out.worker_id, out.key);
+  return out;
+}
+
+/** POST /api/demo/reset: wipes every table and re-seeds the synthetic story (admin-only on a public deploy). */
 export function resetDemo(signal?: AbortSignal): Promise<DemoReset> {
   return sendJson<DemoReset>("POST", "/api/demo/reset", undefined, signal);
 }

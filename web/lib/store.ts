@@ -78,10 +78,46 @@ export type Settings = {
   uiLang: UiLang | null;
   /** STT preset for /speak. */
   listenLang: ListenLang;
+  /**
+   * Secret key of an onboarded worker (POST /api/onboard returns it once). null for the synthetic demo
+   * workers. lib/api.ts sends it as X-Baaki-Key on every /api request; a public deploy needs it.
+   */
+  workerKey: string | null;
 };
 
-export const DEFAULT_SETTINGS: Settings = { workerId: 1, uiLang: null, listenLang: "auto" };
+export const DEFAULT_SETTINGS: Settings = { workerId: 1, uiLang: null, listenLang: "auto", workerKey: null };
 export const settingsStore = createStore<Settings>("local", "baaki.settings.v1", DEFAULT_SETTINGS);
+
+// ------------------------------------------------------------------ worker key (public deploy)
+const KEY_COOKIE = "baaki_key";
+
+/** Mirror the key into a cookie scoped to /api, so <audio src> and PDF links (plain GETs that cannot carry
+ * a header) also open her own media. The backend accepts the cookie for GET requests only. */
+function syncKeyCookie(key: string | null) {
+  if (typeof document === "undefined") return;
+  try {
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = key
+      ? `${KEY_COOKIE}=${encodeURIComponent(key)}; Path=/api; Max-Age=31536000; SameSite=Strict${secure}`
+      : `${KEY_COOKIE}=; Path=/api; Max-Age=0; SameSite=Strict${secure}`;
+  } catch {
+    /* cookies blocked: header only */
+  }
+}
+
+/** After POST /api/onboard: remember her worker id and key together (the key is shown only once).
+ * Switching to a demo worker: setWorker(1, null). */
+export function setWorker(workerId: number, workerKey: string | null) {
+  settingsStore.set({ workerId, workerKey });
+  syncKeyCookie(workerKey);
+}
+
+/** The key to send right now (null for the demo workers). */
+export function currentWorkerKey(): string | null {
+  return settingsStore.get().workerKey ?? null;
+}
+
+if (typeof window !== "undefined") syncKeyCookie(currentWorkerKey());
 
 // ------------------------------------------------------------------ the spoken draft (Speak -> Confirm)
 export type Draft = {

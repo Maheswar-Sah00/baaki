@@ -138,9 +138,14 @@ def test_live_pay_flow_matches_case_screen(client):
     """Payments in parts through the real employer endpoints: the replay's balance equals the case screen's."""
     info = make_case(diary_days=0)
     tok = info["token"]
-    r1 = client.post(f"/api/e/{tok}/pay", json={"amount": 3000, "method": "cash", "alert_audio": False})
+    def pay(**body):   # F2: "I've paid" is a claim; her confirmation records it
+        c = client.post(f"/api/e/{tok}/pay", json={**body, "alert_audio": False})
+        assert c.status_code == 200, c.text
+        return client.post(f"/api/hisaab/{c.json()['claim']['id']}/decide", json={"decision": "accept"})
+
+    r1 = pay(amount=3000, method="cash")
     assert r1.status_code == 200, r1.text
-    r2 = client.post(f"/api/e/{tok}/pay", json={"amount": 2500, "alert_audio": False})
+    r2 = pay(amount=2500)
     out = client.get(f"/api/story/{info['case_id']}").json()
     case_screen = client.get(f"/api/cases/{info['case_id']}").json()
     pays = [e for e in out["events"] if e["kind"] == "paid"]
@@ -220,10 +225,12 @@ def test_seeded_demo(client):
     # the seed stamps confirmed_at microseconds before created_at: same second, intake order kept
     times = [parse_at(e["at"]).replace(microsecond=0) for e in out["events"]]
     assert times == sorted(times)
-    # Reddy garu's October salary (stored 5 Nov) shows as a payment; his case total is already 0
+    # GAP_AUDIT #29: Reddy garu's on-time October salary is a diary entry, not a Payment row (nothing was owed,
+    # amount_paid is 0), so the payment rows agree with the case
     reddy = client.get(f"/api/story/{seeded['cases']['reddy']}").json()
-    paid = [e for e in reddy["events"] if e["kind"] == "paid"]
-    assert len(paid) == 1 and paid[0]["at"] == "2026-11-05T10:12:00Z" and paid[0]["balance_after"] == 0
+    assert [e for e in reddy["events"] if e["kind"] == "paid"] == []
+    noted = [e for e in reddy["events"] if e["kind"] == "diary_payment"]
+    assert len(noted) == 1 and noted[0]["at"].startswith("2026-11-05T10:15")
 
 
 def test_feature_rows_older_than_the_case_are_skipped(client):

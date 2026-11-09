@@ -91,6 +91,41 @@ def _has(text: str, words) -> bool:
     return any(w in low for w in words)
 
 
+# Past-tense payment words: "5 November ko diya tha", "bhej diya", "ఇచ్చాను", "I paid". A date in such a clause is a
+# payment already made (a statement), never a promise for next year.
+_PAST_PAID = re.compile(
+    r"\b(?:diya|diye|de diya|de diye|bheja|bheje|bhej diya|kar diya|transfer kiya|paid|gave|sent|transferred|"
+    r"ichchanu|ichanu|icchanu|ichesanu|ichhesanu|pampanu|pampinchanu|vesanu)\b"
+    r"|दिया|दिए|दी थी|भेजा|भेजे|भेज दिया|कर दिया|ఇచ్చాను|ఇచ్చాం|ఇచ్చేశాను|పంపాను|పంపించాను|వేశాను",
+    re.IGNORECASE)
+
+
+def _past_clause(clause: str) -> bool:
+    return bool(_PAST_PAID.search(clause)) and not _has(clause, _PROMISE_VERBS)
+
+
+def extract_past_payments(text: str, lang: str, said_on: dt.date) -> list[dict[str, Any]]:
+    """Payments the employer says were already made: "5 November ko diya tha 2000" -> [₹2,000 paid on 5 Nov 2026].
+    A statement for the worker to check (she confirms it), never a promise and never a date next year."""
+    text = (text or "").strip()
+    if not text:
+        return []
+    hint = parse_lang(lang)
+    dates = [d for d in extract_dates(text, hint, today=said_on) if d["iso"] <= said_on.isoformat()]
+    amounts = extract_amounts(text, hint)
+    out = []
+    for a, b in _clauses(text):
+        clause = text[a:b].strip()
+        if not _past_clause(clause):
+            continue
+        amt = next((float(x["amount_inr"]) for x in amounts if a <= x["start"] < b), None)
+        when = next((d["iso"] for d in dates if a <= d["start"] < b), None)
+        if amt is None and when is None:
+            continue
+        out.append({"amount": amt, "paid_on": when, "quote": clause, "kind": "past_payment"})
+    return out
+
+
 def extract_promises(text: str, lang: str, said_on: dt.date) -> list[dict[str, Any]]:
     """Every future date in the reply becomes a promise; the amount comes from the same clause.
 
@@ -119,6 +154,8 @@ def extract_promises(text: str, lang: str, said_on: dt.date) -> list[dict[str, A
     for d in sorted(dates, key=lambda d: d["start"]):
         a, b = clause_of(d["start"])
         clause = text[a:b].strip()
+        if _past_clause(clause):
+            continue  # "5 November ko diya tha 2000": a payment already made (extract_past_payments), not a promise
         in_clause = [i for i, x in enumerate(amounts) if a <= x["start"] < b and i not in used]
         amount, is_rest = None, _has(clause, _REST)
         if in_clause:

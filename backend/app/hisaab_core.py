@@ -16,7 +16,8 @@ from .messages import MONTHS, fmt_money, money_words, month_name, name_in, norm_
 KINDS = ("cash", "upi", "advance", "other")
 # Payment.method for each kind (Payment allows upi | cash | bank | other)
 METHOD_OF = {"cash": "cash", "upi": "upi", "advance": "other", "other": "other"}
-KIND_EN = {"cash": "cash", "upi": "UPI", "advance": "advance", "other": "payment"}
+KIND_EN = {"cash": "cash", "upi": "UPI", "advance": "advance", "other": "payment", "bank": "bank transfer",
+           "said_paid": "payment"}
 
 _KIND_WORDS: dict[str, list[str]] = {
     "advance": ["advance", "advanced", "एडवांस", "एडवान्स", "अग्रिम", "అడ్వాన్స్", "అడ్వాన్సు", "udhaar", "udhar",
@@ -245,3 +246,87 @@ NO_AMOUNT = {
     "te-IN": "మొత్తం వినిపించలేదు. దయచేసి మొత్తం టైప్ చేయండి.",
     "en": "Couldn't hear an amount. Please type it.",
 }
+
+
+# --------------------------------------------------------------------------- F2: "I've paid" as a claim
+# The employer's tap on "I've paid" is stored as a proposal of kind "said_paid" (+ a HisaabClaim row with the
+# method). It records no money. She hears "Sharma ji says he sent ₹13,000 by UPI. Did it reach you?" and confirms
+# (accept) or says it did not arrive (reject = disputed). Only her confirmation goes through app.ledger.
+CLAIM_KIND = "said_paid"
+METHOD_EN = {"upi": "by UPI", "cash": "in cash", "bank": "by bank transfer", "other": ""}
+_TE_METHOD = {"upi": "యూపీఐ లో ", "cash": "క్యాష్ ", "bank": "బ్యాంక్ లో ", "other": ""}
+_HI_METHOD = {"upi": "यूपीआई से ", "cash": "कैश ", "bank": "बैंक से ", "other": ""}
+DEMO_CONFIRMED = "Demo: Lakshmi confirmed (synthetic)"
+
+
+def claim_readback(employer_name: str, amount: float, method: str, worker_lang: str) -> dict[str, str]:
+    """What she hears and reads: "Sharma garu antunnaru: ₹13,000 UPI lo pampincharu. Meeku andaya?" """
+    wl = norm_lang(worker_lang)
+    who = name_in(employer_name, wl)
+    method = method if method in METHOD_EN else "other"
+    if wl == "te-IN":
+        display = f"{who} అంటున్నారు: {fmt_money(amount)} {_TE_METHOD[method]}పంపించారు. మీకు డబ్బులు అందాయా?"
+        speech = (f"{who} అంటున్నారు: <slow> {money_words(amount, wl)} {_TE_METHOD[method]}పంపించారు. "
+                  f"<pauses> మీకు డబ్బులు అందాయా?")
+    elif wl == "hi-en":
+        verb = "कह रही हैं" if _female(employer_name) else "कह रहे हैं"
+        display = f"{who} {verb}: {fmt_money(amount)} {_HI_METHOD[method]}भेज दिए हैं। क्या पैसे आपको मिल गए?"
+        speech = (f"{who} {verb}: <slow> {money_words(amount, wl)} {_HI_METHOD[method]}भेज दिए हैं। "
+                  f"<pauses> क्या पैसे आपको मिल गए?")
+    else:
+        how = (" " + METHOD_EN[method]) if METHOD_EN[method] else ""
+        display = f"{who} says they sent you {fmt_money(amount)}{how}. Did it reach you?"
+        speech = f"{who} says they sent you <slow> {money_words(amount, wl)}{how}. <pauses> Did it reach you?"
+    return {"text": display, "speech": speech, "language": wl}
+
+
+def claim_chip(amount: float, method: str, employer_name: str) -> dict[str, str]:
+    """"₹13,000 · UPI · said paid by Sharma ji"."""
+    main = " · ".join(x for x in ("−" + fmt_money(amount), KIND_EN.get(method, "payment")) if x)
+    return {"text": f"{main} (said paid by {employer_name})", "main": main,
+            "said_by_label": f"said paid by {employer_name}"}
+
+
+CLAIM_STATUS_EMPLOYER = {
+    "proposed": {"hi-en": "{worker} की पुष्टि का इंतज़ार है। पैसे मिलते ही हिसाब अपडेट होगा।",
+                 "te-IN": "{worker} నిర్ధారణ కోసం ఎదురుచూస్తున్నాం. డబ్బులు అందాక లెక్క మారుతుంది.",
+                 "en": "Waiting for {worker} to confirm. The account updates once the money reaches her."},
+    "accepted": {"hi-en": "{worker} ने पुष्टि की: पैसे मिल गए।", "te-IN": "{worker} డబ్బులు అందాయని నిర్ధారించారు.",
+                 "en": "{worker} confirmed the money arrived."},
+    "rejected": {"hi-en": "{worker} के मुताबिक पैसे नहीं मिले: विवादित। बकाया नहीं बदला।",
+                 "te-IN": "{worker} కి డబ్బులు అందలేదు: వివాదంలో ఉంది. బాకీ మారలేదు.",
+                 "en": "{worker} says the money has not arrived: disputed. The balance did not change."},
+}
+CLAIM_STATUS_WORKER = {
+    "proposed": {"te-IN": "డబ్బులు అందాయా?", "hi-en": "क्या पैसे मिले?", "en": "Did the money arrive?"},
+    "accepted": {"te-IN": "అందాయని మీరు నిర్ధారించారు", "hi-en": "आपने पुष्टि की: पैसे मिले",
+                 "en": "You confirmed it arrived"},
+    "rejected": {"te-IN": "అందలేదని చెప్పారు (వివాదం)", "hi-en": "आपने कहा पैसे नहीं मिले (विवादित)",
+                 "en": "You said it did not arrive (disputed)"},
+}
+# What the employer sees right after tapping "I've paid"
+CLAIM_SENT = {
+    "hi-en": "धन्यवाद। {worker} पैसे मिलने की पुष्टि करेंगी, फिर हिसाब अपडेट होगा।",
+    "te-IN": "ధన్యవాదాలు. డబ్బులు అందినట్టు {worker} నిర్ధారిస్తారు, తర్వాత లెక్క మారుతుంది.",
+    "en": "Thank you. {worker} will confirm when the money reaches her; then the account updates.",
+}
+
+
+def claim_note(proposal_id: int, employer_name: str, method: str, demo: bool = False) -> str:
+    who = "Demo: Lakshmi confirmed (synthetic, no real money)" if demo else "confirmed by her"
+    how = (" " + METHOD_EN.get(method, "")) if METHOD_EN.get(method) else ""
+    return (f"Payment claim #{proposal_id}: {employer_name} said this was paid{how}; {who}. "
+            "Recorded on her confirmation (Code on Wages s.59: the employer proves payment).")
+
+
+def claim_diary_text(event: str, *, employer_name: str, worker_name: str, amount: float, method: str,
+                     proposal_id: int, demo: bool = False) -> str:
+    how = f" ({KIND_EN.get(method, 'payment')})"
+    if event == "proposed":
+        return (f"Payment claim #{proposal_id}: {employer_name} says {fmt_money(amount)}{how} was paid. "
+                f"Waiting for {worker_name} to confirm.")
+    if event == "accepted":
+        tag = " [Demo: confirmed automatically, synthetic]" if demo else ""
+        return f"Payment claim #{proposal_id}: {worker_name} confirmed {fmt_money(amount)} from {employer_name} arrived.{tag}"
+    return (f"Payment claim #{proposal_id}: {worker_name} says {fmt_money(amount)} from {employer_name} did not "
+            "arrive. Disputed; no change to the balance.")

@@ -19,22 +19,13 @@ from typing import Any
 
 from . import llm
 from .lang._text import norm_deva, norm_telu, skel
-from .meter import meter
+from .meter import MONTH_NAMES, UNPAID_RE, meter, months_named
 
 log = logging.getLogger("extract")
 
 WORK_TYPES = ["housekeeping", "cooking", "childcare", "eldercare", "other", "unknown"]
 ROLES = ["monthly_wage", "deduction", "advance", "paid_per_month", "paid_lump", "stated_total", "owed_lump", "other"]
 REASONS = ["sick", "employer_away", "breakage", "fine", "advance", "other", "none"]
-
-MONTH_NAMES = {
-    1: ["january", "jan", "जनवरी", "జనవరి"], 2: ["february", "feb", "फरवरी", "ఫిబ్రవరి"],
-    3: ["march", "mar", "मार्च", "మార్చి"], 4: ["april", "apr", "अप्रैल", "ఏప్రిల్"], 5: ["may", "मई", "మే"],
-    6: ["june", "jun", "जून", "జూన్"], 7: ["july", "jul", "जुलाई", "జూలై", "జులై"],
-    8: ["august", "aug", "अगस्त", "ఆగస్టు", "ఆగస్ట్"], 9: ["september", "sep", "sept", "सितंबर", "सितम्बर", "సెప్టెంబర్"],
-    10: ["october", "oct", "अक्टूबर", "అక్టోబర్"], 11: ["november", "nov", "नवंबर", "नवम्बर", "నవంబర్"],
-    12: ["december", "dec", "दिसंबर", "दिसम्बर", "డిసెంబర్"],
-}
 
 SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -134,23 +125,7 @@ def guess_work_type(text: str) -> str:
     return "housekeeping"
 
 
-def months_named(text: str) -> list[int]:
-    low = text.lower()
-    found = []
-    for n, names in MONTH_NAMES.items():
-        for nm in names:
-            if nm.isascii():
-                if re.search(rf"\b{re.escape(nm)}\b", low):
-                    found.append(n)
-                    break
-            elif nm in text:
-                found.append(n)
-                break
-    return found
-
-
-_UNPAID_RE = re.compile(r"ఇవ్వలేదు|రాలేదు|ఇవ్వలే|nahi\s+(?:di|diya|mili|mila|mile)|nahin\s+(?:di|diya|mili)|not\s+paid|"
-                        r"unpaid|pending|baaki|bakaya|नहीं\s+(?:दी|दिया|मिली|मिला)|బాకీ|ivvaledu|raledu", re.IGNORECASE)
+_UNPAID_RE = UNPAID_RE
 
 
 def _norm_name(s: str) -> str:
@@ -162,37 +137,28 @@ def _norm_name(s: str) -> str:
 
 
 def facts_from_meter(text: str, m: dict[str, Any]) -> dict[str, Any]:
-    """Parser-only facts (no LLM)."""
-    paid_pm = next((p["amount"] for p in m["paid"] if p["per_month"]), None)
-    monthly = m["monthly_wage"]
-    if monthly is None and paid_pm is not None:
-        monthly = paid_pm  # "dhai hazaar dete hain": her pay is the amount she is paid each month
-    if monthly is None and len(m["paid"]) == 1 and not m["months_unpaid"]:
-        monthly = m["paid"][0]["amount"]  # one amount she is paid and nothing unpaid: that is her pay
-    if monthly is None and not m["paid"]:
-        owed = [c for c in m["chips"] if c["kind"] == "owed"]
-        if len(owed) == 1 and m["months_unpaid"]:
-            monthly = owed[0]["value"]
-    deductions = [{"amount": c["amount"], "reason": c["reason"] or "other", "days_absent": c["days_absent"]}
-                  for c in m["cuts"]]
-    months_unpaid, month_numbers = m["months_unpaid"], []
-    if months_unpaid is None and _UNPAID_RE.search(text):
-        month_numbers = months_named(text)  # "ఆగస్టు, సెప్టెంబర్, అక్టోబర్ జీతం ఇవ్వలేదు"
-        months_unpaid = len(month_numbers) or None
-    lumps = [c["value"] for c in m["chips"] if c["kind"] == "owed" and c["value"] != monthly]
+    """Parser-only facts (no LLM): the meter's own chip facts (the same ones its total comes from) plus the
+    employer name and work type. Month names come through the meter's month chip."""
+    f = dict(m["facts"])
+    unclear = bool(f.get("months_unclear"))
+    if f.get("monthly_wage") and not f.get("months_unpaid") and not f.get("paid_per_month") and UNPAID_RE.search(text):
+        unclear = True  # "salary nahi mili" with a wage but no months: the read-back asks how many
     return {
         "employer_name": find_employer_name(text),
         "work_type": guess_work_type(text),
-        "hours_per_day": m["hours_per_day"],
+        "hours_per_day": f["hours_per_day"],
+        "hours_known": bool(f["hours_per_day"]),
         "days_per_week": None,
-        "monthly_wage": monthly,
-        "paid_per_month": paid_pm if (paid_pm is not None and paid_pm != monthly) else None,
-        "months_unpaid": months_unpaid,
-        "unpaid_month_numbers": month_numbers,
-        "deductions": deductions,
-        "advance_outstanding": m["advance"] or 0,
-        "owed_lumps": lumps,
-        "stated_total": m["stated_total"],
+        "monthly_wage": f["monthly_wage"],
+        "paid_per_month": f["paid_per_month"],
+        "months_unpaid": f["months_unpaid"],
+        "unpaid_month_numbers": f["unpaid_month_numbers"],
+        "deductions": f["deductions"],
+        "advance_outstanding": f["advance_outstanding"] or 0,
+        "owed_lumps": f["owed_lumps"],
+        "paid_lumps": f["paid_lumps"],
+        "stated_total": f["stated_total"],
+        "months_unclear": unclear,
         "dismissed": False,
         "reasons": [],
     }
@@ -276,6 +242,13 @@ def merge(text: str, m: dict[str, Any], base: dict[str, Any], llm_out: dict[str,
         facts["advance_outstanding"] = sum(c["value"] for _, c in by_role["advance"])
     if "owed_lump" in by_role:
         facts["owed_lumps"] = [c["value"] for _, c in by_role["owed_lump"]]
+    # a payment she received: the LLM's role wins for chips it named; parser lumps it gave no role stay
+    role_of = {r["id"]: r["role"] for r in llm_out["amount_roles"]}
+    facts["paid_lumps"] = [c["value"] for cid, c in chips.items()
+                           if role_of.get(cid) == "paid_lump"
+                           or (cid not in role_of and c["kind"] == "paid" and not (c.get("per_month") or c.get("habitual")))]
+    if facts.get("paid_per_month") is not None and facts["paid_per_month"] == facts.get("monthly_wage"):
+        facts["paid_per_month"] = None
     if "stated_total" in by_role:
         facts["stated_total"] = by_role["stated_total"][-1][1]["value"]
 
@@ -305,6 +278,9 @@ def merge(text: str, m: dict[str, Any], base: dict[str, Any], llm_out: dict[str,
         warnings.append("hours a day came from the structure step only; confirm it in the read-back")
     if llm_out["days_per_week"] is not None:
         facts["days_per_week"] = llm_out["days_per_week"]
+    facts["hours_known"] = bool(facts.get("hours_per_day"))
+    if facts.get("months_unpaid"):
+        facts["months_unclear"] = False
 
     name = llm_out["employer_name"]
     if name:

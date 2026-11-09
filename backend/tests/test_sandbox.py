@@ -178,21 +178,19 @@ def test_cap_evicts_the_oldest(client, mock_gnani, monkeypatch):
 
 
 def test_cleanup_after_demo_reset_never_deletes_recycled_ids(client, mock_gnani, monkeypatch):
+    """GAP_AUDIT #11: a demo reset wipes every table, sandbox rows included, so no sandbox row survives with
+    stale ids that could later delete a recycled case."""
     client.post("/api/demo/reset")
     old = client.post("/api/sandbox").json()["sandbox_id"]
-    client.post("/api/demo/reset")  # wipes the core tables; the sandbox row survives with stale ids
-    assert client.get(f"/api/sandbox/{old}").status_code == 410
-    new = client.post("/api/sandbox").json()["sandbox_id"]  # very likely reuses the same case id
+    client.post("/api/demo/reset")  # wipes every registered table, sandbox sessions too
+    assert client.get(f"/api/sandbox/{old}").status_code == 404
     with db.session() as s:
-        row_old = s.get(SandboxSession, old)
-        row_old.expires_ts = 0
-        s.add(row_old)
-        s.commit()
+        assert s.get(SandboxSession, old) is None
+    new = client.post("/api/sandbox").json()["sandbox_id"]
     client.get("/api/sandbox")
     client.post("/api/sandbox", headers={"x-forwarded-for": "192.0.2.77"})  # cleanup runs here
     assert client.get(f"/api/sandbox/{new}").status_code == 200
     with db.session() as s:
-        assert s.get(SandboxSession, old) is None
         assert s.exec(select(func.count()).select_from(Employer).where(Employer.name == "Reddy garu")).one() == 1
 
 

@@ -15,8 +15,8 @@ from typing import Optional
 
 from fpdf import FPDF
 
+from . import calc_inputs, wages
 from . import pdf as pdfmod
-from .lang import today_ist
 from .messages import (DLSA, GO_CITATION, INDIA_LABOURLINE, NALSA, CaseCtx, Draft, fmt_date, fmt_money,
                        item_label, norm_lang)
 
@@ -25,9 +25,7 @@ MUTED = (110, 92, 80)
 ACCENT = (150, 70, 30)      # warm rust; no blue (UI rule)
 RULE = (210, 190, 170)
 
-RATES = {  # G.O.Ms.No.6, Zone-I Hyderabad, basic per month (02_law section 8C)
-    "unskilled": 16000, "semi_skilled": 17000, "skilled": 18500, "highly_skilled": 20000,
-}
+RATES = wages.GO6_MONTHLY  # one source for the G.O.Ms.No.6 rates (app.wages), never a copy
 
 T = {  # fixed strings: employer language first, English always alongside
     "title_formal": {"hi-en": "बकाया वेतन के भुगतान के लिए पत्र", "te-IN": "బాకీ జీతం చెల్లింపు కోసం లేఖ",
@@ -144,7 +142,7 @@ def _bi(lang: str, key: str, **kw) -> str:
 # --------------------------------------------------------------------------- sections
 def _parties(pdf: FPDF, inp: LetterInput, lang: str) -> None:
     c, w, e = inp.ctx.case, inp.ctx.worker, inp.ctx.employer
-    today = inp.today or today_ist()
+    today = inp.today or wages.default_today()
     ref = f"BAAKI-{c.id}-{(c.employer_token or '')[:6].upper()}"
     _para(pdf, f"{fmt_date(today, 'en')}  ·  Ref {ref}", size=9, color=MUTED, after=1)
     who = f"From: {w.name}" + (f", {w.phone}" if w.phone else "") + f", {w.city or 'Hyderabad'}"
@@ -187,7 +185,7 @@ def _items_table(pdf: FPDF, inp: LetterInput, lang: str) -> None:
 
 
 def _payment(pdf: FPDF, inp: LetterInput, lang: str) -> None:
-    reply_by = inp.draft.reply_by if inp.draft else ((inp.today or today_ist()) + dt.timedelta(days=7)).isoformat()
+    reply_by = inp.draft.reply_by if inp.draft else ((inp.today or wages.default_today()) + dt.timedelta(days=7)).isoformat()
     _para(pdf, T["pay_by"][lang].format(d=fmt_date(reply_by, lang)), size=11, color=ACCENT, after=0.5)
     if lang != "en":
         _para(pdf, T["pay_by"]["en"].format(d=fmt_date(reply_by, "en")), size=10, after=1)
@@ -205,7 +203,7 @@ def _legal_basis(pdf: FPDF, inp: LetterInput) -> None:
     rate = RATES.get(cat)
     lines = [
         f"Minimum wage: {GO_CITATION}. Hyderabad (Zone-I), basic pay"
-        + (f": {cat.replace('_', '-')} {fmt_money(rate)} a month ({fmt_money(round(rate / 26 * 2) / 2)} a day = monthly / 26)." if rate else "."),
+        + (f": {cat.replace('_', '-')} {fmt_money(rate)} a month ({fmt_money(wages.per_day_rate(cat))} a day = monthly / 26)." if rate else "."),
         "VDA has not been notified after June 2026, so only basic pay is used. Months before June 2026 use G.O.Ms.No.60 (2011 schedule).",
         "Time of payment: Code on Wages, 2019, section 17(1): monthly wages before the end of the 7th day of the next month; "
         "section 17(2): within two working days of removal or dismissal.",
@@ -344,6 +342,12 @@ def render(inp: LetterInput) -> bytes:
     return bytes(pdf.output())
 
 
+def _hours_text(case) -> str:
+    """Hours she said, or that they were not said (the database column defaults to 8; never shown as fact)."""
+    h = calc_inputs.case_hours(case)
+    return f"{h:g} hours a day" if h else calc_inputs.HOURS_NOT_SAID
+
+
 def render_legal_pack(inp: LetterInput) -> bytes:
     """Case file for India Labourline / the Telangana Labour Department / DLSA: statement with English
     translation, itemised claim, ladder history, payments and the diary hash chain."""
@@ -359,7 +363,7 @@ def render_legal_pack(inp: LetterInput) -> bytes:
     facts = [
         f"Worker: {w.name} ({w.work_type or c.work_type}, {(c.category or w.category).replace('_', '-')}), {w.city or 'Hyderabad'}.",
         f"Employer: {e.name}" + (f", {e.locality}" if e.locality else "") + ".",
-        f"Agreed wage: {fmt_money(c.monthly_wage)} a month; {c.hours_per_day:g} hours a day, {c.days_per_week:g} days a week."
+        f"Agreed wage: {fmt_money(c.monthly_wage)} a month; {_hours_text(c)}, {c.days_per_week:g} days a week."
         if c.monthly_wage else "",
         (f"Work period: {c.start_date or '?'} to {c.end_date or 'ongoing'}" + (" (dismissed)." if c.dismissed else ".")),
         f"Balance due: {fmt_money(ctx.balance)} (total {fmt_money(ctx.total_due)}, received {fmt_money(ctx.paid)}).",

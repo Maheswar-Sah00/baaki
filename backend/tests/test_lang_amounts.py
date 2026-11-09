@@ -86,7 +86,7 @@ CASES = [
     ("I will return two and a half lakh", "en", [(250000, "refund")]),
     ("₹2000/- lift charges", "en", [(2000, "lift")]),
     ("INR 65,000.00 total", "en", [(65000, "total")]),
-    ("₹3.50 for the bulb", "en", [(4, "light")]),
+    ("₹3.50 for the bulb", "en", [(3.5, "light")]),  # paise kept (GAP_AUDIT #29)
     # ---- false-positive traps ----------------------------------------------------------
     ("flat 302 ki painting 5000", "hinglish", [(5000, "painting")]),
     ("Flat No. 302, Block B", "en", []),
@@ -143,7 +143,8 @@ def test_spans_index_original_text(text, lang, expected):
     for a in extract_amounts(text, lang):
         assert text[a["start"]:a["end"]] == a["source_text"]
         assert a["source_text"].strip() == a["source_text"]
-        assert isinstance(a["amount_inr"], int)
+        # whole rupees are ints; paise are kept as a float (₹3.50 -> 3.5, GAP_AUDIT #29)
+        assert isinstance(a["amount_inr"], int) or (isinstance(a["amount_inr"], float) and a["amount_inr"] % 1)
 
 
 @pytest.mark.parametrize("text, sources", [

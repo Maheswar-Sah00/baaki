@@ -39,10 +39,10 @@ GO60_TABLES = [
 ]
 
 SRC_GO6 = ("Telangana G.O.Ms.No.6, LET&F (Lab-I) Dept, dated 30.05.2026, in force 01.06.2026, Table 1, "
-           "Zone-I (Hyderabad), {cat}: Rs {monthly} per month basic; per day = monthly / 26 (para 5(1)). "
+           "Zone-I (Hyderabad), {cat}: ₹{monthly} per month basic; per day = monthly / 26 (para 5(1)). "
            "VDA not yet notified, so basic only. Subject to pending court cases.")
 SRC_GO60 = ("Telangana G.O.Ms.No.60, LET&F (Lab.II) Dept, dated 01.11.2011 (domestic workers), rates for "
-            "{period}: Rs {amount} per month for {hours} a day (basic + VDA). Used only for months before June 2026.")
+            "{period}: ₹{amount} per month for {hours} a day (basic + VDA). Used only for months before June 2026.")
 SRC_ESTIMATE = ("Part-time figure is Baaki's estimate (monthly / 26 / 8 x hours per day x days worked); "
                 "the order does not list part-time rates.")
 SRC_S17_1 = "Code on Wages, 2019, s.17(1)(iv): monthly wages are due before the expiry of the 7th day of the next month."
@@ -131,10 +131,14 @@ def days_per_month(days_per_week: float) -> float:
 
 
 def fmt_inr(x: float) -> str:
-    whole = int(round(x)) if abs(x - round(x)) < 0.005 else None
-    if whole is None:
-        return f"Rs {x:,.2f}"
-    s = str(abs(whole))
+    """The one rupee formatter for item labels and sources: ₹13,000, ₹615.50, -₹2,000 (Indian grouping)."""
+    a = round(float(x), 2)
+    sign, a = ("-", -a) if a < 0 else ("", a)
+    whole = int(a)
+    paise = int(round((a - whole) * 100))
+    if paise == 100:
+        whole, paise = whole + 1, 0
+    s = str(whole)
     if len(s) > 3:
         head, tail = s[:-3], s[-3:]
         parts = []
@@ -144,7 +148,17 @@ def fmt_inr(x: float) -> str:
         if head:
             parts.insert(0, head)
         s = ",".join(parts) + "," + tail
-    return ("-" if whole < 0 else "") + "Rs " + s
+    return f"{sign}₹{s}" + (f".{paise:02d}" if paise else "")
+
+
+def default_today() -> dt.date:
+    """Today in IST (app.clock when it exists, which honours BAAKI_TODAY), never the server's local date."""
+    try:
+        from . import clock  # type: ignore[attr-defined]
+        return clock.today()
+    except (ImportError, AttributeError):
+        from .lang.dates import today_ist
+        return today_ist()
 
 
 # --------------------------------------------------------------------------- minimum wage
@@ -251,18 +265,22 @@ def calculate(*, monthly_wage: float, category: str = "unskilled", work_type: st
               hours_per_day: float | None = 8, days_per_week: float = 6,
               unpaid_months: Iterable[str] | None = None, months_unpaid: float | None = None,
               last_month: str | None = None, paid_months: dict[str, float] | None = None,
+              part_months: dict[str, dict[str, float]] | None = None,
               deductions: Iterable[dict[str, Any]] = (), advance_outstanding: float = 0,
               dismissed_on: str | dt.date | None = None, include_shortfall: bool = False,
               today: dt.date | None = None) -> dict[str, Any]:
     """Dues for one worker and one employer.
 
     unpaid_months: months with no pay at all ("2026-08"), or months_unpaid + last_month (default: the last
-    complete month before today, or the dismissal month). paid_months: month -> amount actually paid for months
-    that were paid (in full or in part; a part payment leaves the rest as unpaid wages).
+    complete month before today, or the dismissal month; a fraction such as 2.5 adds half of the month before).
+    paid_months: month -> amount actually paid for that month (in full or in part; a part payment leaves the rest
+    as unpaid wages). A cut named for the same month is part of what was withheld, so the month never claims more
+    than wage - paid (if paid + cuts exceed the wage, the paid figure is read as the amount before the cut).
+    part_months: month -> {"fraction": 0.5, "paid_per_month": 0} for part of a month she said ("dhai mahine").
     Returns contractual dues (unpaid agreed wages + reclaimable cuts - outstanding advance), the minimum-wage
     shortfall (each line carries is_estimate), due dates, flags and source strings.
     """
-    today = today or dt.date.today()
+    today = today or default_today()
     wage = money(monthly_wage)
     category = category_for(work_type, category)
     dismissed = None
@@ -270,13 +288,20 @@ def calculate(*, monthly_wage: float, category: str = "unskilled", work_type: st
         dismissed = dismissed_on if isinstance(dismissed_on, dt.date) else dt.date.fromisoformat(str(dismissed_on)[:10])
     settlement_due = add_working_days(dismissed, 2) if dismissed else None
 
+    parts = {month_key(parse_month(k)): {"fraction": float(v.get("fraction") or 0),
+                                         "paid_per_month": float(v.get("paid_per_month") or 0)}
+             for k, v in (part_months or {}).items() if float(v.get("fraction") or 0) > 0}
     unpaid = [month_key(parse_month(m)) for m in (unpaid_months or [])]
-    if not unpaid and months_unpaid:
+    if not unpaid and not parts and months_unpaid:
         end = last_month or (month_key(dismissed) if dismissed else last_complete_month(today))
         whole = int(months_unpaid)
         unpaid = previous_months(end, whole) if whole > 0 else []
+        frac = round(float(months_unpaid) - whole, 4)
+        if frac > 0:  # "dhai mahine": part of the month before the whole months (never dropped, never Rs 0)
+            parts[month_key(add_months(parse_month(end), -whole))] = {"fraction": frac, "paid_per_month": 0.0}
     paid = {month_key(parse_month(k)): money(v) for k, v in (paid_months or {}).items()}
-    unpaid = sorted(set(unpaid) - set(paid))
+    unpaid = sorted(set(unpaid) - set(paid) - set(parts))
+    parts = {m: v for m, v in parts.items() if m not in paid}
 
     items: list[dict[str, Any]] = []
     flags: list[str] = []
@@ -291,43 +316,67 @@ def calculate(*, monthly_wage: float, category: str = "unskilled", work_type: st
     def due_fields(month: str) -> dict[str, Any]:
         due = due_for(month)
         return {"due_date": due.isoformat(), "overdue": today > due,
-                "days_overdue": max(0, (today - due).days),
+                "days_overdue": max(0, (today - due).days), "not_yet_due": today <= due,
                 "due_source": SRC_S17_2 if settlement_due and due == settlement_due else SRC_S17_1}
 
-    # 1. unpaid agreed wages (whole months, and the unpaid part of part-paid months)
+    def wage_item(label: str, m: str, amount: float) -> dict[str, Any]:
+        item = {"kind": "unpaid_wage", "label": label, "month": m, "amount": money(amount), "is_estimate": False,
+                "included_in_total": True, **due_fields(m)}
+        item["source"] = item["due_source"]
+        if item["not_yet_due"]:
+            item["label"] += f" (not yet due: due by {due_for(m).strftime('%d %b %Y').lstrip('0')})"
+        return item
+
+    # cuts first: a cut in a part-paid month is part of what was withheld that month
+    checked = [check_deduction(d, wage, days_per_week) for d in deductions]
+    for c in checked:
+        if c.get("month"):
+            c["month"] = month_key(parse_month(c["month"]))
+    per_month_cut: dict[str, float] = {}
+    for c in checked:
+        if c.get("month"):
+            per_month_cut[c["month"]] = per_month_cut.get(c["month"], 0.0) + c["amount"]
+
+    # 1. unpaid agreed wages (whole months, part months she said, and the unpaid part of part-paid months)
     unpaid_total = 0.0
     for m in unpaid:
-        item = {"kind": "unpaid_wage", "label": f"Unpaid wages: {month_label(m)}", "month": m, "amount": wage,
-                "is_estimate": False, "included_in_total": True, **due_fields(m)}
-        item["source"] = item["due_source"]
-        items.append(item)
+        items.append(wage_item(f"Unpaid wages: {month_label(m)}", m, wage))
         unpaid_total += wage
+    for m, p in sorted(parts.items()):
+        gap = money(max(0.0, wage - p["paid_per_month"]) * p["fraction"])
+        if gap > 0:
+            items.append(wage_item(f"Unpaid wages: {month_label(m)} ({p['fraction']:g} of a month, as she said)", m, gap))
+            items[-1]["fraction"] = p["fraction"]
+            unpaid_total += gap
     for m, amt in sorted(paid.items()):
-        if amt < wage:
-            gap = money(wage - amt)
-            item = {"kind": "unpaid_wage", "label": f"Part unpaid: {month_label(m)} ({fmt_inr(amt)} of {fmt_inr(wage)} paid)",
-                    "month": m, "amount": gap, "is_estimate": False, "included_in_total": True, **due_fields(m)}
-            item["source"] = item["due_source"]
-            items.append(item)
+        gap = money(wage - amt - per_month_cut.get(m, 0.0))
+        if gap > 0:
+            items.append(wage_item(f"Part unpaid: {month_label(m)} ({fmt_inr(amt)} of {fmt_inr(wage)} paid)", m, gap))
             unpaid_total += gap
     if any(i["kind"] == "unpaid_wage" for i in items):
         sources.add(SRC_S17_1)
         if settlement_due:
             sources.add(SRC_S17_2)
+    if any(i.get("not_yet_due") for i in items):
+        flags.append("not_yet_due")
 
-    # 2. deductions
-    checked = [check_deduction(d, wage, days_per_week) for d in deductions]
-    per_month_cut: dict[str, float] = {}
-    for c in checked:
-        if c.get("month"):
-            per_month_cut[c["month"]] = per_month_cut.get(c["month"], 0.0) + c["amount"]
-    over_50 = {m: t for m, t in per_month_cut.items() if t > 0.5 * wage}
+    # 2. deductions. s.18(3): all cuts in one wage period <= 50% of it. Cuts without a month are checked
+    # together against one month's wage, and the note says so.
+    period_cut = dict(per_month_cut)
+    if any(not c.get("month") for c in checked):
+        period_cut[""] = sum(c["amount"] for c in checked if not c.get("month"))
+    over_50 = {m: t for m, t in period_cut.items() if t > 0.5 * wage}
     reclaim_total = 0.0
     for c in checked:
-        if c["month"] in over_50 and c["reclaimable"] < c["amount"]:
+        key = c.get("month") or ""
+        if not c.get("month"):
+            c["note"] = ((c.get("note") or "") + " Month not said: the 50% limit is checked against one month's "
+                         f"wage ({fmt_inr(wage)}).").strip()
+            c.setdefault("extra_flags", []).append("cut_month_not_said")
+        if key in over_50 and c["reclaimable"] < c["amount"]:
             # whatever pushes the month above 50% is never lawful (s.18(3)); top up proportionally
-            excess = over_50[c["month"]] - 0.5 * wage
-            share = c["amount"] / over_50[c["month"]]
+            excess = over_50[key] - 0.5 * wage
+            share = c["amount"] / over_50[key]
             c["reclaimable"] = money(min(c["amount"], max(c["reclaimable"], excess * share)))
             c.setdefault("extra_flags", []).append("over_50_percent")
         sources.add(c.get("source", SRC_S18))
@@ -398,7 +447,7 @@ def calculate(*, monthly_wage: float, category: str = "unskilled", work_type: st
     return {
         "inputs": {"monthly_wage": wage, "category": category, "work_type": work_type, "hours_per_day": hours_per_day,
                    "days_per_week": days_per_week, "unpaid_months": unpaid, "paid_months": paid,
-                   "dismissed_on": dismissed.isoformat() if dismissed else None,
+                   "part_months": parts, "dismissed_on": dismissed.isoformat() if dismissed else None,
                    "include_shortfall": include_shortfall, "advance_outstanding": advance},
         "unpaid_wages": money(unpaid_total),
         "reclaimable_deductions": money(reclaim_total),

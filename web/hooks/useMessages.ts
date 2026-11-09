@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { employerLink, errorMessage, makeStep, markSent, mediaKeyUrl, mediaUrl } from "@/lib/api";
-import { fileFromUrl, shareMessage, type ShareResult } from "@/lib/share";
+import { fileFromUrl, needsSentConfirm, reachedSendingApp, shareMessage, type ShareResult } from "@/lib/share";
 import type { CaseDetail, LadderStep, StepOptions, StepResponse } from "@/lib/types";
 
 export const LADDER: LadderStep[] = ["polite", "firm", "formal"];
@@ -39,9 +39,18 @@ type StepState = {
   generated: StepResponse | null;
   sharing: boolean;
   shareResult: ShareResult | null;
+  /** Only copied to the clipboard: waiting for her "yes, I sent it" (confirmSent) before it counts as sent. */
+  awaitingSentConfirm: boolean;
 };
 
-const EMPTY: StepState = { generating: false, error: null, generated: null, sharing: false, shareResult: null };
+const EMPTY: StepState = {
+  generating: false,
+  error: null,
+  generated: null,
+  sharing: false,
+  shareResult: null,
+  awaitingSentConfirm: false,
+};
 
 function fromGenerated(r: StepResponse, step: LadderStep): StepView {
   const audioErr = r.audio_error ? (r.audio_error.message as string | undefined) ?? "voice note failed" : null;
@@ -167,7 +176,8 @@ export function useMessages(
     for (const step of LADDER) void prepareFile(step, views[step]?.audioUrl ?? null);
   }, [views, prepareFile]);
 
-  /** Share from a tap. Marks the message sent unless she cancelled. */
+  /** Share from a tap. Marks the message sent only when it reached a sending app (Web Share / WhatsApp);
+   *  a clipboard-only copy waits for confirmSent(step). */
   const share = useCallback(
     async (step: LadderStep): Promise<ShareResult | null> => {
       const v = views[step];
@@ -180,8 +190,8 @@ export function useMessages(
         title: "Baaki",
         file: v.audioUrl ? files.current.get(v.audioUrl) ?? null : null,
       });
-      patch(step, { sharing: false, shareResult: result });
-      if (result !== "cancelled" && result !== "failed") {
+      patch(step, { sharing: false, shareResult: result, awaitingSentConfirm: needsSentConfirm(result) });
+      if (reachedSendingApp(result)) {
         try {
           await markSent(v.messageId);
           onChanged.current?.();
@@ -194,10 +204,29 @@ export function useMessages(
     [caseData, patch, views],
   );
 
+  /** She pasted it into WhatsApp herself and says she sent it: now it counts as sent. */
+  const confirmSent = useCallback(
+    async (step: LadderStep) => {
+      const v = views[step];
+      if (!v) return false;
+      try {
+        await markSent(v.messageId);
+        patch(step, { awaitingSentConfirm: false });
+        onChanged.current?.();
+        return true;
+      } catch (err) {
+        patch(step, { error: errorMessage(err) });
+        return false;
+      }
+    },
+    [patch, views],
+  );
+
   return {
     steps: LADDER,
     views,
     state: steps,
+    confirmSent,
     nextStep,
     isSent,
     generate,

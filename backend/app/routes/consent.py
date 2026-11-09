@@ -9,7 +9,8 @@
   POST /api/consent/withdraw                JSON {worker_id}: deletes the profile, logs "consent withdrawn"
 
 The gate never blocks: not_matched always offers retry and confirm-by-tap (method=tap with the same audio).
-The old /api/voice-profile endpoints are unchanged.
+method=tap is accepted only after a spoken attempt of the same recording (else status "spoken_first").
+Public deploy (BAAKI_PUBLIC=1): attempt -> 403 cloning_disabled.
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ from starlette.concurrency import run_in_threadpool
 from .. import audio, consent_flow, consent_text, db, tts_cache
 from ..gnani import GnaniError
 from ..models import Worker
+from ..voice_profile import CloningDisabled
 
 router = APIRouter(prefix="/api/consent", tags=["consent"])
 
@@ -96,6 +98,8 @@ async def post_attempt(worker_id: int = Form(...), lang: Optional[str] = Form(No
         w = _worker(s, worker_id)
         try:
             return await consent_flow.attempt(s, w, data, name, lang, method)
+        except CloningDisabled as e:
+            raise HTTPException(403, {"error": "cloning_disabled", "message": str(e)})
         except audio.AudioError as e:
             raise HTTPException(415, f"could not decode audio: {e}")
         except ValueError as e:
