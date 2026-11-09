@@ -24,6 +24,9 @@ const DEV_ORIGINS = [
 const PROJECT_ROOT = path.join(__dirname);
 
 const nextConfig: NextConfig = {
+  // The demo runner builds into its own folder (NEXT_DIST_DIR=.next-demo) so other builds can't
+  // overwrite the app that is being filmed.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   outputFileTracingRoot: PROJECT_ROOT,
   poweredByHeader: false,
   allowedDevOrigins: DEV_ORIGINS,

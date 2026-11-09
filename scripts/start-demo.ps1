@@ -36,7 +36,7 @@ $Backend = Join-Path $Root "backend"
 $Web = Join-Path $Root "web"
 $TmpDir = "B:\tmp"
 $PidFile = Join-Path $TmpDir "baaki-demo-pids.json"
-$StampFile = Join-Path $Web ".next\baaki-demo-build.json"
+$StampFile = Join-Path $Web ".next-demo\baaki-demo-build.json"
 if (-not $SiteUrl) { $SiteUrl = "http://localhost:$WebPort" }
 $SiteUrl = $SiteUrl.TrimEnd("/")
 $BackendUrl = "http://127.0.0.1:$BackendPort"
@@ -47,6 +47,7 @@ New-Item -ItemType Directory -Force $TmpDir | Out-Null
 $env:TMP = $TmpDir; $env:TEMP = $TmpDir
 $env:PIP_CACHE_DIR = "B:\pip-cache"; $env:npm_config_cache = "B:\npm-cache"
 $env:NEXT_TELEMETRY_DISABLED = "1"
+$env:NEXT_DIST_DIR = ".next-demo"   # own build folder, safe from other builds
 
 function Test-PortInUse([int]$Port) {
   $c = New-Object System.Net.Sockets.TcpClient
@@ -106,9 +107,9 @@ try {
     NEXT_PUBLIC_BAAKI_INTERIM_MS = $(if ($NoInterim) { "0" } else { "4500" })
   }
   $needBuild = $true
-  $buildId = Join-Path $Web ".next\BUILD_ID"
+  $buildId = Join-Path $Web ".next-demo\BUILD_ID"
   if ($NoBuild) {
-    if (-not (Test-Path $buildId)) { throw "-NoBuild given but there is no build in web\.next. Run once without -NoBuild." }
+    if (-not (Test-Path $buildId)) { throw "-NoBuild given but there is no build in web\.next-demo. Run once without -NoBuild." }
     $needBuild = $false
   } elseif (-not $Rebuild -and (Test-Path $buildId) -and (Test-Path $StampFile)) {
     $built = (Get-Item $buildId).LastWriteTimeUtc
