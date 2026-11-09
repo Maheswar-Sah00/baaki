@@ -22,6 +22,7 @@ import {
 import { MicIcon } from "@/components/ui/icons";
 import { ExitLink } from "@/components/features/exit/ExitLink";
 import { DuesEntryCard } from "@/components/features/dues/parts";
+import { RaiseCard } from "@/components/features/raise/RaiseCard";
 
 export function LanguagePicker({ onPick, title }: { onPick: (l: (typeof UI_LANGS)[number]["value"]) => void; title: string }) {
   return (
@@ -110,8 +111,8 @@ export function HomeScreen() {
         <span className="hint">{t("home.speak_hint")}</span>
       </Link>
 
-      {/* RAISE MOUNT: the main session mounts <RaiseCard workerId={settings.workerId} /> here (Haq Raise:
-          ask for a raise to the legal minimum; links to /raise/{case}). Built in components/features/raise. */}
+      {/* Haq Raise: ask for a raise to the legal minimum; links to /raise/{case}. */}
+      {settings.hydrated ? <RaiseCard workerId={settings.workerId} /> : null}
 
       {dash.loading && dash.cards.length === 0 ? (
         <div className="stack" role="status" aria-label={t("common.loading")}>

@@ -157,6 +157,9 @@ try {
     $seed = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/demo/reset" -TimeoutSec 60
     $token = $seed.employer_tokens.sharma
     $sharmaCase = $seed.cases.sharma
+    # Add-on demos: Haq Raise (Mehta madam) and "Baaki for every promise" (milkman, chit).
+    try { $raise = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/raise/demo" -ContentType "application/json" -Body '{"audio":true}' -TimeoutSec 120 } catch { Write-Warning "Haq Raise demo seed failed: $_" }
+    try { $null = Invoke-RestMethod -Method Post -Uri "$BackendUrl/api/dues/demo" -TimeoutSec 60 } catch { Write-Warning "Dues demo seed failed: $_" }
   }
 } catch {
   Write-Warning $_
@@ -174,6 +177,8 @@ Write-Host "  Fair Pay Check $WebUrl/check"
 Write-Host "  Noise proof    $WebUrl/proof"
 if ($token) {
   Write-Host "  Employer link  $WebUrl/e/$token   (Sharma ji, case $sharmaCase)"
+  if ($raise) { Write-Host "  Haq Raise      $WebUrl$($raise.worker_path)   (worker)  |  $WebUrl$($raise.employer_path)   (employer)" }
+  Write-Host "  Other dues     $WebUrl/dues   (milkman, chit)"
   Write-Host "  Case           $WebUrl/case/$sharmaCase"
   Write-Host "  Replies inbox  $WebUrl/inbox/$sharmaCase"
   Write-Host "  Exit Kit       $WebUrl/exit?case=$sharmaCase"
