@@ -1,0 +1,48 @@
+{
+ "about": "TTS clips the demo story needs, pre-rendered so a cold start spends no Gnani credits. Not here: the Polite note's reply-by sentence (changes daily; run scripts/warm-demo.ps1 on filming morning) and the Listen-twice check (Prisma STT, cached per message).",
+ "updated": "2026-11-09",
+ "clips": [
+  {
+   "key": "2b05a7bb0e193daa5e011c64356cd991836bb13006b04b935da6776d363ba00d",
+   "lang": "te-IN",
+   "voice": "Kalpana",
+   "purpose": "paid alert: Sharma ji paid in full",
+   "text": "<excited> డబ్బులు వచ్చేశాయి! శర్మ గారు పన్నెండు వేల ఆరు వందల తొంభై రెండు రూపాయలు పంపించారు, మొత్తం లెక్క పూర్తయింది."
+  },
+  {
+   "key": "1d3ea099ee6f09606ef994cf4a7a98be444582e95884e0fceb00477be85627c4",
+   "lang": "hi-en",
+   "voice": "Shivani",
+   "purpose": "polite: Lakshmi -> Sharma ji",
+   "text": "यह एक AI वॉइस संदेश है। इसे लक्ष्मी की अनुमति से, उनकी ओर से, Baaki ऐप ने बनाया है।"
+  },
+  {
+   "key": "64064a4783f58161a43fafef0b58b02f15fcc3ed4b1a671cf3ae3736e2f6f637",
+   "lang": "hi-en",
+   "voice": "Shivani",
+   "purpose": "polite: Lakshmi -> Sharma ji",
+   "text": "नमस्ते शर्मा जी, मेरी अगस्त, सितंबर और अक्टूबर की salary अभी तक नहीं मिली है, चार हज़ार रुपये हर महीने के हिसाब से।"
+  },
+  {
+   "key": "4c26a67316c3bf0e8a818b6e11a5e3dbfdc01f47caa4eeb2430d9f921587d1eb",
+   "lang": "hi-en",
+   "voice": "Shivani",
+   "purpose": "polite: Lakshmi -> Sharma ji",
+   "text": "Salary की कटौती में से छह सौ बानवे रुपये भी वापस बनते हैं।"
+  },
+  {
+   "key": "1d11e9378e3456556db4ad9920d92ecd3bb9c6815dbb412294a10b3c541c3283",
+   "lang": "hi-en",
+   "voice": "Shivani",
+   "purpose": "polite: Lakshmi -> Sharma ji",
+   "text": "कुल मिलाकर बारह हज़ार छह सौ बानवे रुपये बाकी हैं।"
+  },
+  {
+   "key": "7b866f27fcf0d3ef574c56a7d6bb0976b7678fed6f10eaf87af59c8eda3e1de2",
+   "lang": "te-IN",
+   "voice": "Kalpana",
+   "purpose": "read-back: filming story (Telugu, home Sharma ji)",
+   "text": "<slow> శర్మ గారు దగ్గర. <pauses> మూడు నెలల జీతం రాలేదు, <pauses> నెలకు నాలుగు వేల రూపాయలు. <pauses> రెండు రోజులకు వెయ్యి రూపాయలు కట్ చేశారు. <pauses> మొత్తం పదమూడు వేల రూపాయలు. <pauses> చట్టం ప్రకారం అడగగలిగేది పన్నెండు వేల ఆరు వందల తొంభై రెండు రూపాయలు. <pauses> సరేనా?"
+  }
+ ]
+}
