@@ -1301,3 +1301,5 @@
     animation: none !important;
   }
 }
+
+.s-proof-link { margin-top: var(--s-6, 32px); }

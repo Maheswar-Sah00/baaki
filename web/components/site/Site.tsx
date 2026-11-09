@@ -387,6 +387,11 @@ export function GnaniTech() {
             </li>
           ))}
         </ul>
+        <p className="s-center s-proof-link">
+          <Link href="/proof" className="btn">
+            Tested in a noisy kitchen: 34 of 34 rupee amounts heard exactly. See every clip →
+          </Link>
+        </p>
       </div>
     </section>
   );
