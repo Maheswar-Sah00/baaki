@@ -1,0 +1,192 @@
+/* V12 Case Replay: plain and functional. Colours are tokens from app/theme.css only. */
+.page {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: var(--s-5) var(--space) var(--s-9);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+}
+.head {
+  display: grid;
+  gap: var(--s-3);
+  margin-bottom: var(--s-5);
+}
+.kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+.meter {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.meterLabel {
+  color: var(--text-2);
+}
+.meterValue {
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-text);
+}
+.meterOf {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.play {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--grad);
+  color: var(--on-grad);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.play:focus-visible,
+.chip:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.item {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  animation: drop var(--dur-3) var(--ease-out) both;
+}
+.pay {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+.win {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.when {
+  display: grid;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.clock {
+  font-size: 1rem;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.body {
+  min-width: 0;
+}
+.what {
+  margin: 0;
+  font-weight: 600;
+}
+.tick {
+  color: var(--success);
+}
+.amount {
+  color: var(--success-ink);
+}
+.balance {
+  margin: var(--s-1) 0 0;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.quote {
+  margin: var(--s-1) 0 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.chips {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  margin-top: var(--s-2);
+}
+.chips:empty {
+  display: none;
+}
+.chip {
+  min-height: var(--tap-min);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--accent-line);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.end {
+  margin-top: var(--s-5);
+  display: grid;
+  gap: var(--s-2);
+  animation: drop var(--dur-4) var(--ease-out) both;
+}
+.endWin {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--success-ink);
+}
+.endOwed {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.untimed {
+  margin: 0;
+  padding-left: var(--s-5);
+  color: var(--text-2);
+}
+.muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.error {
+  color: var(--error);
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .end {
+    animation: none;
+  }
+}
