@@ -7,7 +7,8 @@ import { ApiError, errorMessage, mediaUrl } from "@/lib/api";
 export type RaiseLang = "hi-en" | "te-IN" | "en";
 export type RaisePlan = "full" | "step";
 export type RaiseStatus = "draft" | "sent" | "played" | "talk" | "accepted" | "stepped";
-export type HomeStatus = RaiseStatus | "none" | "fair";
+/** needs_hours: she never said her hours, so no estimate (and never "fair") until she does. */
+export type HomeStatus = RaiseStatus | "none" | "fair" | "needs_hours";
 
 export type RaiseNumbers = {
   work_type: string;

@@ -510,7 +510,9 @@ def _card(s: Session, case: Case) -> dict[str, Any]:
                   .order_by(Message.id)).all()
     planned = s.exec(select(Payment).where(Payment.case_id == case.id, Payment.status == "planned")
                      .order_by(Payment.due_date)).all()
-    last = msgs[-1] if msgs else None
+    # Only ladder steps she actually sent count as "last sent" (not drafts, previews or scheduled reminders).
+    sent_steps = [m for m in msgs if m.step in ("polite", "firm", "formal") and m.status in ("sent", "played", "replied")]
+    last = sent_steps[-1] if sent_steps else None
     balance = case.balance
     if case.status in ("paid", "closed") or (case.total_due > 0 and balance <= 0):
         state = "paid"

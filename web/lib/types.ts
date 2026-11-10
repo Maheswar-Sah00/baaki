@@ -215,6 +215,8 @@ export type Readback = {
   sentences: string[];
   said_total: number | null;
   legal_total: number | null;
+  /** Questions the read-back asks her, e.g. ["months"] when the number of months was unclear. */
+  asks?: string[];
 };
 
 export type ReadbackAudio = Readback & {
@@ -547,7 +549,8 @@ export type CaseReminder = {
   /** Instalment: mark the reminder sent after a share reached an app. */
   mark_sent?: { method: "POST"; path: string } | null;
   /** next_step: make the next ladder note; promise: the polite reminder quoting his words. */
-  action?: { method: "POST"; path: string } | null;
+  /** POST makes the next note / reminder; GET opens a document (the legal pack on the legal-aid card). */
+  action?: { method: "POST" | "GET"; path: string } | null;
   auto_send: false;
   last_step?: string;
   last_sent_at?: string;

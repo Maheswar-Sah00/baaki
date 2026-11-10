@@ -53,6 +53,7 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
   // ---- pay
   const [paying, setPaying] = useState(false);
   const [payResult, setPayResult] = useState<PayResponse | null>(null);
+  const [payAt, setPayAt] = useState(0);
   const [payError, setPayError] = useState<string | null>(null);
   const pay = useCallback(
     async (amount?: number) => {
@@ -62,6 +63,7 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
       try {
         const r = await postPay(token, { amount, method: "upi" });
         setPayResult(r);
+        setPayAt(Date.now());
         if (r.pending_confirmation) setAwaitingHer(true);
         res.refresh();
         return r;
@@ -183,8 +185,10 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
       : null,
     fullyPaid,
     /** His claim waits for her: show the waiting panel instead of "I've paid". */
-    pendingConfirmation: pendingConfirmation || (!!payResult?.pending_confirmation && !page?.badge && !fullyPaid),
-    pendingClaim: page?.pending_claim ?? payResult?.claim ?? null,
+    // The page is the truth once it has been loaded after his tap (she may have said "not yet" or confirmed);
+    // the pay response only bridges the moment between the tap and that reload.
+    pendingConfirmation: res.updatedAt >= payAt ? pendingConfirmation : !!payResult?.pending_confirmation,
+    pendingClaim: res.updatedAt >= payAt ? (page?.pending_claim ?? null) : (payResult?.claim ?? null),
     claims: page?.claims ?? [],
     stale: !!page?.stale,
     staleNote: page?.stale_note ?? null,
