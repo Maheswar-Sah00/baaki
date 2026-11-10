@@ -11,6 +11,8 @@ BACKEND_PORT="${BACKEND_PORT:-8000}"
 if [ -z "${PUBLIC_BASE_URL:-}" ]; then
   if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
     PUBLIC_BASE_URL="$RENDER_EXTERNAL_URL"
+  elif [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
+    PUBLIC_BASE_URL="https://${RAILWAY_PUBLIC_DOMAIN}"
   elif [ -n "${FLY_APP_NAME:-}" ]; then
     PUBLIC_BASE_URL="https://${FLY_APP_NAME}.fly.dev"
   fi

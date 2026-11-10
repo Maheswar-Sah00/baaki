@@ -4,7 +4,7 @@
 # Keep ONE instance: SQLite on a disk cannot be shared between instances.
 services:
   - type: web
-    name: baaki                      # the public URL becomes https://baaki.onrender.com if the name is free
+    name: baaki-app                  # public URL https://baaki-app.onrender.com ("baaki" is taken on Render)
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -22,14 +22,14 @@ services:
       - key: BACKEND_URL
         value: http://127.0.0.1:8000
       - key: NEXT_PUBLIC_SITE_URL      # change if the service name (and so the URL) is different
-        value: https://baaki.onrender.com
+        value: https://baaki-app.onrender.com
       - key: NEXT_PUBLIC_BAAKI_INTERIM_MS
         value: "4500"
       # --- runtime ---
       - key: PORT
         value: "10000"
       - key: PUBLIC_BASE_URL           # links Baaki writes into messages; must match the public URL
-        value: https://baaki.onrender.com
+        value: https://baaki-app.onrender.com
       - key: DATABASE_URL
         value: sqlite:////data/app.db
       - key: MEDIA_DIR
@@ -62,3 +62,7 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: GEMINI_API_KEY            # optional backup LLM, tried only when Groq fails
+        sync: false
+      - key: GEMINI_BACKUP
+        value: "1"

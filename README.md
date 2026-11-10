@@ -16,6 +16,7 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 [![Tests](https://img.shields.io/badge/tests-1%2C643%20passing-2e7a46)](backend/tests)
 [![Data](https://img.shields.io/badge/demo%20data-synthetic-8a5a22)](#honesty-and-limits)
 
+🌐 **Try it live:** [baaki.up.railway.app](https://baaki.up.railway.app) (worker app at [/app](https://baaki.up.railway.app/app), employer check at [/check](https://baaki.up.railway.app/check); synthetic demo data) &nbsp;·&nbsp;<br>
 📄 **Solution pitch:** [PITCH.md](PITCH.md) · [PDF, 1 page](Baaki_Solution_Pitch.pdf) &nbsp;·&nbsp;
 🎬 **Demo video:** <!-- VIDEO_URL --> *(link coming)*
 
@@ -202,7 +203,8 @@ Every setting, with its default, is in `.env.example`.
 
 `Dockerfile` builds the web app (Node 22) and runs both processes in one Python 3.12 image: `start.sh` starts FastAPI on `127.0.0.1:8000` (private), waits for `/health`, then runs `next start` on `0.0.0.0:$PORT`, which proxies `/api/*` to it. The database, media and TTS cache live on a persistent disk at `/data` (`DATABASE_URL=sqlite:////data/app.db`). On first boot, with an empty database, the backend seeds the synthetic demo story itself. `backend/seed_cache` is in the image, so the demo's voice clips and the noise-bench results work on a cold start. Keep one instance: SQLite on one disk.
 
-- **Render:** New → Blueprint → this repo (`render.yaml`: Docker web service, Starter plan, 1 GB disk at `/data`, health check `/api/health`). Fill in `GNANI_API_KEY` and `GROQ_API_KEY` when asked; `BAAKI_ADMIN_TOKEN` is generated. If the service name isn't `baaki`, change `NEXT_PUBLIC_SITE_URL` and `PUBLIC_BASE_URL` to the real URL.
+- **Railway (the live demo runs here):** `railway init`, `railway add --service baaki`, `railway domain`, then set the variables from `render.yaml` (URLs = the Railway domain) plus `GNANI_API_KEY`, `GROQ_API_KEY` and a long random `BAAKI_ADMIN_TOKEN`, add a volume at `/data`, and `railway up`. Set `TRUSTED_PROXY_HOPS=2`: Railway's edge appends its own hop after the visitor's IP, so with 1 every visitor would share the edge node's per-IP limits. `railway.json` sets the Dockerfile build, one replica and the `/api/health` check. `start.sh` falls back to `RAILWAY_PUBLIC_DOMAIN` when `PUBLIC_BASE_URL` is unset.
+- **Render:** New → Blueprint → this repo (`render.yaml`: Docker web service, Starter plan, 1 GB disk at `/data`, health check `/api/health`). Fill in `GNANI_API_KEY` and `GROQ_API_KEY` when asked; `BAAKI_ADMIN_TOKEN` is generated. If the service name isn't `baaki-app`, change `NEXT_PUBLIC_SITE_URL` and `PUBLIC_BASE_URL` to the real URL.
 - **Fly.io:** set the app name and both URLs in `fly.toml`, then `fly apps create <name>`, `fly volumes create baaki_data --region bom --size 1`, `fly secrets set GNANI_API_KEY=... GROQ_API_KEY=... BAAKI_ADMIN_TOKEN=...`, `fly deploy` (one machine, always on, health check `/api/health`).
 - **Any Docker host:** `docker build -t baaki --build-arg NEXT_PUBLIC_SITE_URL=https://your-host .` then `docker run -p 3000:3000 -v baaki-data:/data -e BAAKI_PUBLIC=1 -e BAAKI_ADMIN_TOKEN=... -e GNANI_API_KEY=... baaki`.
 
