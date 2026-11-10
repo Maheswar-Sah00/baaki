@@ -16,7 +16,7 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 [![Tests](https://img.shields.io/badge/tests-1%2C643%20passing-2e7a46)](backend/tests)
 [![Data](https://img.shields.io/badge/demo%20data-synthetic-8a5a22)](#honesty-and-limits)
 
-📄 **Solution pitch:** [PITCH.md](PITCH.md) · [PDF, 1 page](docs/Baaki_Solution_Pitch.pdf) &nbsp;·&nbsp;
+📄 **Solution pitch:** [PITCH.md](PITCH.md) · [PDF, 1 page](Baaki_Solution_Pitch.pdf) &nbsp;·&nbsp;
 🎬 **Demo video:** <!-- VIDEO_URL --> *(link coming)* &nbsp;·&nbsp;
 🌐 **Live app:** <!-- LIVE_URL --> *(link coming)*
 

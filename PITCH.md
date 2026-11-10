@@ -1,6 +1,6 @@
 # Baaki (బాకీ): a wage advocate in her pocket
 
-*"Bolo. Baaki sambhal lega."* (Just speak. Baaki asks.) · Built on Gnani.ai Prisma and Timbre · [PDF version](docs/Baaki_Solution_Pitch.pdf)
+*"Bolo. Baaki sambhal lega."* (Just speak. Baaki asks.) · Built on Gnani.ai Prisma and Timbre · [PDF version](Baaki_Solution_Pitch.pdf)
 
 **The problem.** Hyderabad's maids and cooks are often owed money they can't calculate, can't put in writing, and can't safely ask for in their employer's language.
 

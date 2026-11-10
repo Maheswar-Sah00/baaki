@@ -1,4 +1,4 @@
-"""Build docs/Baaki_Solution_Pitch.pdf: the one-page solution pitch (same text as PITCH.md), A4.
+"""Build Baaki_Solution_Pitch.pdf (repo root): the one-page solution pitch (same text as PITCH.md), A4.
 
 Run: python docs/architecture/tools/make_pitch_pdf.py
 Needs Python Playwright and an installed Edge or Chrome. Cabinet Grotesk is embedded from web/app/fonts;
@@ -13,7 +13,7 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parents[3]
-OUT = ROOT / "docs" / "Baaki_Solution_Pitch.pdf"
+OUT = ROOT / "Baaki_Solution_Pitch.pdf"
 CABINET = base64.b64encode((ROOT / "web/app/fonts/CabinetGrotesk-Variable.woff2").read_bytes()).decode()
 MARK = ('<svg viewBox="0 0 512 512" width="44" height="44"><rect width="512" height="512" rx="114" fill="#0e0e0c"/>'
         '<path fill="#fbfaf7" transform="translate(74.77 74.77) scale(0.6762)" d="M80 120a64 64 0 0 1 128 0V170a160 '
