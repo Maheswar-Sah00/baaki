@@ -1,4 +1,4 @@
-"""V12 Case Replay: one case's real stored events as a timeline. Owned by the story agent (tournament ranks 6-10).
+"""V12 Case Replay: one case's real stored events as a timeline.
 
   GET /api/story/{case_id}   the case summary, total due and every stored event in stored-time order
 

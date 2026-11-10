@@ -1,4 +1,4 @@
-"""Employer page, pay, plan, reply, and the opt-in voice profile (Agent B). Offline, mocked Gnani/LLM."""
+"""Employer page, pay, plan, reply, and the opt-in voice profile. Offline, mocked Gnani/LLM."""
 from __future__ import annotations
 
 import json

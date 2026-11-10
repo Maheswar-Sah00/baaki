@@ -5,7 +5,7 @@ parse_spoken()  -> work type, hours a day, days a week and monthly pay from a Hi
                    using the deterministic app.lang parsers (never an LLM).
 
 Every rupee figure comes from wages.minimum_wage(); this module only formats and divides.
-Tone rule (judges): information, not accusation. Part-time figures are always flagged as an estimate.
+Tone rule: information, not accusation. Part-time figures are always flagged as an estimate.
 """
 from __future__ import annotations
 

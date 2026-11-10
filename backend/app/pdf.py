@@ -4,7 +4,7 @@ Why fpdf2: in the Deposit Wapas test (04_tech_feasibility.md section 7, 8 Nov 20
 shaping rendered Telugu conjuncts like Chromium and copied Telugu text back at 0.97, against 0.48 for
 ReportLab. Fonts are in backend/fonts (SIL Open Font License).
 
-Only plumbing: the letter layout and content are TODO (they wait for the law research).
+Only plumbing: the letter layout and content live in app/letter.py.
 """
 from __future__ import annotations
 

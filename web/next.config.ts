@@ -20,7 +20,7 @@ const DEV_ORIGINS = [
     .filter(Boolean),
 ];
 
-// Pin the project root to web/ (B:\Projects holds unrelated lockfiles).
+// Pin the project root to web/ (lockfiles in parent folders are ignored).
 const PROJECT_ROOT = path.join(__dirname);
 
 const nextConfig: NextConfig = {

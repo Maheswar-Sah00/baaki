@@ -6,7 +6,7 @@ home from Rs 2,500 to the estimated legal Rs 4,000 (2 h a day) is Rs 18,000 more
 Rules:
 - Every rupee figure comes from check_core.compute (G.O.Ms.No.6 via app.wages); part-time figures are estimates.
 - The request is warm and respectful, in the EMPLOYER's language. It never mentions penalties, and it never
-  mentions the law unless she turns the toggle on (judge J1: citing the law in a raise ask reads as a threat).
+  mentions the law unless she turns the toggle on (citing the law in a raise ask reads as a threat).
   With the toggle on there is exactly one gentle line: "the Telangana minimum for this work is about Rs X (estimate)".
 - Slots are filled by code. The LLM may only reword the sentences around them; afterwards every amount is
   re-extracted with app.lang (messages.verify_amounts) and must be one of the plan's amounts. Any failure falls

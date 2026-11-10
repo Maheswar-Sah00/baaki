@@ -241,7 +241,7 @@ async def tts(body: TTSIn) -> Response:
 for _r in ROUTERS:
     app.include_router(_r)
 
-# Agent B: messages and employer side (letters is already in ROUTERS)
+# Messages and the employer side (letters is already in ROUTERS)
 from .routes.employer import router as _employer_router  # noqa: E402
 from .routes.onboard import router as _onboard_router  # noqa: E402
 from .routes.voice_profile import router as _voice_profile_router  # noqa: E402

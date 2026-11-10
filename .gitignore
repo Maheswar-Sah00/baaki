@@ -36,3 +36,5 @@ docs/submission/proof/
 # deploy CLIs
 .fly/
 .render/
+# per-machine npm cache path (keep it local)
+web/.npmrc

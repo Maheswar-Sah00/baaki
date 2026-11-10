@@ -2,7 +2,7 @@
 
 // /raise/[caseId]: Haq Raise, the worker side. Hero: her pay vs the legal estimate and "₹18,000 more every year".
 // She picks a plan (full now, or a step-up), optionally says a line in her own words, and Baaki writes a warm
-// request in the EMPLOYER's language with a voice note (AI disclosure first). The law is OFF by default (judge J1).
+// request in the EMPLOYER's language with a voice note (AI disclosure first). The law is OFF by default.
 // She shares it herself. When the employer accepts, this screen celebrates in her language.
 
 import { useCallback, useEffect, useRef, useState } from "react";

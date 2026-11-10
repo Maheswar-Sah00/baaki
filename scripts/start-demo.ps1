@@ -3,14 +3,14 @@
   One-command local Baaki demo: backend on :8020, production web on :3020, fresh demo story.
 
 .DESCRIPTION
-  1. Starts the FastAPI backend on 127.0.0.1:8020 (log: B:\tmp\baaki-demo-backend.log).
+  1. Starts the FastAPI backend on 127.0.0.1:8020 (log: baaki-demo-backend.log in the temp folder printed at start).
   2. Builds the web app with BACKEND_URL=http://127.0.0.1:8020 (baked in at build time). The build is
      skipped when .next is newer than every source file and was built with the same settings;
      -NoBuild always skips it, -Rebuild always builds.
-  3. Runs `next start -p 3020` (log: B:\tmp\baaki-demo-web.log).
+  3. Runs `next start -p 3020` (log: baaki-demo-web.log).
   4. POST /api/demo/reset (Lakshmi's three homes, Rafiq and Rao garu).
   5. Prints the local URLs, including the seeded employer link /e/{token}.
-  PIDs go to B:\tmp\baaki-demo-pids.json; scripts\stop-demo.ps1 stops only those processes.
+  PIDs go to baaki-demo-pids.json in the same folder; scripts\stop-demo.ps1 stops only those processes.
   Local only: nothing is exposed to the internet.
 
 .EXAMPLE
@@ -34,7 +34,9 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Backend = Join-Path $Root "backend"
 $Web = Join-Path $Root "web"
-$TmpDir = "B:\tmp"
+# Logs and PIDs: B:\tmp on the author's PC (C: is nearly full), else %TEMP%\baaki-demo.
+$OnB = Test-Path "B:\"
+$TmpDir = if ($OnB) { "B:\tmp" } else { Join-Path $env:TEMP "baaki-demo" }
 $PidFile = Join-Path $TmpDir "baaki-demo-pids.json"
 $StampFile = Join-Path $Web ".next-demo\baaki-demo-build.json"
 if (-not $SiteUrl) { $SiteUrl = "http://localhost:$WebPort" }
@@ -43,9 +45,11 @@ $BackendUrl = "http://127.0.0.1:$BackendPort"
 $WebUrl = "http://localhost:$WebPort"
 
 New-Item -ItemType Directory -Force $TmpDir | Out-Null
-# Everything stays on B: (C: is nearly full).
-$env:TMP = $TmpDir; $env:TEMP = $TmpDir
-$env:PIP_CACHE_DIR = "B:\pip-cache"; $env:npm_config_cache = "B:\npm-cache"
+Write-Host "Logs and PIDs: $TmpDir"
+if ($OnB) {
+  $env:TMP = $TmpDir; $env:TEMP = $TmpDir
+  $env:PIP_CACHE_DIR = "B:\pip-cache"; $env:npm_config_cache = "B:\npm-cache"
+}
 $env:NEXT_TELEMETRY_DISABLED = "1"
 $env:NEXT_DIST_DIR = ".next-demo"   # own build folder, safe from other builds
 

@@ -6,7 +6,7 @@ transcribes the generated audio and we check two things:
 1. every rupee amount written in the message (and so the total) is heard, and nothing else is;
 2. the spoken AI disclosure is heard at the start of the note.
 
-The result only warns. The worker can always send (02_law section 8; FINAL_TOP5 judge condition:
+The result only warns. The worker can always send (02_law section 8; design rule:
 "on a mismatch it warns and still lets her send; it never silently blocks").
 
 STT settings (docs/research/04_gnani_feasibility.md, test 3): Hinglish hi-IN,en-IN and Telugu

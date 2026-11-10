@@ -90,7 +90,7 @@ def test_hinglish_voice_note_promise_next_week(client, mock_gnani, short_ogg, sh
 
 
 def test_sample_reply_two_promises(client, mock_gnani, short_ogg, short_wav):
-    """Agent B's synthetic clip: "Saturday ₹12,000, the rest next month" -> two promises, Saturday first."""
+    """The synthetic employer clip: "Saturday ₹12,000, the rest next month" -> two promises, Saturday first."""
     mock_gnani.push("/stt/v3", _stt("लक्ष्मी को बोलो, मैं शनिवार को बारह हज़ार रुपये दे दूँगा, बाकी अगले महीने।", []))
     mock_gnani.default["/api/v1/tts/inference"] = tts_ok(short_ogg)
     ids = make_case(diary_days=0)

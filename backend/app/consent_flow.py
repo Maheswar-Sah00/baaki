@@ -7,7 +7,7 @@
               only its sha256 goes into the diary.
   withdraw voice_profile.delete_profiles + DiaryEntry(kind="consent", "Voice consent withdrawn ...").
 
-The gate never blocks (judge condition): a failed match, or STT being down, returns the matched / missed
+The gate never blocks: a failed match, or STT being down, returns the matched / missed
 words and lets her retry or confirm by tap; a tap is logged as method "tap". A tap is accepted only for a
 recording (same sha256) that was first sent as a spoken attempt (status "spoken_first" otherwise), so a
 client flag alone can never make a clone. POST /api/voice-profile goes through attempt(method="spoken").

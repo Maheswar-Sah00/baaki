@@ -1,4 +1,4 @@
-"""Synthetic demo rows for the messages / employer-side tests (Agent B). Fictional people only."""
+"""Synthetic demo rows for the messages / employer-side tests. Fictional people only."""
 from __future__ import annotations
 
 import hashlib

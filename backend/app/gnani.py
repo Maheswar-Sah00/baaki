@@ -7,8 +7,9 @@ Endpoints, field names and voices come from docs/gnani_api/ (docs.gnani.ai, Nov 
   VC synthesis     POST {base}/api/v1/tts/inference           JSON with speaker_embedding
 
 The account allows ONE active request ("Only 1 active request is allowed at a time", 429
-RATE_LIMITED), so every call goes through one process-wide asyncio.Lock, and 429/5xx are
-retried with backoff (errors page: retry 429/500/503/504, ~3 attempts; no Retry-After today).
+RATE_LIMITED), so every call goes through one process-wide asyncio.Lock. Only 429 (nothing was processed) and
+connection errors are retried with backoff; 5xx and read timeouts are not, since they may already be
+billed. 401/402 open a short circuit breaker (see RETRYABLE and BREAKER_STATUSES below).
 
 The API key is sent only in the X-API-Key-ID header to the official base URL. It is never
 logged, printed or included in exceptions.

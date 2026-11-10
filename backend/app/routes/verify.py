@@ -1,4 +1,4 @@
-"""Listen-twice guard (G07). Owned by the tournament feature agent for this module.
+"""Listen-twice guard (G07).
 
   POST /api/verify/messages/{message_id}   re-hear the message's voice note with Prisma (cached)
   GET  /api/verify/messages/{message_id}   the cached result for the current audio, or 404

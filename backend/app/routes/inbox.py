@@ -1,4 +1,4 @@
-"""Share to Baaki + Promise Keeper (W04+G16+W05). Owned by the tournament feature agent for this module.
+"""Share to Baaki + Promise Keeper (W04+G16+W05).
 
 The employer replies on WhatsApp, not on the Baaki page. The worker forwards / uploads that voice note
 (or pastes the text) into Baaki for one case:

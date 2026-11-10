@@ -63,7 +63,8 @@ def gemini_backup_enabled() -> bool:
 
 
 def database_url() -> str | None:
-    """Postgres (Supabase/Neon) in production. Unset = local SQLite at backend/data/app.db."""
+    """SQLite URL override (e.g. sqlite:////data/app.db on a deploy volume). Unset = backend/data/app.db.
+    Only SQLite is supported (see .env.example)."""
     return os.environ.get("DATABASE_URL", "").strip() or None
 
 
@@ -109,7 +110,7 @@ def _flag(name: str, default: str = "0") -> bool:
 
 
 def baaki_public() -> bool:
-    """BAAKI_PUBLIC=1: a public deploy (judges, LinkedIn). Turns on worker keys, the admin token on demo
+    """BAAKI_PUBLIC=1: a public deploy anyone can open. Turns on worker keys, the admin token on demo
     routes, the Gnani budget, cache-only TTS and no cloning. Unset (localhost filming): behaviour as before."""
     return _flag("BAAKI_PUBLIC")
 

@@ -1,4 +1,4 @@
-"""Live check of the employer side with the real Gnani key (Agent B). Spends at most 8 Gnani calls,
+"""Live check of the employer side with the real Gnani key . Spends at most 8 Gnani calls,
 one at a time, one attempt each (no automatic retries), and stops before going over.
 
   1. Polite voice note, Lakshmi -> Sharma ji, Hinglish, stock voice (one Timbre call per sentence).
@@ -23,7 +23,7 @@ from sqlmodel import create_engine  # noqa: E402
 
 from app import audio, config, db, gnani, seed  # noqa: E402
 
-# Agent B was allowed 8 live calls. Run 1 (9 Nov) spent 7: 5 Timbre calls for the polite note (now in the TTS
+# This check is capped at 8 live calls. Run 1 (9 Nov) spent 7: 5 Timbre calls for the polite note (now in the TTS
 # cache, so the note re-renders for free), 1 Timbre call for the synthetic employer reply below, and 1 Prisma call
 # whose response was lost to a decoding bug in this script's transport (fixed). So BUDGET = 1 is left.
 BUDGET = 1

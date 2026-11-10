@@ -1,4 +1,4 @@
-"""Ladder messages, voice notes and PDFs (Agent B). Offline: Gnani and the LLM are mocked."""
+"""Ladder messages, voice notes and PDFs. Offline: Gnani and the LLM are mocked."""
 from __future__ import annotations
 
 import datetime as dt

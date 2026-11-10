@@ -996,7 +996,7 @@ label.fc-q-label {
   height: 14px;
 }
 
-/* the "estimate" label must be LARGE (judges' condition) */
+/* the "estimate" label must be LARGE (it is an estimate, not a ruling) */
 .fc-estimate {
   display: flex;
   flex-direction: column;

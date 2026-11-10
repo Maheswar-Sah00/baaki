@@ -1,4 +1,4 @@
-// The PWA share target (add-on; see docs/feature_tournament/inbox_share_target.md): the service worker puts the
+// The PWA share target (add-on, registered in public/manifest.webmanifest): the service worker puts the
 // shared voice note in Cache Storage under SHARE_KEY and opens /inbox/share. These helpers read and clear it.
 
 export const SHARE_CACHE = "baaki-share-v1";

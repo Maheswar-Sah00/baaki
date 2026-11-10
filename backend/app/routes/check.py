@@ -1,4 +1,4 @@
-"""Fair Pay Check (V01). Owned by the tournament feature agent for this module.
+"""Fair Pay Check (V01).
 
 Public, no login, and nothing is stored: no database rows, no files, no logging of inputs or transcripts.
 Every endpoint that takes inputs is a POST, so the inputs never appear in access-log query strings.

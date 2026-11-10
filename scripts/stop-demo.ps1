@@ -3,11 +3,12 @@
   Stops the Baaki demo started by scripts\start-demo.ps1, and nothing else.
 
 .DESCRIPTION
-  Reads the PIDs from B:\tmp\baaki-demo-pids.json and ends each one with its child processes
+  Reads the PIDs from baaki-demo-pids.json (in the folder start-demo.ps1 printed) and ends each one with its child processes
   (the venv python launcher and Next.js both start children). Other programs on other ports are untouched.
 #>
 $ErrorActionPreference = "Continue"
-$PidFile = "B:\tmp\baaki-demo-pids.json"
+$TmpDir = if (Test-Path "B:\") { "B:\tmp" } else { Join-Path $env:TEMP "baaki-demo" }
+$PidFile = Join-Path $TmpDir "baaki-demo-pids.json"
 if (-not (Test-Path $PidFile)) {
   Write-Host "No demo PID file ($PidFile): nothing to stop."
   exit 0

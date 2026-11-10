@@ -1,5 +1,5 @@
-"""Domain routers. Agent A: cases, workers, diary, demo. Agent B: letters (+ employer, voice_profile in main.py).
-Tournament features (one agent owns each module): verify, check, proof, exit, inbox."""
+"""Domain routers: cases, workers, diary, demo, letters (employer, onboard and voice_profile are mounted in main.py),
+plus one module per feature: verify, check, proof, exit, inbox, dues, raise, consent, sandbox, quiz, story, hisaab."""
 from .cases import ROUTERS as CASE_ROUTERS
 from .demo import router as demo_router
 from .letters import router as letters_router
@@ -10,7 +10,6 @@ from .exit import router as exit_router
 from .inbox import router as inbox_router
 from .dues import router as dues_router  # add-on: Baaki for every promise (/api/dues)
 from .raise_ import router as raise_router  # Haq Raise (/api/raise)
-# Tournament ranks 6-10 (one agent owns each module).
 from .consent import router as consent_router  # G13 spoken consent = voice sample (/api/consent)
 from .sandbox import router as sandbox_router  # V04 Be Sharma ji sandbox (/api/sandbox)
 from .quiz import router as quiz_router  # V08 Fair or Not? (/api/quiz)

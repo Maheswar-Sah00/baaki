@@ -1,4 +1,4 @@
-"""Haq Raise: ask for a raise to the legal minimum, with a step-up plan. Owned by the Haq Raise agent.
+"""Haq Raise: ask for a raise to the legal minimum, with a step-up plan.
 
 Worker side (case id):
   GET  /api/raise/summary?worker_id=          per home: current, legal estimate, gap (month / year), status; totals
@@ -276,7 +276,7 @@ class ComposeIn(BaseModel):
     step1_amount: Optional[float] = Field(default=None, gt=0)
     step_months: Optional[int] = Field(default=None, ge=1, le=12)
     start_month: Optional[str] = Field(default=None, pattern=r"^\d{4}-\d{2}$")
-    mention_law: bool = False                       # judge J1: OFF by default
+    mention_law: bool = False                       # OFF by default: citing the law in a raise ask reads as a threat
     years_worked: Optional[float] = Field(default=None, ge=0, le=60)
     personal_text: Optional[str] = Field(default=None, max_length=MAX_TEXT)
     personal_lang: Optional[str] = None             # language of personal_text (default: the worker's)

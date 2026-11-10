@@ -18,7 +18,7 @@
 param([switch]$Export, [switch]$Rao, [switch]$LiveConsent, [int]$BackendPort = 8020)
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
-$env:TMP = "B:\tmp"; $env:TEMP = "B:\tmp"; $env:PIP_CACHE_DIR = "B:\pip-cache"
+if (Test-Path "B:\") { $env:TMP = "B:\tmp"; $env:TEMP = "B:\tmp"; $env:PIP_CACHE_DIR = "B:\pip-cache" }
 $env:PYTHONIOENCODING = "utf-8"
 $py = Join-Path $Root "backend\.venv\Scripts\python.exe"
 $argv = @((Join-Path $Root "backend\scripts\warm_demo.py"), "--base", "http://127.0.0.1:$BackendPort")
