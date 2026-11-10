@@ -10,6 +10,7 @@ import { AssetSlot } from "@/components/ui/AssetSlot";
 import { LockIcon } from "@/components/ui/icons";
 import { useAudioPlayer, useT } from "@/hooks";
 import { getInbox, type InboxAdded, type InboxList, type InboxPromise } from "@/lib/features/inbox";
+import { getCaseHisaab } from "@/lib/features/hisaab";
 import { AddReplySheet } from "./AddReplySheet";
 import { EvidenceCard } from "./EvidenceCard";
 import { ReminderCard } from "./ReminderCard";
@@ -95,6 +96,19 @@ export function InboxScreen({ caseId, asOf, shared }: { caseId: number; asOf?: s
     );
   }, []);
 
+  // A card mentions money he says he paid: link to Hisaab only while a claim waits for her answer there.
+  const mentionsPaid = !!data?.cards.some((c) => c.past_payments?.length);
+  const [claimPending, setClaimPending] = useState(false);
+  useEffect(() => {
+    if (!mentionsPaid) return;
+    const ac = new AbortController();
+    getCaseHisaab(caseId, ac.signal)
+      .then((h) => setClaimPending((h.pending_claims ?? 0) > 0))
+      .catch(() => undefined);
+    return () => ac.abort();
+  }, [caseId, mentionsPaid]);
+  const claimHref = mentionsPaid && claimPending ? `/hisaab/${caseId}` : null;
+
   const employer = data?.case.employer.name ?? "";
   const passed = data?.passed ?? [];
 
@@ -142,6 +156,7 @@ export function InboxScreen({ caseId, asOf, shared }: { caseId: number; asOf?: s
                     duplicate={fresh?.id === c.id && fresh.duplicate}
                     player={player}
                     onPromise={onPromise}
+                    claimHref={claimHref}
                   />
                 </li>
               ))}

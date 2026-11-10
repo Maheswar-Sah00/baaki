@@ -475,3 +475,216 @@
   width: 14px;
   height: 14px;
 }
+
+/* ------------------------------------------------------------ case-screen reminders strip (CaseReminders) */
+.remStrip {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.rem {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px 16px;
+  border-radius: var(--tile-r);
+  background: var(--pale-butter);
+  color: var(--text);
+  animation: inbox-rise var(--dur-3) var(--ease-out) both;
+}
+
+.rem[data-done="true"] {
+  background: var(--pale-sage);
+}
+
+.remTitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 1.02rem/1.3 var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--pale-butter-ink);
+}
+
+.rem[data-done="true"] .remTitle {
+  color: var(--pale-sage-ink);
+}
+
+.remIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: inherit;
+}
+
+.remIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.remDue {
+  justify-self: start;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--pale-butter-ink);
+  font: 600 0.76rem/1.25 var(--font-sans);
+}
+
+.remText {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.remQuote {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.remMsg summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  list-style: none;
+  cursor: pointer;
+  font: 600 0.82rem/1.2 var(--font-sans);
+  color: var(--pale-butter-ink);
+}
+
+.remMsg summary::-webkit-details-marker {
+  display: none;
+}
+
+.remMsg summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--dur-2) var(--ease-std);
+}
+
+.remMsg[open] summary::after {
+  margin-top: 3px;
+  transform: rotate(-135deg);
+}
+
+.remMsg p {
+  margin: 0 0 4px;
+  padding: 10px 12px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--surface);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.remActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.remActions > * {
+  flex: 1 1 auto;
+  min-height: 44px;
+}
+
+.remActions:empty {
+  display: none;
+}
+
+.remNote {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+/* ------------------------------------------------------------ evidence card: payments he says he made */
+.past {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pale-sky);
+}
+
+.past .blockLabel {
+  color: var(--pale-sky-ink);
+}
+
+.pastList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pastList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.pastList li::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.55em;
+  border-radius: 50%;
+  background: var(--pale-sky-ink);
+}
+
+.pastFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pastNote {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--pale-sky-ink);
+}
+
+.pastLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-pill);
+  background: var(--ink-pill);
+  color: var(--on-ink-pill);
+  font: 600 0.88rem/1 var(--font-sans);
+  text-decoration: none;
+}
+
+.pastLink svg {
+  width: 16px;
+  height: 16px;
+}

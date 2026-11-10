@@ -40,6 +40,8 @@ const CONF: Record<
     check: string;
     retold: (employer: string, was: string | null) => string;
     noWorker: string;
+    howManyMonths: string;
+    howManyHint: string;
   }
 > = {
   en: {
@@ -50,6 +52,8 @@ const CONF: Record<
     check: "Check each line",
     retold: (e, was) => `Updating your ${e} case${was ? ` (was ${was})` : ""}. Check the new numbers.`,
     noWorker: "No profile on this server yet. Open Baaki from the start to begin.",
+    howManyMonths: "How many months?",
+    howManyHint: "Tap Fix and say the number of months.",
   },
   "hi-en": {
     how: "Hisaab kaise bana",
@@ -59,6 +63,8 @@ const CONF: Record<
     check: "Har line check karein",
     retold: (e, was) => `${e} वाला case update हो रहा है${was ? ` (पहले ${was})` : ""}। नए नंबर देख लीजिए।`,
     noWorker: "इस server पर अभी कोई profile नहीं है। Baaki शुरू से खोलिए।",
+    howManyMonths: "कितने महीने?",
+    howManyHint: "ठीक करें दबाइए और महीनों की गिनती बताइए।",
   },
   te: {
     how: "లెక్క ఎలా వచ్చింది",
@@ -68,6 +74,8 @@ const CONF: Record<
     check: "ప్రతి వివరం చూడండి",
     retold: (e, was) => `${e} కేసు మారుస్తున్నాం${was ? ` (ముందు ${was})` : ""}. కొత్త లెక్క చూడండి.`,
     noWorker: "ఈ సర్వర్‌లో ఇంకా ప్రొఫైల్ లేదు. బాకీని మొదటి నుంచి తెరవండి.",
+    howManyMonths: "ఎన్ని నెలలు?",
+    howManyHint: "సరిచేయి నొక్కి, ఎన్ని నెలలో చెప్పండి.",
   },
 };
 
@@ -262,6 +270,9 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
   const audioUrl = flow.readbackAudioUrl;
   const haq = flow.haq;
   const employerName = flow.caseData?.employer?.name ?? (f?.employer_name as string) ?? "—";
+  // The read-back asks back what was unclear ("do teen mahine" -> readback.asks = ["months"]).
+  const asks = ((flow.caseData?.readback ?? flow.preview?.readback) as { asks?: unknown } | undefined)?.asks;
+  const asksMonths = Array.isArray(asks) && asks.includes("months");
 
   const onYes = async () => {
     const id = await flow.yes();
@@ -270,11 +281,17 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
     else router.replace(`/case/${id}`);
   };
 
-  const factRows: { k: string; label: string; value: ReactNode }[] = f
+  const factRows: { k: string; label: string; value: ReactNode; ask?: string }[] = f
     ? [
         { k: "employer", label: t("confirm.employer"), value: employerName },
         { k: "wage", label: t("confirm.wage"), value: <Money value={Number(f.monthly_wage ?? 0)} /> },
-        { k: "months", label: t("confirm.months"), value: flow.caseData?.months_unpaid ?? f.months_unpaid ?? "—" },
+        {
+          k: "months",
+          label: t("confirm.months"),
+          // an unclear count is stored as 0 / null: show a dash next to the question, never "0 months"
+          value: asksMonths ? "—" : (flow.caseData?.months_unpaid ?? f.months_unpaid ?? "—"),
+          ask: asksMonths ? C.howManyMonths : undefined,
+        },
         ...(f.hours_per_day ? [{ k: "hours", label: t("confirm.hours"), value: f.hours_per_day as ReactNode }] : []),
         ...(f.deductions?.length ? [{ k: "cuts", label: t("confirm.cuts"), value: f.deductions.map((d) => inr(d.amount)).join(", ") as ReactNode }] : []),
       ]
@@ -340,9 +357,17 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
             </div>
             <dl className="facts receipt-facts">
               {factRows.map((r) => (
-                <div key={r.k} className="fact-row" data-ok={!!okLines[r.k]}>
+                <div key={r.k} className="fact-row" data-ok={!!okLines[r.k]} data-ask={r.ask ? "true" : undefined}>
                   <dt>{r.label}</dt>
-                  <dd>{r.value}</dd>
+                  <dd>
+                    {r.value}
+                    {r.ask ? (
+                      <>
+                        <span className="fact-ask">{r.ask}</span>
+                        <span className="fact-ask-hint">{C.howManyHint}</span>
+                      </>
+                    ) : null}
+                  </dd>
                   <span className="fact-actions">
                     <button
                       type="button"
@@ -383,14 +408,24 @@ function ConfirmFlowBody({ resumeCaseId = null, onConfirmed }: FlowProps) {
                       <span className="item-label" title={it.label}>
                         {itemLabel(t, it, lang)} {it.is_estimate ? <EstimateTag t={t} /> : null}
                       </span>
-                      <Money value={it.amount} />
+                      {/* money already received (paid_received) comes off the total: "− ₹X", not owed */}
+                      {it.amount < 0 ? (
+                        <span className="money" data-sign="neg">
+                          − {inr(-it.amount)}
+                        </span>
+                      ) : (
+                        <Money value={it.amount} />
+                      )}
                     </div>
                     {it.note ? <p className="meta">{it.note}</p> : null}
-                    <details className="item-source">
-                      <summary>{t("common.source")}</summary>
-                      <p className="meta">{it.label}</p>
-                      <p>{it.source}</p>
-                    </details>
+                    {/* lines with no source (money already received) have nothing to open */}
+                    {it.source ? (
+                      <details className="item-source">
+                        <summary>{t("common.source")}</summary>
+                        <p className="meta">{it.label}</p>
+                        <p>{it.source}</p>
+                      </details>
+                    ) : null}
                   </div>
                 </li>
               ))}

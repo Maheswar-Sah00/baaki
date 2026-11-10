@@ -25,6 +25,7 @@ import { ErrorNote, Illustration, Loading, Screen, SkeletonCard } from "@/compon
 import { CheckIcon, LockIcon, MicIcon, PlayIcon, StopIcon } from "@/components/ui/icons";
 import { ConsentWords } from "./ConsentWords";
 import css from "./consent.module.css";
+import { CONSENT_UI } from "./strings";
 
 const EXPECTED_S = 14; // a slow reading of the sentence; guides the karaoke cursor while she records
 const HTML_LANG: Record<ConsentLang, string> = { "te-IN": "te", "hi-en": "hi", en: "en" };
@@ -47,6 +48,7 @@ const serverSearch = () => null;
 
 export function ConsentScreen() {
   const settings = useSettings();
+  const T = CONSENT_UI[settings.uiLang ?? "en"];
   const search = useSyncExternalStore(noSubscribe, readSearch, serverSearch);
   const query = useMemo(() => (search === null ? null : parseQuery(search)), [search]);
   const [picked, setPicked] = useState<ConsentLang | null>(null);
@@ -121,7 +123,7 @@ export function ConsentScreen() {
     try {
       const p = status?.prompt?.audio_url ? status.prompt : await getPrompt(workerId, statusLang ?? lang);
       if (!p.audio_url) {
-        setError("Baaki cannot speak right now. Read the sentence on the screen.");
+        setError(T.noAudio);
         return;
       }
       audioRef.current?.pause();
@@ -170,19 +172,19 @@ export function ConsentScreen() {
   const shownLang = status?.lang ?? lang ?? "te-IN";
 
   return (
-    <Screen title="Voice consent" back="/voice" className={`fx ${css.screen}`}>
+    <Screen title={T.title} back="/voice" className={`fx ${css.screen}`}>
       <section className={css.hero} data-wash="lilac">
         <div className={css.heroText}>
-          <p className="fx-eyebrow fx-wash-ink">Say it once</p>
+          <p className="fx-eyebrow fx-wash-ink">{T.eyebrow}</p>
           <h1 className={`fx-h ${css.title}`}>
-            Your voice, <em>your permission.</em>
+            {T.heroLead} <em>{T.heroAccent}</em>
           </h1>
-          <p className={css.heroSub}>Say this sentence after Baaki. The same recording is your permission and your voice sample.</p>
+          <p className={css.heroSub}>{T.heroSub}</p>
         </div>
         <Illustration name="speak" className={css.heroArt} />
       </section>
 
-      <div className={css.langs} role="group" aria-label="Language">
+      <div className={css.langs} role="group" aria-label={T.langGroup}>
         {CONSENT_LANGS.map((l) => (
           <button
             key={l.id}
@@ -202,14 +204,14 @@ export function ConsentScreen() {
       <ErrorNote message={loadError} />
 
       {workerId === null || (!status && !loadError) ? (
-        <div role="status" aria-label="Loading">
+        <div role="status" aria-label={T.loading}>
           <SkeletonCard />
         </div>
       ) : null}
 
       {status ? (
         <section className={css.script} aria-live="polite" lang={HTML_LANG[status.lang]}>
-          <p className={css.scriptLabel}>{recording ? "Read it now, slowly" : sending ? "Checking your words…" : "Say this after Baaki"}</p>
+          <p className={css.scriptLabel}>{recording ? T.readNow : sending ? T.checking : T.sayAfter}</p>
           <ConsentWords words={baseWords} cursor={cursor} />
           {!ready ? (
             <div className={css.controls}>
@@ -217,7 +219,7 @@ export function ConsentScreen() {
                 <span className={css.listenIcon} aria-hidden="true">
                   <PlayIcon />
                 </span>
-                {promptBusy ? "Loading…" : "Listen first"}
+                {promptBusy ? T.loadingShort : T.listenFirst}
               </button>
               <button
                 type="button"
@@ -232,7 +234,7 @@ export function ConsentScreen() {
                   {recording ? <StopIcon /> : <MicIcon />}
                 </span>
                 <span className={css.recordText}>
-                  {recording ? `Stop · ${formatTimer(recorder.elapsedMs)}` : active ? "Record again" : "Record"}
+                  {recording ? `${T.stop} · ${formatTimer(recorder.elapsedMs)}` : active ? T.recordAgain : T.record}
                 </span>
               </button>
             </div>
@@ -242,10 +244,10 @@ export function ConsentScreen() {
               <span className={css.minBar} aria-hidden="true">
                 <span style={{ transform: `scaleX(${Math.min(1, recorder.elapsedMs / (minS * 1000))})` }} />
               </span>
-              {recorder.elapsedMs < minS * 1000 ? <span className={css.minText}>Keep reading, at least {minS} seconds.</span> : null}
+              {recorder.elapsedMs < minS * 1000 ? <span className={css.minText}>{T.keepReading(minS)}</span> : null}
             </div>
           ) : null}
-          {sending ? <Loading label="Checking your words…" /> : null}
+          {sending ? <Loading label={T.checking} /> : null}
           {recorder.error ? <ErrorNote message={recorder.error} /> : null}
           {status.lang !== "en" ? (
             <p className={css.meaning} lang="en">
@@ -261,11 +263,10 @@ export function ConsentScreen() {
             <span className={css.okIcon} aria-hidden="true">
               <CheckIcon />
             </span>
-            Voice profile ready
+            {T.profileReady}
           </p>
           <p className={css.panelText}>
-            Consent {status?.log.at(-1)?.consent_method === "tap" ? "confirmed by tap" : "given by voice"} on{" "}
-            {status?.log.at(-1)?.timestamp.slice(0, 16).replace("T", " ")} UTC.
+            {T.consentOn(status?.log.at(-1)?.consent_method === "tap", status?.log.at(-1)?.timestamp.slice(0, 16).replace("T", " ") ?? "")}
           </p>
         </section>
       ) : null}
@@ -278,20 +279,14 @@ export function ConsentScreen() {
                 <span className={css.okIcon} aria-hidden="true">
                   <CheckIcon />
                 </span>
-                {result.consent_method === "tap" ? "Consent confirmed by tap" : "Consent heard"}
+                {result.consent_method === "tap" ? T.consentTap : T.consentHeard}
               </p>
-              <p className={css.panelText}>
-                Your voice profile is ready. Messages to employers can now use your voice, and each one says first that it
-                is an AI message.
-              </p>
+              <p className={css.panelText}>{T.readyText}</p>
               {result.match ? (
-                <p className={css.count}>
-                  <b>{result.match.content_matched}</b> of {result.match.content_total} words heard
-                </p>
+                <WordsHeard parts={T.wordsHeard(result.match.content_matched, result.match.content_total)} />
               ) : null}
               <p className={css.hash}>
-                Saved in your diary: {result.consent?.timestamp.slice(0, 19).replace("T", " ")} UTC · hash{" "}
-                {result.consent?.hash.slice(0, 12)}…
+                {T.savedInDiary(result.consent?.timestamp.slice(0, 19).replace("T", " ") ?? "", result.consent?.hash.slice(0, 12) ?? "")}
               </p>
             </>
           ) : null}
@@ -300,14 +295,11 @@ export function ConsentScreen() {
             <>
               <p className={css.warnTitle}>{result.message}</p>
               {result.match ? (
-                <p className={css.count}>
-                  <b>{result.match.content_matched}</b> of {result.match.content_total} words heard
-                  {!result.match.name_matched ? ", your name was not heard" : ""}.
-                </p>
+                <WordsHeard parts={T.wordsHeard(result.match.content_matched, result.match.content_total)} suffix={`${!result.match.name_matched ? T.nameNotHeard : ""}.`} />
               ) : null}
               {result.missed?.length ? (
                 <p className={css.missed}>
-                  Missed:{" "}
+                  {T.missed}{" "}
                   {result.missed.map((m) => (
                     <span key={m} className="fx-chip" style={{ background: "var(--surface)" }}>
                       {m}
@@ -315,13 +307,13 @@ export function ConsentScreen() {
                   ))}
                 </p>
               ) : null}
-              {result.transcript ? <p className={css.panelText}>Baaki heard: &ldquo;{result.transcript}&rdquo;</p> : null}
+              {result.transcript ? <p className={css.panelText}>{T.baakiHeard(result.transcript)}</p> : null}
               <div className={css.choices}>
                 <button type="button" className={css.primary} onClick={retry}>
-                  Try again
+                  {T.tryAgain}
                 </button>
                 <button type="button" className={css.secondary} disabled={!lastRec} onClick={() => lastRec && void submit(lastRec, "tap")}>
-                  I agree, confirm by tap
+                  {T.confirmByTap}
                 </button>
               </div>
             </>
@@ -331,7 +323,7 @@ export function ConsentScreen() {
             <>
               <p className={css.warnTitle}>{result.message}</p>
               <button type="button" className={css.primary} onClick={retry}>
-                Record again
+                {T.recordAgain}
               </button>
             </>
           ) : null}
@@ -341,26 +333,26 @@ export function ConsentScreen() {
       <ErrorNote message={error} />
 
       <p className={css.lock}>
-        <LockIcon /> Baaki keeps only the voice profile and a fingerprint (hash) of the recording, never the recording.
+        <LockIcon /> {T.lockNote}
       </p>
 
       {status?.profile.exists || ready ? (
         <section className={css.withdraw}>
-          <p className="fx-muted">You can take back your permission at any time. This deletes your voice profile.</p>
+          <p className="fx-muted">{T.withdrawNote}</p>
           <button type="button" className={css.danger} onClick={() => void withdraw()}>
-            Withdraw consent and delete my voice
+            {T.withdrawBtn}
           </button>
         </section>
       ) : null}
 
       {status?.log.length ? (
         <details className={css.log}>
-          <summary>Consent record ({status.log.length})</summary>
+          <summary>{T.consentRecord(status.log.length)}</summary>
           <ul>
             {status.log.map((e) => (
               <li key={e.diary_entry_id}>
                 <span>
-                  {e.timestamp.slice(0, 16).replace("T", " ")} · {e.event === "withdrawn" ? "withdrawn" : `given (${e.consent_method})`}
+                  {e.timestamp.slice(0, 16).replace("T", " ")} · {e.event === "withdrawn" ? T.logWithdrawn : T.logGiven(e.consent_method ?? "")}
                 </span>
                 <code>{e.hash.slice(0, 10)}…</code>
               </li>
@@ -369,5 +361,17 @@ export function ConsentScreen() {
         </details>
       ) : null}
     </Screen>
+  );
+}
+
+/** "<b>13</b> of 15 words heard" with the word order of each language. */
+function WordsHeard({ parts, suffix = "" }: { parts: { before: string; bold: string; after: string }; suffix?: string }) {
+  return (
+    <p className={css.count}>
+      {parts.before}
+      <b>{parts.bold}</b>
+      {parts.after}
+      {suffix}
+    </p>
   );
 }

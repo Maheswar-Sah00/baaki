@@ -69,6 +69,10 @@ export type InboxStrings = {
   pickTitle: string;
   pickHint: string;
   pickNone: string;
+  /** Payments the employer says he already made (read-only; nothing is recorded). */
+  pastTitle: string;
+  pastNote: string;
+  pastCheck: string;
 };
 
 export const INBOX_STRINGS: Record<UiLang, InboxStrings> = {
@@ -139,6 +143,9 @@ export const INBOX_STRINGS: Record<UiLang, InboxStrings> = {
     pickTitle: "Which home is this reply from?",
     pickHint: "Pick the employer who sent this voice note.",
     pickNone: "Nothing was shared. Open WhatsApp, long-press the voice note and share it to Baaki.",
+    pastTitle: "Payments they mention",
+    pastNote: "Only noted here. Nothing is recorded.",
+    pastCheck: "Check it",
   },
   te: {
     entry: "WhatsApp లో జవాబు వచ్చిందా?",
@@ -207,6 +214,9 @@ export const INBOX_STRINGS: Record<UiLang, InboxStrings> = {
     pickTitle: "ఈ జవాబు ఏ ఇంటి నుండి?",
     pickHint: "ఈ వాయిస్ నోట్ పంపిన యజమానిని ఎంచుకోండి.",
     pickNone: "ఏదీ షేర్ కాలేదు. WhatsApp లో వాయిస్ నోట్ ని నొక్కి పట్టుకుని బాకీ కి షేర్ చేయండి.",
+    pastTitle: "వాళ్లు చెప్పిన చెల్లింపులు",
+    pastNote: "ఇక్కడ చూపడానికి మాత్రమే. ఏదీ నమోదు కాలేదు.",
+    pastCheck: "చూడండి",
   },
   "hi-en": {
     entry: "WhatsApp reply आया?",
@@ -275,6 +285,9 @@ export const INBOX_STRINGS: Record<UiLang, InboxStrings> = {
     pickTitle: "यह reply किस घर से है?",
     pickHint: "जिस मालिक ने यह voice note भेजा, उन्हें चुनिए।",
     pickNone: "कुछ share नहीं हुआ। WhatsApp में voice note दबाकर रखिए और Baaki पर share कीजिए।",
+    pastTitle: "उन्होंने बताए payments",
+    pastNote: "सिर्फ़ यहाँ दिखाया है। कुछ भी record नहीं हुआ।",
+    pastCheck: "देखिए",
   },
 };
 

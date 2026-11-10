@@ -458,12 +458,18 @@ export function CountUp({
   useEffect(() => {
     const node = el.current;
     if (!node) return;
-    if (prefersReducedMotion()) return;
+    // Reduced motion, or nothing to count (still loading): show the value as it is. `shown` is state, so a
+    // value that arrives after mount (data loaded) must still be written, or the figure stays at 0.
+    if (prefersReducedMotion() || value === 0) {
+      const raf = requestAnimationFrame(() => setShown(value));
+      return () => cancelAnimationFrame(raf);
+    }
     let raf = requestAnimationFrame(() => setShown(0));
     const run = () => {
       const t0 = performance.now();
       const step = (now: number) => {
-        const p = Math.min(1, (now - t0) / durationMs);
+        // rAF timestamps can be a little earlier than t0: clamp, so the first frame never goes below 0
+        const p = Math.min(1, Math.max(0, (now - t0) / durationMs));
         setShown(Math.round(value * easeOutCubic(p)));
         if (p < 1) raf = requestAnimationFrame(step);
       };
@@ -495,16 +501,19 @@ export function CountUp({
 // ------------------------------------------------------------------ MoneyFigure
 /**
  * Big money figure: a small muted ₹ and Cabinet Grotesk tabular digits in ink (never gradient).
- * `count` counts up once when it scrolls into view. size: sm (24) · md (34) · lg (52) · xl (64).
+ * `count` counts up once when it scrolls into view (`durationMs`, default CountUp's 1400 ms).
+ * size: sm (24) · md (34) · lg (52) · xl (64).
  */
 export function MoneyFigure({
   value,
   count = false,
+  durationMs,
   size = "lg",
   className,
 }: {
   value: number;
   count?: boolean;
+  durationMs?: number;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
@@ -512,7 +521,11 @@ export function MoneyFigure({
   return (
     <span className={cx("figure", `figure-${size}`, className)}>
       <span className="figure-cur">₹</span>
-      {count ? <CountUp value={value} format={digits} className="figure-num" /> : <span className="figure-num">{digits(value)}</span>}
+      {count ? (
+        <CountUp value={value} format={digits} durationMs={durationMs} className="figure-num" />
+      ) : (
+        <span className="figure-num">{digits(value)}</span>
+      )}
     </span>
   );
 }

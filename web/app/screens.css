@@ -453,9 +453,12 @@
 .dx-legend .fx-chip { padding: 4px 9px; }
 
 /* ============================================================ EMPLOYER: claim waits for her, his claims, typed reply */
-.ex-wait { gap: 8px; }
-.ex-wait-title { display: flex; align-items: center; gap: 10px; margin: 0; font: 600 1.06rem/1.3 var(--font-display); letter-spacing: -0.015em; color: var(--wash-ink); }
-.ex-wait-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: currentColor; animation: dot-pulse 1.4s var(--ease-std) infinite; }
+/* one calm line: pulsing dot · the server's status text · the amount waiting, like a ledger row */
+.ex-wait { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; column-gap: 12px; }
+.ex-wait-title { margin: 0; font: 600 1.06rem/1.42 var(--font-display); letter-spacing: -0.015em; color: var(--wash-ink); text-wrap: pretty; }
+.ex-wait-amt { margin: 0; font: 700 1.12rem/1.35 var(--font-display); letter-spacing: -0.015em; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
+.ex-wait-dot { flex: none; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: var(--wash-ink); animation: dot-pulse 1.4s var(--ease-std) infinite; }
+.ex-line-amt[data-sign="neg"] { color: var(--pale-sage-ink); }
 .ex-claims { gap: 10px; }
 .ex-claim-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .ex-claim {

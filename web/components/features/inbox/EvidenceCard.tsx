@@ -4,8 +4,9 @@
 // ₹12,000 by 14 Nov"), the employer's own words as the chat bubble they came in (with their voice note), the
 // promise chip(s), the translation with its Timbre read-out, and the hash that links it into her diary chain.
 
+import Link from "next/link";
 import { PlayButton } from "@/components/ui/primitives";
-import { LockIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, LockIcon } from "@/components/ui/icons";
 import { shortDate } from "@/lib/format";
 import type { UiLang } from "@/lib/i18n";
 import type { InboxCard, InboxPromise } from "@/lib/features/inbox";
@@ -25,6 +26,7 @@ export function EvidenceCard({
   duplicate,
   player,
   onPromise,
+  claimHref,
 }: {
   card: InboxCard;
   S: InboxStrings;
@@ -34,6 +36,8 @@ export function EvidenceCard({
   duplicate?: boolean;
   player: ReturnType<typeof useAudioPlayer>;
   onPromise: (p: InboxPromise) => void;
+  /** /hisaab/{caseId}, only while an "I've paid" claim waits for her answer there. */
+  claimHref?: string | null;
 }) {
   const play = (url: string | null, label: string) =>
     url ? (
@@ -73,6 +77,28 @@ export function EvidenceCard({
       ) : (
         <p className={css.note}>{S.noPromise}</p>
       )}
+
+      {/* payments he says he already made: read-only, in her language; nothing is recorded from this */}
+      {card.past_payments?.length ? (
+        <div className={css.past}>
+          <p className={css.blockLabel}>{S.pastTitle}</p>
+          <ul className={css.pastList}>
+            {card.past_payments.map((x, i) => (
+              <li key={`${x.paid_on ?? ""}-${x.amount ?? ""}-${i}`} lang={HTML_LANG[x.line_lang] ?? undefined}>
+                {x.line}
+              </li>
+            ))}
+          </ul>
+          <div className={css.pastFoot}>
+            <p className={css.pastNote}>{S.pastNote}</p>
+            {claimHref ? (
+              <Link href={claimHref} className={css.pastLink}>
+                {S.pastCheck} <ArrowRightIcon />
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className={css.block}>
         <p className={css.blockLabel}>{S.inYourLang}</p>

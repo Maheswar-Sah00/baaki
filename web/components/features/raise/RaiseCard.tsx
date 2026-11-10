@@ -31,7 +31,23 @@ export function RaiseCard({ workerId }: { workerId: number | null | undefined })
   if (!workerId || !s) return null;
   const possible = s.total_yearly_gain_possible;
   const won = s.total_yearly_gain_won;
-  if (possible <= 0 && won <= 0) return null;
+  if (possible <= 0 && won <= 0) {
+    // Hours never said: the estimate can't be made (never guessed as 8 h), so ask her to tell Baaki.
+    // (`needs_hours` is a summary status the shared HomeStatus type does not list yet.)
+    const noHours = s.per_home.find((h) => String(h.status) === "needs_hours");
+    if (!noHours) return null;
+    return (
+      <Card href="/speak" className={css.card} aria-label={C.needsHours}>
+        <div>
+          <p className={css.cardValue}>{C.needsHours}</p>
+          {noHours.employer ? <p className={css.cardSub}>{C.needsHoursSub(noHours.employer)}</p> : null}
+        </div>
+        <span className={css.cardIcon} aria-hidden="true">
+          <ArrowRightIcon />
+        </span>
+      </Card>
+    );
+  }
 
   const best = s.per_home.find((h) => h.case_id === s.best_case_id);
   const href = s.best_url ?? s.per_home.find((h) => h.status === "accepted" || h.status === "stepped")?.url ?? "/app";

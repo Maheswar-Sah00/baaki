@@ -94,6 +94,17 @@ export function EmployerScreen({ token }: { token: string }) {
   const due = p.balance > 0.5;
   const upi = emp.upi;
   const initial = p.worker.name.slice(0, 1).toUpperCase();
+  // His "I've paid" waits for her: the amount waiting (every pending claim) and the server's status line.
+  // The hook also counts the last pay response as waiting; once the page lists that claim as decided (she
+  // confirmed or said not yet), it is not waiting any more, so "pay now" can come back for a balance left.
+  const lastClaim = emp.payResult?.claim?.id ?? null;
+  const lastDecided = lastClaim !== null && emp.claims.some((c) => c.id === lastClaim && c.status !== "proposed");
+  const waiting = !!p.pending_confirmation || (emp.pendingConfirmation && !lastDecided);
+  const waitAmount =
+    (p.pending_claim_total ?? 0) > 0 ? inr(p.pending_claim_total) : (emp.pendingClaim?.amount_display ?? null);
+  const waitText = emp.pendingClaim?.status_text || L.wait(p.worker.name);
+  // "Your payments" lists decided claims; while one waits, the panel above already says it.
+  const listedClaims = waiting ? emp.claims.filter((c) => c.status !== "proposed") : emp.claims;
 
   return (
     <Screen title={t("emp.title", { name: p.worker.name })} safetyLink={false} className="employer-screen fx employer-fx">
@@ -173,7 +184,10 @@ export function EmployerScreen({ token }: { token: string }) {
                     <span className="ex-line-label">
                       {it.label} {it.is_estimate ? <EstimateTag t={t} /> : null}
                     </span>
-                    <span className="ex-line-amt">{it.amount_display}</span>
+                    {/* money already received (paid_received) is a minus line, never shown as owed */}
+                    <span className="ex-line-amt" data-sign={it.amount < 0 ? "neg" : undefined}>
+                      {it.amount < 0 ? `− ${inr(-it.amount)}` : it.amount_display}
+                    </span>
                   </div>
                   <details className="ex-src">
                     <summary>{t("common.source")}</summary>
@@ -198,7 +212,8 @@ export function EmployerScreen({ token }: { token: string }) {
         </div>
 
         <aside className="emp-side">
-          {due && upi ? (
+          {/* no "pay now" while a claim waits for her: it comes back after she confirms, if a balance remains */}
+          {due && upi && !waiting ? (
             <section className={upi.mobile !== true ? "fx-panel pay" : "ex-pay-bare pay"} aria-label={t("emp.pay_upi")}>
               {upi.mobile !== false ? (
                 <a href={upi.link} className="btn btn-primary btn-big">
@@ -233,13 +248,11 @@ export function EmployerScreen({ token }: { token: string }) {
             <>
               {/* "I've paid" is a claim: once made, a calm waiting panel replaces the button until she
                   confirms the money arrived (the page polls, so the badge appears by itself) */}
-              {emp.pendingConfirmation ? (
+              {waiting ? (
                 <section className="fx-panel ex-wait" data-wash="butter" aria-live="polite">
-                  <p className="ex-wait-title">
-                    <span className="ex-wait-dot" aria-hidden="true" />
-                    {L.wait(p.worker.name)}
-                  </p>
-                  {emp.pendingClaim?.status_text ? <p className="fx-sub fx-wash-ink">{emp.pendingClaim.status_text}</p> : null}
+                  <span className="ex-wait-dot" aria-hidden="true" />
+                  <p className="ex-wait-title">{waitText}</p>
+                  {waitAmount ? <p className="ex-wait-amt">{waitAmount}</p> : null}
                 </section>
               ) : (
                 <button type="button" className="fx-pill-btn ex-paid-btn" onClick={() => void emp.pay()} disabled={emp.paying}>
@@ -278,11 +291,11 @@ export function EmployerScreen({ token }: { token: string }) {
             </>
           ) : null}
 
-          {emp.claims.length ? (
+          {listedClaims.length ? (
             <section className="fx-panel ex-claims" aria-label={L.claims}>
               <h2 className="fx-h2">{L.claims}</h2>
               <ul className="ex-claim-list">
-                {emp.claims.map((c) => (
+                {listedClaims.map((c) => (
                   <li key={c.id} className="ex-claim" data-state={c.display_state}>
                     <span className="ex-claim-amt">{c.amount_display}</span>
                     <span className="ex-claim-status">{c.status_text}</span>

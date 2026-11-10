@@ -377,23 +377,32 @@ export function employerStrings(lang: RaiseLang): EmployerStrings {
 }
 
 /** RaiseCard copy (home screen). */
-export const CARD: Record<RaiseLang, { possible: Fn<[string]>; sub: Fn<[string]>; won: Fn<[string]>; cta: string }> = {
+export const CARD: Record<
+  RaiseLang,
+  { possible: Fn<[string]>; sub: Fn<[string]>; won: Fn<[string]>; cta: string; needsHours: string; needsHoursSub: Fn<[string]> }
+> = {
   en: {
     possible: (n) => `${n} more a year is possible`,
     sub: (e) => `Ask ${e} for a raise, politely, in their language`,
     won: (n) => `${n} more a year, agreed`,
     cta: "Ask for a raise",
+    needsHours: "Tell Baaki your hours to see the estimate",
+    needsHoursSub: (e) => `Hours at ${e} were not said`,
   },
   "hi-en": {
     possible: (n) => `हर साल ${n} ज़्यादा मिल सकते हैं`,
     sub: (e) => `${e} से प्यार से, उनकी भाषा में salary बढ़ाने को कहें`,
     won: (n) => `हर साल ${n} ज़्यादा, तय हो गया`,
     cta: "Salary बढ़वाएँ",
+    needsHours: "अनुमान देखने के लिए Baaki को अपने घंटे बताइए",
+    needsHoursSub: (e) => `${e} के यहाँ कितने घंटे, यह नहीं बताया`,
   },
   "te-IN": {
     possible: (n) => `ప్రతి సంవత్సరం ${n} ఎక్కువ రావచ్చు`,
     sub: (e) => `${e}ని మర్యాదగా, వారి భాషలో జీతం పెంచమని అడగండి`,
     won: (n) => `ప్రతి సంవత్సరం ${n} ఎక్కువ, ఒప్పుకున్నారు`,
     cta: "జీతం పెంపు అడగండి",
+    needsHours: "అంచనా చూడటానికి మీ పని గంటలు బాకీకి చెప్పండి",
+    needsHoursSub: (e) => `${e} దగ్గర ఎన్ని గంటలో చెప్పలేదు`,
   },
 };

@@ -3691,6 +3691,39 @@ audio {
     border-color: color-mix(in srgb, var(--text) 26%, transparent);
   }
 }
+/* the read-back asks back what was unclear ("How many months?"): a butter prompt on that fact */
+.fact-row[data-ask="true"] {
+  margin: 4px -10px;
+  padding: 10px;
+  border-bottom-color: transparent;
+  border-radius: 14px;
+  background: var(--pale-butter);
+}
+.fact-ask {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--pale-butter-ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.fact-ask-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--pale-butter-ink);
+}
+/* money already received (paid_received) is a minus line: calm sage, never read as owed */
+.money[data-sign="neg"] {
+  color: var(--pale-sage-ink, var(--success));
+}
 
 /* receipt: the money step by step */
 .receipt-items {
@@ -5449,15 +5482,30 @@ svg.hub-speak-art {
   display: grid;
   gap: 8px;
 }
+.hub-draft-item {
+  display: grid;
+  gap: 6px;
+}
 .hub-draft {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 56px;
+  padding-right: 6px;
+  border-radius: var(--tile-r);
+  border: 1px dashed var(--line-2);
+  color: var(--text);
+}
+.hub-draft-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   min-height: 56px;
-  padding: 10px 14px 10px 16px;
-  border-radius: var(--tile-r);
-  border: 1px dashed var(--line-2);
+  padding: 10px 8px 10px 16px;
+  border-radius: var(--tile-r) 0 0 var(--tile-r);
   color: var(--text);
   text-decoration: none;
 }
@@ -5465,6 +5513,94 @@ svg.hub-speak-art {
   min-width: 0;
   font-size: 0.92rem;
   font-weight: 600;
+}
+/* quiet Delete: a muted text pill, a hairline away from Continue */
+.hub-draft-del {
+  flex: none;
+  position: relative;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--muted);
+  font: 600 0.82rem/1 var(--font-sans);
+  cursor: pointer;
+  transition: background var(--dur-2) var(--ease-std), color var(--dur-2) var(--ease-std);
+}
+.hub-draft-del::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: var(--line);
+}
+@media (hover: hover) {
+  .hub-draft-del:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .hub-draft-del:hover::before {
+    opacity: 0;
+  }
+}
+/* the one-tap confirm, in place of the row */
+.hub-draft-ask {
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 12px 12px 16px;
+  border: 1px solid transparent;
+  background: var(--pale-rose);
+  animation: rise-in var(--dur-2) var(--ease-out) both;
+}
+.hub-draft-ask .hub-draft-text {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 180px;
+  color: var(--pale-rose-ink);
+}
+.hub-draft-sub {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.hub-draft-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.hub-draft-btn {
+  min-height: var(--tap-min);
+  padding: 0 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 0.88rem/1 var(--font-sans);
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease-std);
+}
+.hub-draft-btn[data-ink] {
+  background: var(--ink-pill);
+  color: var(--on-ink-pill);
+  border-color: transparent;
+}
+.hub-draft-btn:active {
+  transform: scale(0.97);
+}
+.hub-draft-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.hub-draft-note {
+  margin: 0;
+  padding: 0 4px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text-2);
 }
 .hub-draft-go {
   display: inline-flex;

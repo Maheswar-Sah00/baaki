@@ -33,7 +33,19 @@ import { ConfirmFlow } from "./ConfirmScreen";
 import { VerifyBadge } from "@/components/features/verify/VerifyBadge";
 import { ExitLink } from "@/components/features/exit/ExitLink";
 import { InboxEntryButton } from "@/components/features/inbox/InboxEntryButton";
+import { CaseReminders } from "@/components/features/inbox/CaseReminders";
 import { HisaabCaseCard } from "@/components/features/hisaab/HisaabWorker";
+
+/** An item amount: money already received (paid_received, negative) reads "− ₹X", never as owed. */
+function ItemAmount({ value }: { value: number }) {
+  return value < 0 ? (
+    <span className="money" data-sign="neg">
+      − {inr(-value)}
+    </span>
+  ) : (
+    <Money value={value} />
+  );
+}
 
 // Case-screen labels (kept local so the shared i18n table stays untouched).
 type CaseLabels = {
@@ -220,6 +232,14 @@ export function CaseScreen({ caseId }: { caseId: number }) {
         </Link>
       ) : null}
 
+      {/* what is due now (instalment, next step, passed promise): she shares each one herself */}
+      <CaseReminders
+        caseId={c.id}
+        employer={name}
+        refreshKey={`${c.messages.map((m) => `${m.id}:${m.status}`).join(",")}|${c.balance}`}
+        onChanged={kase.refresh}
+      />
+
       <section className="card journey" aria-label={J.title}>
         <div className="journey-head">
           <h2 className="card-title">{J.title}</h2>
@@ -334,7 +354,7 @@ export function CaseScreen({ caseId }: { caseId: number }) {
                   {itemLabel(t, it, lang)} {it.is_estimate ? <EstimateTag t={t} /> : null}
                   {it.kind === "not_yet_due" ? <span className="tag">{J.notYetDue}</span> : null}
                 </span>
-                <Money value={it.amount} />
+                <ItemAmount value={it.amount} />
               </div>
               <p className="meta">{it.source}</p>
             </li>

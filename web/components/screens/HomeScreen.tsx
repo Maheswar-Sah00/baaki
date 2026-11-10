@@ -5,8 +5,10 @@
 // of her homes, recent activity, and the hidden demo menu. The marketing website is at "/".
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useDashboard, useSettings, useT } from "@/hooks";
+import { ApiError, deleteDraft } from "@/lib/api";
+import type { DraftCard } from "@/lib/types";
 import { UI_LANGS, translator, type StringKey, type UiLang } from "@/lib/i18n";
 import { inr, shortDate } from "@/lib/format";
 import { AssetSlot } from "@/components/ui/AssetSlot";
@@ -54,6 +56,15 @@ type HubLabels = {
   claimCta: string;
   draft: (employer: string, amount: string) => string;
   draftGo: string;
+  drafts: string;
+  draftDelete: string;
+  draftAsk: string;
+  draftYes: string;
+  draftKeep: string;
+  draftDeleting: string;
+  draftNotDraft: string;
+  draftHasEvidence: string;
+  draftFailed: string;
 };
 const HUB: Record<UiLang, HubLabels> = {
   en: {
@@ -68,6 +79,15 @@ const HUB: Record<UiLang, HubLabels> = {
     claimCta: "Check",
     draft: (e, a) => `Not finished: ${e} ${a}`,
     draftGo: "Continue",
+    drafts: "Not finished",
+    draftDelete: "Delete",
+    draftAsk: "Delete this unfinished case?",
+    draftYes: "Yes, delete",
+    draftKeep: "Keep it",
+    draftDeleting: "Deleting…",
+    draftNotDraft: "That case is already confirmed, so it stays with your homes.",
+    draftHasEvidence: "This one has diary proof linked, so Baaki keeps it.",
+    draftFailed: "Could not delete it. Try again.",
   },
   "hi-en": {
     greet: "Namaste",
@@ -81,6 +101,15 @@ const HUB: Record<UiLang, HubLabels> = {
     claimCta: "देखिए",
     draft: (e, a) => `अधूरा: ${e} ${a}`,
     draftGo: "आगे बढ़िए",
+    drafts: "अधूरे case",
+    draftDelete: "हटाइए",
+    draftAsk: "यह अधूरा case हटाएँ?",
+    draftYes: "हाँ, हटाइए",
+    draftKeep: "रहने दो",
+    draftDeleting: "हटा रहे हैं…",
+    draftNotDraft: "वह case पहले ही confirm हो चुका है, इसलिए आपके घरों में रहेगा।",
+    draftHasEvidence: "इसमें diary का सबूत जुड़ा है, इसलिए Baaki इसे रखता है।",
+    draftFailed: "हटा नहीं पाए। फिर कोशिश कीजिए।",
   },
   te: {
     greet: "నమస్తే",
@@ -94,8 +123,21 @@ const HUB: Record<UiLang, HubLabels> = {
     claimCta: "చూడండి",
     draft: (e, a) => `పూర్తి కాలేదు: ${e} ${a}`,
     draftGo: "కొనసాగించండి",
+    drafts: "పూర్తి కానివి",
+    draftDelete: "తొలగించండి",
+    draftAsk: "పూర్తి కాని ఈ కేసును తొలగించాలా?",
+    draftYes: "అవును, తొలగించండి",
+    draftKeep: "వద్దు, ఉంచండి",
+    draftDeleting: "తొలగిస్తున్నాం…",
+    draftNotDraft: "ఆ కేసు ఇప్పటికే నిర్ధారించారు, అందుకే మీ ఇళ్ల జాబితాలో ఉంటుంది.",
+    draftHasEvidence: "దీనికి డైరీ రుజువు జోడించి ఉంది, అందుకే బాకీ దీన్ని ఉంచుతుంది.",
+    draftFailed: "తొలగించలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
   },
 };
+
+/** The dashboard's `last_step` is its last message to the employer, which can also be a plan's scheduled
+ *  instalment reminder: only the Polite / Firm / Formal steps have a "last sent" label. */
+const ladderStep = (step: string | null | undefined) => (step === "polite" || step === "firm" || step === "formal" ? step : null);
 
 const LANG_SUB: Record<UiLang, string> = { te: "Telugu", "hi-en": "Hindi · Hinglish", en: "English" };
 const LOCALE: Record<UiLang, string> = { te: "te-IN", "hi-en": "hi-IN", en: "en-IN" };
@@ -195,12 +237,13 @@ export function HomeScreen() {
   const acts: Act[] = [];
   for (const c of dash.cards) {
     const who = c.employer?.name ?? "—";
-    if (c.last_step) {
+    const lastStep = ladderStep(c.last_step);
+    if (lastStep) {
       acts.push({
         key: `s${c.case_id}`,
         caseId: c.case_id,
         who,
-        text: `${t("home.last_step")}: ${t(`case.step.${c.last_step}` as StringKey)}`,
+        text: `${t("home.last_step")}: ${t(`case.step.${lastStep}` as StringKey)}`,
         when: shortDate(c.last_sent_at, lang),
         sort: c.last_sent_at ? Date.parse(c.last_sent_at) : 0,
         tone: "success",
@@ -219,7 +262,7 @@ export function HomeScreen() {
         icon: "clock",
       });
     }
-    if (!c.last_step) {
+    if (!lastStep) {
       acts.push({
         key: `t${c.case_id}`,
         caseId: c.case_id,
@@ -260,7 +303,8 @@ export function HomeScreen() {
           </StatusPill>
         </div>
         <p className="total-value hub-wallet-figure">
-          <MoneyFigure value={totals?.baaki ?? 0} count size="xl" />
+          {/* short count-up (about 1 s, ease-out) so early frames and screenshots already read the real total */}
+          <MoneyFigure value={totals?.baaki ?? 0} count durationMs={1000} size="xl" />
         </p>
         <dl className="total-row hub-wallet-stats">
           <div>
@@ -359,6 +403,7 @@ export function HomeScreen() {
         <ul className="cards hub-home-list">
           {dash.cards.map((c) => {
             const ename = c.employer?.name ?? "—";
+            const lastStep = ladderStep(c.last_step);
             return (
               <li key={c.case_id} className="hub-home">
                 {(c.pending_claims ?? 0) > 0 ? (
@@ -394,16 +439,16 @@ export function HomeScreen() {
                   </span>
                   <ChevronRightIcon className="home-card-arrow" />
                 </Link>
-                {c.shortfall_estimate > 0 || c.last_step || c.next_reminder ? (
+                {c.shortfall_estimate > 0 || lastStep || c.next_reminder ? (
                   <div className="home-card-meta">
                     {c.shortfall_estimate > 0 ? (
                       <p className="home-card-hidden">
                         {t("home.hidden")}: <Money value={c.shortfall_estimate} /> <EstimateTag t={t} />
                       </p>
                     ) : null}
-                    {c.last_step ? (
+                    {lastStep ? (
                       <p className="meta">
-                        {t("home.last_step")}: {t(`case.step.${c.last_step}` as StringKey)} · {shortDate(c.last_sent_at, lang)}
+                        {t("home.last_step")}: {t(`case.step.${lastStep}` as StringKey)} · {shortDate(c.last_sent_at, lang)}
                       </p>
                     ) : null}
                     {c.next_reminder ? (
@@ -422,21 +467,8 @@ export function HomeScreen() {
         </ul>
       </section>
 
-      {/* cases she started but never confirmed (not in the totals): continue where she stopped */}
-      {dash.dashboard?.drafts?.length ? (
-        <ul className="hub-drafts" aria-label={H.draftGo}>
-          {dash.dashboard.drafts.map((d) => (
-            <li key={d.case_id}>
-              <Link href={d.resume_path} className="hub-draft">
-                <span className="hub-draft-text">{H.draft(d.employer, inr(d.total_due))}</span>
-                <span className="hub-draft-go">
-                  {H.draftGo} <ChevronRightIcon />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {/* cases she started but never confirmed (not in the totals): continue where she stopped, or delete */}
+      <DraftList drafts={dash.dashboard?.drafts ?? []} H={H} onDeleted={dash.refresh} />
 
       {acts.length ? (
         <section aria-label={H.recent} className="hub-recent">
@@ -511,6 +543,102 @@ export function HomeScreen() {
         </div>
       </details>
     </Screen>
+  );
+}
+
+type DraftState = { asking?: boolean; busy?: boolean; note?: string | null };
+
+/** "Not finished: {employer} ₹X" rows: Continue (resume_path) or a quiet Delete with a one-tap inline confirm. */
+function DraftList({ drafts, H, onDeleted }: { drafts: DraftCard[]; H: HubLabels; onDeleted: () => void }) {
+  const [rows, setRows] = useState<Record<number, DraftState>>({});
+  // hidden at once on success; the dashboard refresh then drops them for good
+  const [gone, setGone] = useState<ReadonlySet<number>>(() => new Set());
+  // a note that must outlive its row (confirmed meanwhile: the refresh moves it to her homes)
+  const [flash, setFlash] = useState<string | null>(null);
+  const patch = (id: number, next: DraftState) => setRows((r) => ({ ...r, [id]: { ...r[id], ...next } }));
+  const shown = drafts.filter((d) => !gone.has(d.case_id));
+  if (!shown.length && !flash) return null;
+
+  async function remove(d: DraftCard) {
+    patch(d.case_id, { busy: true, note: null });
+    try {
+      await deleteDraft(d.delete_path ?? d.case_id);
+      setGone((g) => new Set(g).add(d.case_id));
+      onDeleted();
+    } catch (err) {
+      const code = err instanceof ApiError && err.status === 409 ? err.code : null;
+      if (code === "not_draft") {
+        // confirmed meanwhile: the refresh moves it out of the drafts and into her homes
+        patch(d.case_id, { busy: false, asking: false });
+        setFlash(H.draftNotDraft);
+        onDeleted();
+        return;
+      }
+      patch(d.case_id, { busy: false, asking: false, note: code === "has_evidence" ? H.draftHasEvidence : H.draftFailed });
+    }
+  }
+
+  return (
+    <>
+      {shown.length ? (
+        <ul className="hub-drafts" aria-label={H.drafts}>
+          {shown.map((d) => {
+            const st = rows[d.case_id] ?? {};
+            const label = H.draft(d.employer, inr(d.total_due));
+            return (
+              <li key={d.case_id} className="hub-draft-item">
+                {st.asking ? (
+                  <div className="hub-draft hub-draft-ask" role="group" aria-label={H.draftAsk}>
+                    <span className="hub-draft-text">
+                      {H.draftAsk}
+                      <span className="hub-draft-sub">{label}</span>
+                    </span>
+                    <span className="hub-draft-actions">
+                      <button type="button" className="hub-draft-btn" onClick={() => patch(d.case_id, { asking: false })} disabled={st.busy}>
+                        {H.draftKeep}
+                      </button>
+                      <button type="button" className="hub-draft-btn" data-ink onClick={() => void remove(d)} disabled={st.busy}>
+                        {st.busy ? H.draftDeleting : H.draftYes}
+                      </button>
+                    </span>
+                  </div>
+                ) : (
+                  <div className="hub-draft">
+                    <Link href={d.resume_path} className="hub-draft-main">
+                      <span className="hub-draft-text">{label}</span>
+                      <span className="hub-draft-go">
+                        {H.draftGo} <ChevronRightIcon />
+                      </span>
+                    </Link>
+                    <button
+                      type="button"
+                      className="hub-draft-del"
+                      aria-label={`${H.draftDelete}: ${label}`}
+                      onClick={() => {
+                        setFlash(null);
+                        patch(d.case_id, { asking: true, note: null });
+                      }}
+                    >
+                      {H.draftDelete}
+                    </button>
+                  </div>
+                )}
+                {st.note ? (
+                  <p className="hub-draft-note" role="status">
+                    {st.note}
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {flash ? (
+        <p className="hub-draft-note" role="status">
+          {flash}
+        </p>
+      ) : null}
+    </>
   );
 }
 
