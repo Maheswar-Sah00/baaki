@@ -23,6 +23,10 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 </div>
 
 
+<p align="center"><img src="docs/screens/baaki-screens.png" alt="Baaki screens: Telugu speech to ₹13,000, the law check to ₹12,692, the Hinglish voice note heard twice, the employer accepting a raise, and the raise confirmed" width="100%"></p>
+
+<p align="center"><sub>Real app screens from the demo (synthetic data). Left to right: she speaks Telugu and the meter shows ₹13,000 · Baaki checks the law (₹12,692, Code on Wages s.20(2)) · the Hinglish voice note, AI-disclosed, heard twice by Prisma · Mehta madam accepts a step-up raise · "Jeetham penchaaru!"</sub></p>
+
 ---
 
 ## The problem
