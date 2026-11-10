@@ -17,8 +17,7 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 [![Data](https://img.shields.io/badge/demo%20data-synthetic-8a5a22)](#honesty-and-limits)
 
 📄 **Solution pitch:** [PITCH.md](PITCH.md) · [PDF, 1 page](Baaki_Solution_Pitch.pdf) &nbsp;·&nbsp;
-🎬 **Demo video:** <!-- VIDEO_URL --> *(link coming)* &nbsp;·&nbsp;
-🌐 **Live app:** <!-- LIVE_URL --> *(link coming)*
+🎬 **Demo video:** <!-- VIDEO_URL --> *(link coming)*
 
 </div>
 
@@ -34,7 +33,7 @@ Voice-first help for Hyderabad's domestic workers to work out unpaid wages and a
 She can speak. She just can't safely ask. A maid or cook in Hyderabad often has no contract and no payslip. The legal rate is buried in a government PDF. Her employer may speak Hindi while she speaks Telugu.
 
 - **81%** of Hyderabad's domestic workers earned below the state's minimum wage (Montfort Social Institute survey of Hyderabad domestic workers, reported by [Siasat, 27 Aug 2025](https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044)).
-- **6 lakh** domestic workers in Hyderabad alone, by a union estimate ([Siasat, 16 Jun 2025](https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/)). Officials say no more than 2 lakh ([Deccan Chronicle, 30 Apr 2025](https://www.deccanchronicle.com/southern-states/telangana/domestic-helps-seek-basic-labour-rights-1875894)).
+- **6 lakh** domestic workers in Hyderabad alone, by an NGO estimate from the director of Montfort Social Institute ([Siasat, 16 Jun 2025](https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/)). Officials say no more than 2 lakh ([Deccan Chronicle, 30 Apr 2025](https://www.deccanchronicle.com/southern-states/telangana/domestic-helps-seek-basic-labour-rights-1875894)).
 - **61.1%** literacy among rural women in Telangana (PLFS 2023-24, [Telangana Today, 8 Dec 2024](https://telanganatoday.com/rural-literacy-rate-plunges-in-telangana-stands-second-from-bottom-among-all-states)). So Baaki works by voice first.
 
 Telangana promised a Domestic Workers Welfare Act in June 2026 ([Siasat, 16 Jun 2026](https://www.siasat.com/telangana-govt-to-soon-introduce-domestic-workers-welfare-act-3490478/)). It has not been tabled. Until it is, the money she is owed needs one clear number and a polite way to ask.
@@ -58,9 +57,7 @@ Language is the delivery. Every word she hears and every word she says goes thro
 |---|---|---|
 | **Prisma v3.0 STT**<br>`POST /stt/v3` (REST) | Her story in one request listing `te-IN,hi-IN,en-IN`, so there is no language picker. `codemix` for every multi-language request (in our test, `transcribe` with two languages dropped a spoken amount). Clips split at pauses under 28 s. While she talks, the audio so far is re-sent every 4.5 s so the meter moves. Also: his voice replies and corrections, the spoken consent check, the Fair Pay Check mic, and **Listen-twice**. | `backend/app/gnani.py`, `stt_service.py`, `routes/cases.py`, `routes/employer.py`, `routes/inbox.py`, `routes/hisaab.py`, `consent_flow.py`, `routes/check.py`, `verify_guard.py`, `web/hooks/useListen.ts` |
 | **Timbre v3.0 TTS**<br>`POST /api/v1/tts/inference` (REST) | The read-back with `<slow>` and `<pauses>`. Voice notes in Hinglish or Telugu, the AI disclosure spoken first, one call per sentence. "Paisa aa gaya!" with `<excited>`. Also the consent sentence, the Exit Kit checklist, Hisaab read-backs and his reply spoken in her language. Voices: Kalpana (Telugu), Shivani (Hinglish). | `readback.py`, `voice_note.py`, `tts_cache.py`, `ledger.py`, `consent_text.py`, `exit_kit.py`, `hisaab_core.py` |
-| **Voice Clone**<br>embeddings + `vachana-vc-v1` | Opt-in only. Her spoken consent recording is the sample, so the note can be in her own voice. She can withdraw and delete it. Off on the public deploy. | `gnani.py` (`vc_embedding`, `vc_tts`), `voice_profile.py`, `voice_note.py`, `consent_flow.py` |
-
-<!-- TODO-F5: keep the Voice Clone row as is only if a consented clone note plays and passes Listen-twice in the app. Otherwise add "built, not yet tested end to end in the app" to it. -->
+| **Voice Clone**<br>embeddings + `vachana-vc-v1` | Opt-in only. Her spoken consent recording is the sample, so the note can be in her own voice. She can withdraw and delete it. Off on the public deploy. Built and covered by tests; tested live against Gnani's API, not yet shown end to end in the demo film. | `gnani.py` (`vc_embedding`, `vc_tts`), `voice_profile.py`, `voice_note.py`, `consent_flow.py` |
 
 All three go through one client, `gnani.py`. It respects the account's one-active-request limit with a global lock, retries only on 429, and opens a breaker on 401/402. A sha256 disk cache means no sentence is ever synthesised twice. Every rupee figure comes from our own Telugu and Hindi number parsers and the wage calculator, never from a language model.
 
@@ -156,7 +153,7 @@ powershell -ExecutionPolicy Bypass -File scripts\start-demo.ps1   # backend :802
 powershell -ExecutionPolicy Bypass -File scripts\stop-demo.ps1    # stops only what start-demo started
 ```
 
-`start-demo.ps1` starts the backend on `127.0.0.1:8020`, builds the web app with `BACKEND_URL=http://127.0.0.1:8020` (skipped when the build is newer than the sources; `-NoBuild` skips it, `-Rebuild` forces it), runs `next start -p 3020`, calls `POST /api/demo/reset` (plus the Haq Raise and dues demos) and prints the URLs: the seeded employer link, the case, Case Replay, Hisaab Milao (both sides), Haq Raise (both sides), the inbox, the Exit Kit, voice consent, `/quiz` and `/try/employer`. Logs and PIDs go to `B:\tmp` (`baaki-demo-*.log`, `baaki-demo-pids.json`). Options: `-NoInterim` (the meter updates only after she stops: fewer STT calls), `-SiteUrl https://...` (the public origin used in link previews and in the links Baaki writes). If `BAAKI_ADMIN_TOKEN` is set in the shell, it is sent on the demo resets (needed only when `BAAKI_PUBLIC=1`).
+`start-demo.ps1` starts the backend on `127.0.0.1:8020`, builds the web app with `BACKEND_URL=http://127.0.0.1:8020` (skipped when the build is newer than the sources; `-NoBuild` skips it, `-Rebuild` forces it), runs `next start -p 3020`, calls `POST /api/demo/reset` (plus the Haq Raise and dues demos) and prints the URLs: the seeded employer link, the case, Case Replay, Hisaab Milao (both sides), Haq Raise (both sides), the inbox, the Exit Kit, voice consent, `/quiz` and `/try/employer`. Logs and PIDs go to the temp folder the script prints at start (`baaki-demo-*.log`, `baaki-demo-pids.json`). Options: `-NoInterim` (the meter updates only after she stops: fewer STT calls), `-SiteUrl https://...` (the public origin used in link previews and in the links Baaki writes). If `BAAKI_ADMIN_TOKEN` is set in the shell, it is sent on the demo resets (needed only when `BAAKI_PUBLIC=1`).
 
 Filming morning, with the demo running:
 
@@ -176,6 +173,16 @@ cd web; $env:BACKEND_URL="http://127.0.0.1:8020"; npm run dev                  #
 cd backend; .venv\Scripts\python -m pytest -q                                    # 1,643 tests pass, offline (keys blanked)
 backend\.venv\Scripts\python backend\scripts\retest_features.py                  # every feature through the API, zero Gnani calls
 cd web; npm run build
+```
+
+macOS / Linux:
+
+```bash
+cd backend && python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn app.main:app --port 8020 --reload                 # API, keys from ../.env
+cd web && npm ci && BACKEND_URL=http://127.0.0.1:8020 npm run dev    # http://localhost:3000
+curl -X POST http://127.0.0.1:8020/api/demo/reset                    # seed the demo story
+cd backend && .venv/bin/python -m pytest -q                          # tests, offline
 ```
 
 `retest_features.py` drives each feature end to end against a throwaway database (`BAAKI_RETEST_DIR`, default the system temp folder) with every key blanked, and exits non-zero if a step fails; `-k raise` runs only matching steps. `GET /health` reports whether the keys are set and the Gnani calls made since start. Gnani API notes: `docs/gnani_api/`. Design system: `docs/DESIGN_SYSTEM.md`. Link-preview image: `node web/scripts/make-og.mjs`. Diagrams: `python docs/architecture/tools/build_diagrams.py`.

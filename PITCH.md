@@ -5,7 +5,7 @@
 **The problem.** Hyderabad's maids and cooks are often owed money they can't calculate, can't put in writing, and can't safely ask for in their employer's language.
 
 - **81%** of Hyderabad's domestic workers earned below the state's minimum wage (Montfort Social Institute survey, via [Siasat, Aug 2025](https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044)).
-- **6 lakh** domestic workers in Hyderabad, by a union estimate (officials say 2 lakh) ([Siasat](https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/)).
+- **6 lakh** domestic workers in Hyderabad, by an NGO estimate from Montfort Social Institute (officials say 2 lakh) ([Siasat](https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/)).
 - **61.1%** literacy among rural women in Telangana, PLFS 2023-24 ([Telangana Today](https://telanganatoday.com/rural-literacy-rate-plunges-in-telangana-stands-second-from-bottom-among-all-states)).
 
 **Who it's for.** Domestic workers in Hyderabad, mostly women, who speak Telugu or Hinglish, work in 3 to 6 homes with no contract, and are paid in cash or UPI. Second user: the employer, who opens the link she shares on WhatsApp. No app, no login.

@@ -31,13 +31,13 @@ Domestic workers come first (section A). The other segments are kept brief (sect
 | Labour Bureau's first All-India Survey on Domestic Workers | Launched 22 Nov 2021; results were due within 1 year. **No published results found.** | - | PIB, 2021 | https://labour.gov.in/sites/default/files/pib1773934.pdf | SNIPPET |
 | e-Shram total (all workers) | **31.89 crore**; women 54.28%; "Domestic and Household Workers" is one of the top occupational categories | "The portal has recorded 31.89 crore registrations." (as on 18 Aug 2026) | PIB, "5 years of e-Shram", 25 Aug 2026 | https://static.pib.gov.in/WriteReadData/specificdocs/documents/2026/aug/doc_9692_20260825_14270901.pdf | VERIFIED |
 
-**Takeaway:** a union estimates 6 lakh domestic workers in Hyderabad. Officials say no more than 2 lakh, and about 60,667 are on e-Shram (in the article's scope). Either way, the government's own records reach only a small share of these workers.
+**Takeaway:** an NGO (Montfort Social Institute) estimates 6 lakh domestic workers in Hyderabad. Officials say no more than 2 lakh, and about 60,667 are on e-Shram (in the article's scope). Either way, the government's own records reach only a small share of these workers.
 
 ### A2. Unpaid, withheld and below-minimum wages
 
 | Claim | Number | Exact quote | Source, date | URL | Tag |
 |---|---|---|---|---|---|
-| Hyderabad survey on minimum wage (Montfort Social Institute, 2023) | **81%** earn below the state minimum wage; **96%** get no weekly day of rest; **68%** have never had a raise | "81% of domestic workers earned below the state's minimum wage" / "96% had no weekly day of rest" / "68% had never received a raise" | Siasat, guest column by Emaan Chimote and Manisha Dhulipala, 27 Aug 2025, "The silent domestic labour force in Telangana is mostly invisible" | https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044 | VERIFIED (the article). The survey report itself and its sample size were **not** found. Confirm with Montfort Social Institute or GUTS if possible. |
+| Hyderabad survey on minimum wage (Montfort Social Institute; Siasat calls it 2023, but the figures match Montfort's 2017 survey) | **81%** earn below the state minimum wage; **96%** get no weekly day of rest; **68%** have never had a raise | "81% of domestic workers earned below the state's minimum wage" / "96% had no weekly day of rest" / "68% had never received a raise" | Siasat, guest column by Emaan Chimote and Manisha Dhulipala, 27 Aug 2025, "The silent domestic labour force in Telangana is mostly invisible" | https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044 | VERIFIED (the article). The survey report itself and its sample size were **not** found. Confirm with Montfort Social Institute or GUTS if possible. |
 | Telangana's minimum wage for domestic workers (Jan 2024 notification) | "Rs. 599 for half an hour of work, scaling up to Rs. 9559 for an eight-hour work-day" (monthly rates; linked to CPI) | as quoted | Same Siasat article, 27 Aug 2025 | same | VERIFIED (secondary). Telangana's G.O.Ms.No.6 of 30 May 2026 replaced all Minimum Wages Act notifications from 1 Jun 2026. **I could not see the domestic-worker rate in G.O.Ms.No.6. Check it before the app hard-codes a number.** |
 | Telangana/AP pandemic-era survey | **84.2%** not paid when they could not work through no fault of their own (400 workers, 2020-21) | snippet only | UPR joint submission JS42 (2022) | https://upr-info.org/sites/default/files/country-document/2022-10/JS42_UPR41_IND_E_Main.pdf | SNIPPET |
 | National: domestic workers not paid for the lockdown | ~**85%** (DWSSC survey, 8 states, Apr 2020) | snippet | NewsClick, 2020 | https://www.newsclick.in/85%25-Domestic-Workers-Not-Paid-Lockdown-Survey | SNIPPET (old, COVID-era) |
@@ -129,65 +129,9 @@ Domestic workers come first (section A). The other segments are kept brief (sect
 
 | Segment | Strength of hard numbers | Hyderabad stories | News timing (Nov 2026) | Fit for a voice, two-language app |
 |---|---|---|---|---|
-| **Domestic workers** | Medium: 81% below minimum wage (Hyderabad survey, secondary source) and 6 lakh in Hyderabad (union estimate); no official count | Medium-strong (Dimple Hayathi case, Madhavi, Mee Suraksha contrast) | **Strong**: Telangana Act promised Jun 2026 and not delivered; Centre says no law needed; India has not ratified C189; Labour Codes anniversary 21 Nov | **Best**: one worker, one employer, no HR, no paperwork, a language gap in both directions |
+| **Domestic workers** | Medium: 81% below minimum wage (Hyderabad survey, secondary source) and 6 lakh in Hyderabad (NGO estimate); no official count | Medium-strong (Dimple Hayathi case, Madhavi, Mee Suraksha contrast) | **Strong**: Telangana Act promised Jun 2026 and not delivered; Centre says no law needed; India has not ratified C189; Labour Codes anniversary 21 Nov | **Best**: one worker, one employer, no HR, no paperwork, a language gap in both directions |
 | Construction | Strong (78.5% Hyderabad underpaid, 87% India) but 2023 job-ad data | Weak in 2025-26 | Weak | Medium (contractor chains) |
 | Security/hotel/contract | Strong local stories (20 months, 4 months unpaid) | **Strong** | Strong (Sep-Oct 2026) | Medium (the employer is often the government or an agency, which unions already handle) |
 | Gig | Strong scale and strike numbers | Strong | Medium (state Act in force; strike Aug 2026) | Weak fit: the problem is algorithmic pay, not a one-to-one wage dispute |
 
 ---
-
-## C. Top 3 candidate headline numbers (ranked)
-
-1. **"81% of Hyderabad's domestic workers earn below the legal minimum wage."** (Montfort Social Institute 2023 survey, quoted in Siasat, 27 Aug 2025.)
-   - It is local, a non-technical judge feels it at once, and it maps straight onto what Baaki does (it checks pay against the legal minimum).
-   - Risk: the survey report itself was not seen. On screen, credit it as "2023 survey by Montfort Social Institute, via Siasat".
-2. **"6 lakh domestic workers in Hyderabad. No law of their own."** (Montfort director, Siasat, 16 Jun 2025; Telangana's Act promised 16 Jun 2026 but not yet introduced; the Centre's panel said a new law is "not desirable".)
-   - Risk: 6 lakh is an NGO estimate, and officials say 2 lakh. Label it "union estimate".
-3. **"96% get no weekly day off"** (same 2023 survey). Alternative: **"18,413 domestic helpers registered with police in weeks, to protect employers"** as the system-contrast number (Telangana Today, 25 May 2026, VERIFIED).
-
-Pair for the opening: "**81%** paid below minimum wage. **96%** no day off." Then: "Telangana promised a law in June. It still isn't here."
-
-## D. Video-ready article clips (headline, outlet, date, URL, line to highlight)
-
-1. **"The silent domestic labour force in Telangana is mostly invisible"**, Siasat, 27 Aug 2025. https://www.siasat.com/the-silent-domestic-labour-force-in-telangana-is-mostly-invisible-3264044
-   - Highlight: "**81%** of domestic workers earned below the state's minimum wage", "**96%** had no weekly day of rest"
-2. **"'We want dignity': Domestic workers protest for rights, recognition in Hyderabad"**, Siasat, 16 Jun 2025. https://www.siasat.com/we-want-dignity-domestic-workers-protest-for-rights-recognition-in-hyderabad-3234135/
-   - Highlight: "**11 lakh** domestic workers in the state, with **6 lakh** working in Hyderabad alone"
-3. **"Telangana govt to soon introduce Domestic Workers Welfare Act"**, Siasat, 16 Jun 2026. https://www.siasat.com/telangana-govt-to-soon-introduce-domestic-workers-welfare-act-3490478/
-   - Highlight: "**soon** introduce" (then a caption: "That was June. It's November.")
-4. **"Despite SC call for statutory protections, panel backs status quo on domestic workers' rights"**, The Tribune, 12 Dec 2025. https://www.tribuneindia.com/news/delhi/despite-sc-call-for-statutory-protections-panel-backs-status-quo-on-domestic-workers-rights
-   - Highlight: "introducing a new legal framework is **not desirable**"
-5. **"Hyderabad: Actress Dimple Hayathi, husband booked after help's complaint"**, Siasat, 1 Oct 2025. https://www.siasat.com/hyderabad-actress-dimple-hayathi-husband-booked-after-maids-complaint-3278230
-   - Highlight: "**failed to pay her** for her services" (an allegation: keep "booked after complaint" visible)
-6. **"Over 18,000 residents join Mee Suraksha verification drive in Malkajgiri"**, Telangana Today, 25 May 2026. https://telanganatoday.com/over-18000-residents-join-mee-suraksha-verification-drive-in-malkajgiri
-   - Highlight: "**18,413** enrolments". Caption: "Hyderabad tracks who she is. Nobody tracks what she's owed."
-7. **"Rural literacy rate plunges in Telangana; Stands second from bottom among all States"**, Telangana Today, 8 Dec 2024. https://telanganatoday.com/rural-literacy-rate-plunges-in-telangana-stands-second-from-bottom-among-all-states
-   - Highlight: rural female literacy "**61.1 percent**". Caption: "So Baaki listens instead of asking her to read."
-8. **"Fifteen years advancing decent work for domestic workers in India"**, ILO, 12 Jun 2026. https://www.ilo.org/resource/article/fifteen-years-advancing-decent-work-domestic-workers-india
-   - Highlight: "domestic workers have largely received **lower wages** than other recognized categories" and "hopes to move closer towards its **ratification** in India"
-- Backup (other segment, very timely): **"Sanitary workers protest at Telangana Secretariat over pending salaries"**, Telangana Today, 29 Sep 2026. https://telanganatoday.com/sanitary-workers-protest-at-telangana-secretariat-over-pending-salaries
-  - Highlight: "For the last **20 months**, our salaries have not been paid."
-
-## E. Which segment has the strongest evidence and timing
-
-**Domestic workers**, which is the user's choice and is supported by the evidence:
-1. **Gap in protection:**
-   - Telangana promised a Domestic Workers Welfare Act on 16 Jun 2026, and nothing has been tabled.
-   - The Centre's panel (Dec 2025) said a new law is "not desirable".
-   - The Supreme Court (Jan 2026) left the matter to legislatures.
-   - India has not ratified ILO C189.
-   - So no institution acts for this worker. That justifies an agent that acts for her: it drafts the demand, sends it to the employer, and follows up.
-2. **The problem a judge feels:** 81% paid below minimum wage, 96% with no weekly day off, in the judges' own city type (Hyderabad gated communities).
-3. **The language gap is built into the job:**
-   - many workers are Telugu-speaking with Hinglish employers, or migrants with Telugu employers;
-   - rural women's literacy in Telangana is 61.1%;
-   - the government itself added Bhashini voice in 22 languages to e-Shram in 2025.
-4. **Timing:** the Labour Codes' first anniversary is on 21 Nov 2026, 11 days after the deadline, and the Centre says domestic workers are "already covered" by those codes.
-
-**Weak spots to state honestly:**
-- the 81% comes from a 2023 NGO survey seen only through a newspaper column;
-- the 6 lakh is an NGO estimate, against 2 lakh from officials;
-- no national survey measures unpaid wages or pay cuts for leave for domestic workers;
-- the Code on Wages claim route for a single household employer is legally uncertain.
-
-The contract-staff segment (20 months unpaid, Sep 2026) has the freshest unpaid-wage headlines. Use one of them as a supporting clip if needed.

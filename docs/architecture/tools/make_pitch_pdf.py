@@ -19,7 +19,7 @@ MARK = ('<svg viewBox="0 0 512 512" width="44" height="44"><rect width="512" hei
         '<path fill="#fbfaf7" transform="translate(74.77 74.77) scale(0.6762)" d="M80 120a64 64 0 0 1 128 0V170a160 '
         '160 0 0 1 248 134V480L400 432H144a64 64 0 0 1-64-64Z M296 246a58 58 0 1 0 0.01 0Z"/></svg>')
 
-HTML = """<!doctype html><html><head><meta charset="utf-8">
+HTML = """<!doctype html><html><head><meta charset="utf-8"><title>Baaki: solution pitch</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@500;700&display=block" rel="stylesheet">
 <style>
 @font-face { font-family: Cabinet; src: url(data:font/woff2;base64,__CABINET__) format("woff2"); font-weight: 100 900; }
@@ -98,7 +98,7 @@ and <span>can't safely ask for in their employer's language.</span></div>
   <div class="stat"><div class="num">81%</div><p>of Hyderabad's domestic workers earned below the state's minimum wage</p>
     <small>Montfort Social Institute survey, via Siasat (27 Aug 2025)</small></div>
   <div class="stat"><div class="num">6 lakh</div><p>domestic workers in Hyderabad alone</p>
-    <small>Union estimate, Siasat (16 Jun 2025). Officials say 2 lakh.</small></div>
+    <small>NGO estimate (Montfort Social Institute), Siasat (16 Jun 2025). Officials say 2 lakh.</small></div>
   <div class="stat"><div class="num">61.1%</div><p>literacy among rural women in Telangana, so voice comes first</p>
     <small>PLFS 2023-24, Telangana Today (8 Dec 2024)</small></div>
 </div>
@@ -153,7 +153,7 @@ and <span>can't safely ask for in their employer's language.</span></div>
 </div>
 </div>
 </div>
-<footer><span><b>Repo:</b> github.com/Maheswar-Sah00/baaki</span><span><b>Demo video:</b> in the repo README</span>
+<footer><span><b>Repo:</b> <a href="https://github.com/Maheswar-Sah00/baaki">github.com/Maheswar-Sah00/baaki</a></span><span><b>Demo video:</b> linked at the top of the repo README</span>
 <span>Gnani.ai Great Indian AI Internship Challenge</span></footer>
 </body></html>"""
 
