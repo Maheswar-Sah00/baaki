@@ -181,6 +181,7 @@ const en = {
   "item.illegal_deduction": "Cut to be returned",
   "item.min_wage_shortfall": "Below minimum wage",
   "item.final_settlement": "Final settlement",
+  "item.paid_received": "Received from employer",
   "item.other": "Amount owed",
 
   // employer page
@@ -381,6 +382,7 @@ const te: Table = {
   "item.illegal_deduction": "తిరిగి రావాల్సిన కోత",
   "item.min_wage_shortfall": "కనీస వేతనం కంటే తక్కువ",
   "item.final_settlement": "చివరి లెక్క",
+  "item.paid_received": "యజమాని నుండి అందింది",
   "item.other": "బాకీ",
   "emp.title": "{name}కు రావాల్సిన బాకీ",
   "emp.play": "వాయిస్ నోట్ వినండి",
@@ -570,6 +572,7 @@ const hiEn: Table = {
   "item.illegal_deduction": "वापस मिलने वाली कटौती",
   "item.min_wage_shortfall": "Minimum wage से कम",
   "item.final_settlement": "आख़िरी हिसाब",
+  "item.paid_received": "मालिक से मिला",
   "item.other": "बाकी रकम",
   "emp.title": "{name} का बाकी पैसा",
   "emp.play": "Voice note सुनिए",

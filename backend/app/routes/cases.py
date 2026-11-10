@@ -568,7 +568,9 @@ async def dashboard(worker_id: int, s: Session = Depends(db.get_session)) -> dic
     for c in cases:
         if c.status == "draft":
             emp = s.get(Employer, c.employer_id)
-            drafts.append({"case_id": c.id, "employer": emp.model_dump() if emp else None, "total_due": c.total_due,
+            # employer = the home's name (what the drafts list shows); employer_id for anything else.
+            drafts.append({"case_id": c.id, "employer": emp.name if emp else "", "employer_id": c.employer_id,
+                           "employer_language": emp.language if emp else None, "total_due": c.total_due,
                            "created_at": c.created_at, "resume_path": f"/case/{c.id}",
                            "delete_path": f"/api/cases/{c.id}"})
     return {

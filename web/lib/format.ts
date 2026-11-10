@@ -56,12 +56,13 @@ export function todayIst(): string {
 
 /** Worker-side label for an itemised line: localized kind + month (the backend label is English). */
 export function itemLabel(
-  t: (key: "item.unpaid_wage" | "item.illegal_deduction" | "item.min_wage_shortfall" | "item.final_settlement" | "item.other") => string,
+  t: (key: "item.unpaid_wage" | "item.illegal_deduction" | "item.min_wage_shortfall" | "item.final_settlement" | "item.paid_received" | "item.other") => string,
   item: { kind: string; month: string | null },
   uiLang = "en",
 ): string {
   const key =
-    item.kind === "unpaid_wage" || item.kind === "illegal_deduction" || item.kind === "min_wage_shortfall" || item.kind === "final_settlement"
+    item.kind === "unpaid_wage" || item.kind === "illegal_deduction" || item.kind === "min_wage_shortfall" ||
+    item.kind === "final_settlement" || item.kind === "paid_received"
       ? (`item.${item.kind}` as const)
       : ("item.other" as const);
   const month = monthLabel(item.month, uiLang);

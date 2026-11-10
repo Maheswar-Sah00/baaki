@@ -24,14 +24,17 @@ const CLAIM_POLL_MS = 5000;
 export function useEmployerPage(token: string | null, opts: { pollMs?: number | null } = {}) {
   // Poll while his "I've paid" claim waits for her answer (set from the last page we loaded).
   const [awaitingHer, setAwaitingHer] = useState(false);
-  const res = useResource(token === null ? null : `emp:${token}`, (signal) => getEmployerPage(token!, signal), {
-    pollMs: opts.pollMs ?? (awaitingHer ? CLAIM_POLL_MS : null),
-  });
+  const res = useResource(
+    token === null ? null : `emp:${token}`,
+    (signal) =>
+      getEmployerPage(token!, signal).then((p) => {
+        setAwaitingHer(!!p.pending_confirmation);
+        return p;
+      }),
+    { pollMs: opts.pollMs ?? (awaitingHer ? CLAIM_POLL_MS : null) },
+  );
   const page = res.data;
   const pendingConfirmation = !!page?.pending_confirmation;
-  useEffect(() => {
-    setAwaitingHer(pendingConfirmation);
-  }, [pendingConfirmation]);
   const player = useAudioPlayer();
   const playedSent = useRef(false);
   const hydrated = useHydrated();
@@ -118,13 +121,14 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
     },
   });
 
+  const employerLang = page?.employer.language ?? null;
   const sendText = useCallback(
     async (text: string) => {
       if (!token || !text.trim()) return null;
       setReplying(true);
       setReplyError(null);
       try {
-        const out = await employerReply(token, null, { text, lang: page?.employer.language ?? null });
+        const out = await employerReply(token, null, { text, lang: employerLang });
         setReplyResult(out);
         res.refresh();
         return out;
@@ -135,7 +139,7 @@ export function useEmployerPage(token: string | null, opts: { pollMs?: number | 
         setReplying(false);
       }
     },
-    [page?.employer.language, res, token],
+    [employerLang, res, token],
   );
 
   // ---- UPI: deep link on phones, QR on desktops

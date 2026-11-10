@@ -32,6 +32,8 @@ import type {
   VoiceProfileDeleted,
   VoiceProfileView,
   Worker,
+  CaseReminders,
+  DraftDeleted,
 } from "./types";
 import { currentWorkerKey, setWorker } from "./store";
 
@@ -371,6 +373,23 @@ export function legalPackUrl(caseId: number, useLlm = true): string {
 // ------------------------------------------------------------------ workers / dashboard / demo
 export function getWorker(workerId: number, signal?: AbortSignal): Promise<Worker> {
   return getJson<Worker>(`/api/workers/${workerId}`, signal);
+}
+
+/** Delete an unfinished draft (`dashboard.drafts[].delete_path`, or its case id). 409 for anything confirmed. */
+export function deleteDraft(pathOrCaseId: string | number, signal?: AbortSignal): Promise<DraftDeleted> {
+  const path = typeof pathOrCaseId === "number" ? `/api/cases/${pathOrCaseId}` : pathOrCaseId;
+  return sendJson<DraftDeleted>("DELETE", path, undefined, signal);
+}
+
+/** Due reminder cards for a case (instalments due, next ladder step after 7 quiet days, passed promises). */
+export function getReminders(caseId: number, opts: { asOf?: string } = {}, signal?: AbortSignal): Promise<CaseReminders> {
+  const q = opts.asOf ? `?as_of=${encodeURIComponent(opts.asOf)}` : "";
+  return getJson<CaseReminders>(`/api/cases/${caseId}/reminders${q}`, signal);
+}
+
+/** POST a reminder card's `mark_sent` or `action` path (both come from the server). */
+export function postReminderAction(path: string, signal?: AbortSignal): Promise<unknown> {
+  return sendJson<unknown>("POST", path, {}, signal);
 }
 
 export function getDashboard(workerId: number, signal?: AbortSignal): Promise<Dashboard> {

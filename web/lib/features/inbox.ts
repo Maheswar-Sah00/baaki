@@ -27,6 +27,16 @@ export type InboxPromise = {
   can_remind: boolean;
 };
 
+export type InboxPastPayment = {
+  amount: number;
+  amount_display: string;
+  paid_on: string | null;
+  text: string;
+  line: string;
+  line_lang: string;
+  recorded: false;
+};
+
 export type InboxCard = {
   id: number;
   case_id: number;
@@ -44,6 +54,8 @@ export type InboxCard = {
   summary: { text: string; language: string; text_en: string };
   promise: InboxPromise | null;
   promises: InboxPromise[];
+  /** "He says he paid Rs X on <date>": read-only, nothing is recorded; `line` is in her language. */
+  past_payments?: InboxPastPayment[];
   card: { id: number; hash: string; prev_hash: string; at: string; diary_entry_id: number | null };
 };
 

@@ -363,7 +363,10 @@ export type DashboardCard = {
 /** A case she started but never confirmed: not counted in totals; she can continue or delete it. */
 export type DraftCard = {
   case_id: number;
+  /** The home's name. */
   employer: string;
+  employer_id: number;
+  employer_language: string | null;
   total_due: number;
   created_at: string;
   resume_path: string;
@@ -521,6 +524,46 @@ export type EmployerPage = {
   pending_claim_total?: number;
   badge: Badge | null;
   ai_notice: string;
+};
+
+/** DELETE /api/cases/{id}: drafts only (409 not_draft / has_evidence otherwise). */
+export type DraftDeleted = { deleted: number; rows_removed: Record<string, number>; employer_removed: boolean };
+
+/** One card from GET /api/cases/{id}/reminders. Nothing is sent automatically: she shares it herself. */
+export type CaseReminder = {
+  kind: "instalment" | "next_step" | "promise";
+  key: string;
+  case_id: number;
+  due_date: string | null;
+  days_overdue: number;
+  title: string;
+  /** In her language, for the card. */
+  text: string;
+  text_lang: string;
+  /** In the employer's language, to share (instalment / promise); null when `action` makes it. */
+  message: string | null;
+  message_lang: string;
+  share_text?: string;
+  /** Instalment: mark the reminder sent after a share reached an app. */
+  mark_sent?: { method: "POST"; path: string } | null;
+  /** next_step: make the next ladder note; promise: the polite reminder quoting his words. */
+  action?: { method: "POST"; path: string } | null;
+  auto_send: false;
+  last_step?: string;
+  last_sent_at?: string;
+  days_since?: number;
+  next_step?: string;
+  [k: string]: unknown;
+};
+
+export type CaseReminders = {
+  case_id: number;
+  as_of: string;
+  balance: number;
+  balance_display: string;
+  count: number;
+  reminders: CaseReminder[];
+  next_check: string;
 };
 
 /** "Paisa aa gaya" for her phone. */
